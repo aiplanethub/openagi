@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "openagi"
+version = "0.1.0-b3"
+description = ""
+authors = ["AI Planet <tech@aiplanet.com>"]
+readme = "README.md"
+include = ["src/*"]
+
+[tool.poetry.dependencies]
+python = "~3.11"
+langchain = "0.1.8"
+langchain-community = "0.0.21"
+langchain-openai = "0.0.6"
+duckduckgo-search = "5.2.1"
+spacy = "3.7.4"
+xorbits = "^0.7.2"
+azure-identity = "^1.15.0"
+langchain-text-splitters = "^0.0.1"
+python-dotenv = "^1.0.1"
+langchain-experimental = "^0.0.53"
+spacytextblob = "^4.0.0"
+google-auth-oauthlib = "^1.2.0"
+google-auth-httplib2 = "^0.2.0"
+google-api-python-client = "^2.121.0"
+langchain-exa = "^0.0.1"
+ollama = "^0.1.7"
+wikipedia = "^1.4.0"
+yfinance = "^0.2.37"
+google-search-results = "^2.4.2"
+fastapi = "^0.110.0"
+uvicorn = "^0.29.0"
+pygithub = "^2.3.0"
+langchainhub = "^0.1.15"
+python-multipart = "^0.0.9"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.11"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff]
+ignore-init-module-imports = true
+line-length = 98
+output-format = "grouped"

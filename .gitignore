@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+env.bak/
+env1/
+env2/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Build
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Compiled Python files
+*.pyc
+*.pyo
+
+# Test coverage
+htmlcov/
+
+# Dependency directories
+lib/
+libs/
+lib64/
+include/
+includes/
+bin/
+
+# credentials
+credentials.json
+token.json
+*.pem
+*.yaml
+
+# Files
+.DS_Store
