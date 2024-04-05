@@ -363,7 +363,7 @@ if __name__ == "__main__":
     agent1 = Agent(agentName=agent_list[0], consumerAgent=agent_list[1])
     agent2 = Agent(agentName=agent_list[1], consumerAgent=agent_list[2])
     agent3 = Agent(agentName=agent_list[2], consumerAgent=agent_list[0])
-    # , role="RESEARCHER", goal="search for latest trends in Carona treatment", capability="INTERNET_SEARCHER", agent_type="STATIC",
+    # , role="RESEARCHER", goal="search for latest trends in COVID-19 treatment", capability="INTERNET_SEARCHER", agent_type="STATIC",
     #                multiplicity=3, task="search internet for the goal", output_consumer_agent=agent_list[1],
     #               llm_api="gpt4", go_d_timer=10000, llm_resp_timer=20, tools_list=["Google", "Bing","DuckduckGo-search" ])
     agent1.start_agent(mapper)

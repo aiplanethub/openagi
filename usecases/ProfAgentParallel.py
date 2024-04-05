@@ -30,7 +30,7 @@ if __name__ == "__main__":
             creator=None,
             role="RESEARCHER",
             feedback=False,
-            goal="search for latest trends in Carona treatment that includes medicines, physical exercises, overall management and prevention aspects",
+            goal="search for latest trends in COVID-19 treatment that includes medicines, physical exercises, overall management and prevention aspects",
             backstory="backstory",
             capability="search_executor",
             agent_type="STATIC",

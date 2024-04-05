@@ -20,7 +20,7 @@ if __name__ == "__main__":
             creator=None,  # Used to indicate dynamic agent's object name ex:Agent2,3
             role="RESEARCHER",  # Role
             feedback=False,  # Boolean
-            goal="search for latest trends in Carona treatment that includes medicines, physical exercises, overall management and prevention aspects",
+            goal="search for latest trends in COVID-19 treatment that includes medicines, physical exercises, overall management and prevention aspects",
             backstory="backstory",
             capability="search_executor",
             agent_type="STATIC",  # Indicates it will get instantiated as part of system initial bring up

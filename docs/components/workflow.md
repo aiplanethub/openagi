@@ -39,7 +39,7 @@ def onAggregationAction(agentName, consumerAgent, aggrSourceAgentList, aggrResul
 # Example Usage:
 if __name__ == "__main__":
     agents_list = [
-    Agent(agentName="RESEARCHER1", aggregator=0, onAggregationAction=None, creator=None, role="RESEARCHER", feedback=False, goal="search for latest trends in Carona treatment that includes medicines, physical exercises, overall management and prevention aspects",
+    Agent(agentName="RESEARCHER1", aggregator=0, onAggregationAction=None, creator=None, role="RESEARCHER", feedback=False, goal="search for latest trends in COVID-19 treatment that includes medicines, physical exercises, overall management and prevention aspects",
                      backstory="backstory", capability="search_executor", agent_type="STATIC",  multiplicity=0, 
                      task="search internet for the goal for the trends in 2H 2023 onwards", output_consumer_agent=agent_list[2], HGI_Intf=onResultHGI, 
                       llm_resp_timer_value=20, tools_list=[DuckDuckGoSearchTool]),
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     llm_openai= OpenAIModel(config=config_openai)
     
     agent_list = [
-    Agent(agentName="RESEARCHER1", aggregator=0, onAggregationAction=None, creator=None, role="RESEARCHER", feedback=False, goal="search for latest trends in Carona treatment that includes medicines, physical exercises, overall management and prevention aspects",
+    Agent(agentName="RESEARCHER1", aggregator=0, onAggregationAction=None, creator=None, role="RESEARCHER", feedback=False, goal="search for latest trends in COVID-19 treatment that includes medicines, physical exercises, overall management and prevention aspects",
                      backstory="backstory", capability="search_executor", agent_type="STATIC",  multiplicity=0, 
                      task="search internet for the goal for the trends in 2H 2023 onwards", output_consumer_agent=agent_list[2], HGI_Intf=onResultHGI, llm=llm_azure, 
                       llm_resp_timer_value=20, tools_list=[DuckDuckGoSearchTool]),
