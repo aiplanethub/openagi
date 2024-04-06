@@ -27,6 +27,8 @@
 ## Planner LLM UI
 
 * [Automated Agent Configuration](planner-llm-ui/automated-agent-configuration.md)
+* [ACKNOWLEDGEMENTS](planner-llm-ui/acknowledgements/README.md)
+  * [Special Mentions](planner-llm-ui/acknowledgements/special-mentions.md)
 
 ***
 
