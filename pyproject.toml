@@ -32,6 +32,7 @@ uvicorn = "^0.29.0"
 pygithub = "^2.3.0"
 langchainhub = "^0.1.15"
 python-multipart = "^0.0.9"
+pandas = "^2.2.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.11"
