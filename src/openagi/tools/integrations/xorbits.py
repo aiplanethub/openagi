@@ -1,6 +1,6 @@
 import logging
 
-import xorbits.pandas as pd
+import pandas as pd
 from langchain_experimental.agents.agent_toolkits import create_xorbits_agent
 from pydantic import BaseModel, Field
 
