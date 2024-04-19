@@ -2,7 +2,6 @@ import logging
 
 from duckduckgo_search import DDGS
 from pydantic import BaseModel, Field
-
 from openagi.tools.base import BaseTool, tool
 
 

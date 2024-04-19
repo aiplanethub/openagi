@@ -11,7 +11,7 @@ if __name__ == "__main__":
             agentName=agent_names[0],  # name
             role="RESEARCHER",  # role
             goal="search for latest trends in COVID-19 and Cancer treatment that includes medicines, physical exercises, overall management and prevention aspects",
-            backstory="Has the capability to execute internet search tool",
+            backstory="Has the capability to execute internet search tool and keep it within context length",
             capability="search_executor",
             task="search internet for the goal for the trends after first half of 2023",
             output_consumer_agent=[agent_names[1]],  # the consumer agent after executing task
