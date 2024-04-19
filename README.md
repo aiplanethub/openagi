@@ -6,13 +6,9 @@
 <a href="https://discord.gg/4aWV7He2QU"><img src="https://dcbadge.vercel.app/api/server/4aWV7He2QU?style=flat" alt="Discord" /></a>
 <a href="https://twitter.com/aiplanethub"><img src="https://img.shields.io/twitter/follow/aiplanethub" alt="Twitter" /></a>
 
-![Thumbnails](https://github.com/aiplanethub/openagi/assets/openagi.png)
-
 <p>OpenAGI aims to make human-like agents accessible to everyone, thereby paving the way towards open agents and, eventually, AGI for everyone. We strongly believe in the transformative power of AI and are confident that this initiative will significantly contribute to solving many real-life problems. Currently, OpenAGI is designed to offer developers a framework for creating autonomous human-like agents.</p>
 <i><a href="https://discord.gg/4aWV7He2QU">👉 Join our Discord community!</a></i>
 </div>
-
-
 
 
 ## Installation
@@ -47,6 +43,10 @@ Follow this quick [installation guide](https://openagi.aiplanet.com/getting-star
 ## Documentation
 
 For more queries find documentation for OpenAGI at [openagi.aiplanet.com](https://openagi.aiplanet.com/)
+
+## Understand OpenAGI
+
+![Thumbnails](https://github.com/aiplanethub/openagi/blob/dev/assets/openagi.png)
 
 ## Example
 
