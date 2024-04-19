@@ -1,11 +1,13 @@
 import logging
-
+import asyncio
 from duckduckgo_search import DDGS
 from pydantic import BaseModel, Field
 from openagi.tools.base import BaseTool, tool
 
 
 def getDuckduckgoSearchResults(query):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     results = DDGS().text(query, max_results=5)
     logging.debug(f"Results from DUCKDUCKGO --- {results}")
     return results
