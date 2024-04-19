@@ -7,11 +7,11 @@ readme = "README.md"
 include = ["src/*"]
 
 [tool.poetry.dependencies]
-python = "~3.11"
+python = "^3.9, <3.12"
 langchain = "0.1.8"
 langchain-community = "0.0.21"
 langchain-openai = "0.0.6"
-duckduckgo-search = "5.2.1"
+duckduckgo-search = "^5.3.0"
 spacy = "3.7.4"
 xorbits = "^0.7.2"
 azure-identity = "^1.15.0"
@@ -33,6 +33,7 @@ pygithub = "^2.3.0"
 langchainhub = "^0.1.15"
 python-multipart = "^0.0.9"
 pandas = "^2.2.2"
+numpy = "^1.26.4"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.11"
