@@ -12,7 +12,7 @@ OpenAGI consists of two different types of Agents: Static and Dynamic.
 
 ### Static
 
-Static Agent is an Agent type Whether the agent is created at the initialisation of the program. The Agent type is configured within AIAgent, as an attribute: `agent_type="STATIC"`
+Static Agent is an Agent type Whether the agent is created at the initialisation of the program. The Agent type is configured within **Agent**, as an attribute: `agent_type="STATIC"`
 
 ```
 agent1 = Agent(
@@ -23,7 +23,7 @@ agent1 = Agent(
 
 ### Dynamic
 
-Dynamic Agent is an Agent type that is dynamically created during the declaration of Agents object. The Agent type is configured within AIAgent, as an attribute: `agent_type="DYNAMIC"`
+Dynamic Agent is an Agent type that is dynamically created during the declaration of Agents object. The Agent type is configured within **Agent**, as an attribute: `agent_type="DYNAMIC"`
 
 ```
 agent2 = Agent(
@@ -40,7 +40,7 @@ The objective can be achieved through the OpenAGI is by deploying a trio of agen
 
 Lets understand this step-by-step:
 
-<figure><img src="../.gitbook/assets/image (27).png" alt=""><figcaption><p>Solution diagram</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/1.png" alt=""><figcaption><p>Agent Flow</p></figcaption></figure>
 
 ### Define Agent agentName and Roles
 
@@ -50,11 +50,11 @@ The first agent, which employs search engines using tools like 'DuckDuckGo searc
 
 > Agent 2: **Writer**
 
-**T**he second agent, which processes the information collected from the first agent to create succinct summaries tailored for healthcare professionals and the general public.
+The second agent, which processes the information collected from the first agent to create succinct summaries tailored for healthcare professionals and the general public.
 
 > Agent 3: **Emailer**
 
-**T**he third agent, which takes the summaries from the second agent as input to craft distinct emails as per the task of the use case.
+The third agent, which takes the summaries from the second agent as input to craft distinct emails as per the task of the use case.
 
 Note: The label assigned for the Agent Name i.e., Researcher, Writer and Emailer can be set to anything meaningful based on your use cases.
 
@@ -69,6 +69,8 @@ The user needs to create the list of agents.
 It's crucial to clearly define and label the capabilities of each agent. For example, we might label the agent responsible `RESEARCHER`as the `search_executor`. We also need to designate which agent will receive the output once a task is completed. Agents are limited to specific capabilities like search execution and `LLM` task execution. For instance, the `RESEARCHER` agent sends a message to the `WRITER` agent, which then forwards it to the `EMAILER` for printing, as the recipient is `HGI`.
 
 > The value “HGI” indicates human agent which is the final receiver of the output from the agent
+
+**Note**: to understand functions of each attribute click [here](https://openagi.aiplanet.com/components/agent-attributes).
 
 ```python
 #Agent objects configuration as a list

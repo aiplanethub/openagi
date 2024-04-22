@@ -1,4 +1,4 @@
-# Workflow
+# Agent Architectures
 
 ### Parallel Execution of Agents
 
@@ -9,7 +9,7 @@ The parallel execution configuration allows us to simultaneously execute two res
 3. Writer: This agent processes the information collected from the Researcher agents executed parallel to create succinct summaries tailored for healthcare professionals and the general public.
 4. Emailer: This agent, which takes the summaries from the Writer agent as input to craft distinct emails as per the task of the use case.
 
-<figure><img src="../.gitbook/assets/image (28).png" alt=""><figcaption><p>Parallel Agents</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/2.png" alt=""><figcaption><p>Parallel Agents</p></figcaption></figure>
 
 The code illustrates a scenario involving four agents, where two agents operate in parallel, as indicated by the second parameter in the kickOffGenAIAgents function. It permits the third agent to collect and combine the outcomes using the "onAggregationAction" function, which consolidates the results from the two parallel agents.
 
@@ -183,11 +183,11 @@ llm = AzureChatOpenAIModel(config=config)
 kickOffAgents(agent_list,[agent_list[0], agent_list[1]], llm=llm)
 ```
 
-### Configuration for Multilevel Agent Communication&#x20;
+### Configuration for Multilevel Agent Communication
 
-The following diagram shows the example that uses parallel, aggregation and parallel  configuration of agents. In this example both 'RESEARCHER1' and 'RESEARCHER2' will get triggered by the user and their responses will be aggregated by "WRITER". The response of the "WRITER" agent will go to "EMAILER1" and "EMAILER2".  Eventually the "HGI" gets the two responses.
+The following diagram shows the example that uses parallel, aggregation and parallel configuration of agents. In this example both 'RESEARCHER1' and 'RESEARCHER2' will get triggered by the user and their responses will be aggregated by "WRITER". The response of the "WRITER" agent will go to "EMAILER1" and "EMAILER2". Eventually the "HGI" gets the two responses.
 
-<figure><img src="../.gitbook/assets/image (45).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/3.png" alt=""><figcaption><p>Hybrid Architecture</p></figcaption></figure>
 
 Example
 

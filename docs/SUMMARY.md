@@ -13,7 +13,7 @@
 * [Agent Attributes](components/agent-attributes.md)
 * [Tools](components/tools.md)
 * [LLM](components/llm.md)
-* [Workflow](components/workflow.md)
+* [Agent Architectures](components/workflow.md)
 * [Integrations APIs to third parties (Coming soon)](components/integrations-apis-to-third-parties-coming-soon.md)
 * [Kick-Off](components/kick-off.md)
 
