@@ -70,7 +70,7 @@ It's crucial to clearly define and label the capabilities of each agent. For exa
 
 > The value “HGI” indicates human agent which is the final receiver of the output from the agent
 
-**Note**: to understand functions of each attribute click [here](https://openagi.aiplanet.com/components/agent-attributes).
+**Note**: To understand functions of each attribute click [here](https://openagi.aiplanet.com/components/agent-attributes).
 
 ```python
 agent_list = [
