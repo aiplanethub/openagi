@@ -4,11 +4,11 @@ from openagi.llms.openai import OpenAIModel
 
 def loadLLM(llm="openai"):
     if llm == "openai":
-        config = OpenAIModel.load_from_yml_config()
+        config = OpenAIModel.load_from_yaml_config()
         llm = OpenAIModel(config=config)
         return llm
     else:
-        config = AzureChatOpenAIModel.load_from_yml_config()
+        config = AzureChatOpenAIModel.load_from_yaml_config()
         llm = AzureChatOpenAIModel(config=config)
     return llm
 

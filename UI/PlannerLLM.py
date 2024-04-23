@@ -7,10 +7,10 @@ from openagi.utils.yamlParse import read_yaml_config
 def executor_llm(llm_choice):
     print(f"{llm_choice=}")
     if llm_choice == "azure-openai":
-        config = AzureChatOpenAIModel.load_from_yml_config()
+        config = AzureChatOpenAIModel.load_from_yaml_config()
         llm_1 = AzureChatOpenAIModel(config=config)
     elif llm_choice == "openai":
-        config = OpenAIModel.load_from_yml_config()
+        config = OpenAIModel.load_from_yaml_config()
         llm_1 = OpenAIModel(config=config)
     else:
         raise ValueError("Invalid LLM choice. Please provide a valid LLM choice.")

@@ -39,7 +39,7 @@ class HuggingFaceModel(LLMBaseModel):
         return resp[0]['generated_text']
 
     @staticmethod
-    def load_from_yml_config() -> HuggingFaceConfigModel:
+    def load_from_yaml_config() -> HuggingFaceConfigModel:
         """Loads the Hugging Face configurations from a YAML file.
 
         Returns:

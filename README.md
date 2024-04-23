@@ -86,7 +86,7 @@ if __name__ == "__main__":
         ),
     ]
 
-    config = OpenAIModel.load_from_yml_config()  # Setup a file named config.yaml and set OPENAI_API_KEY variable. Follow instructions from docs in Note above.
+    config = OpenAIModel.load_from_yaml_config()  # Setup a file named config.yaml and set OPENAI_API_KEY variable. Follow instructions from docs in Note above.
     llm = OpenAIModel(config=config)
     kickOffAgents(agent_list, [agent_list[0]], llm=llm)
 ```

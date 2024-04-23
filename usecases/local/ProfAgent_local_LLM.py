@@ -38,7 +38,7 @@ class OllamaModel(LLMBaseModel):
         return resp
 
     @staticmethod
-    def load_from_yml_config():
+    def load_from_yaml_config():
         return OllamaConfigModel(model_name=read_yaml_config("OLLAMA_MODEL_NAME") or "llama2")
 
 
@@ -72,6 +72,6 @@ if __name__ == "__main__":
             output_consumer_agent=["HGI"],
         ),
     ]
-    config = OllamaModel.load_from_yml_config()
+    config = OllamaModel.load_from_yaml_config()
     llm = OllamaModel(config=config)
     kickOffAgents(agent_list, [agent_list[0]], llm=llm)

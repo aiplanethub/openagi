@@ -43,7 +43,7 @@ class OpenAIModel(LLMBaseModel):
         return resp.content
 
     @staticmethod
-    def load_from_yml_config() -> OpenAIConfigModel:
+    def load_from_yaml_config() -> OpenAIConfigModel:
         """Loads the OpenAI configurations from a YAML file.
 
         Returns:
