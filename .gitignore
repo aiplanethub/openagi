@@ -13,6 +13,7 @@ env2/
 .env
 venv9/
 venv10/
+env9/
 
 # IDE
 .vscode/
@@ -41,6 +42,9 @@ lib64/
 include/
 includes/
 bin/
+
+# Directories
+documents/
 
 # credentials
 credentials.json
