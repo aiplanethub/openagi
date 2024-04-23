@@ -53,7 +53,7 @@ class AzureChatOpenAIModel(LLMBaseModel):
         return resp.content
 
     @staticmethod
-    def load_from_yml_config() -> AzureChatConfigModel:
+    def load_from_yaml_config() -> AzureChatConfigModel:
         """Loads the AzureChatOpenAI configurations from a YAML file.
 
         Returns:
@@ -71,7 +71,7 @@ class AzureChatOpenAIModel(LLMBaseModel):
 """
 def main():
     # Demonstrates the use of AzureChatOpenAIModel.
-    config = AzureChatOpenAIModel.load_from_yml_config()
+    config = AzureChatOpenAIModel.load_from_yaml_config()
     azure_chat_model = AzureChatOpenAIModel(config=config)
     response = azure_chat_model.run("Hello, how can I help you today?")
     print(response)

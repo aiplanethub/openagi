@@ -17,7 +17,7 @@ if __name__ == "__main__":
     """
 
 
-tail_azure = """config = AzureChatOpenAIModel.load_from_yml_config()
+tail_azure = """config = AzureChatOpenAIModel.load_from_yaml_config()
 llm = AzureChatOpenAIModel(config=config)
 kickOffAgents(agent_list, [agent_list[0]], llm=llm)"""
 
@@ -41,6 +41,6 @@ if __name__ == "__main__":
     """
 
 tail_openai = """    
-config = OpenAIModel.load_from_yml_config()
+config = OpenAIModel.load_from_yaml_config()
 llm = OpenAIModel(config=config)
 kickOffAgents(agent_list, [agent_list[0]], llm=llm)"""

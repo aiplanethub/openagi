@@ -22,9 +22,9 @@ def onAggregationAction(agentName, consumerAgent, aggrSourceAgentList, aggrResul
 
 if __name__ == "__main__":
     agent_name = ["RESEARCHER1", "RESEARCHER2", "WRITER", "EMAILER"]
-    config_azure = AzureChatOpenAIModel.load_from_yml_config()
+    config_azure = AzureChatOpenAIModel.load_from_yaml_config()
     llm_azure = AzureChatOpenAIModel(config=config_azure)
-    config_openai = OpenAIModel.load_from_yml_config()
+    config_openai = OpenAIModel.load_from_yaml_config()
     llm_openai = OpenAIModel(config=config_openai)
     agent_list = [
         Agent(

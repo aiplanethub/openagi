@@ -57,6 +57,6 @@ if __name__ == "__main__":
         output_consumer_agent=["HGI"],
     )
     ]
-    config = AzureChatOpenAIModel.load_from_yml_config()
+    config = AzureChatOpenAIModel.load_from_yaml_config()
     llm = AzureChatOpenAIModel(config=config)
     kickOffAgents(agent_list,[agent_list[0]], llm=llm)
