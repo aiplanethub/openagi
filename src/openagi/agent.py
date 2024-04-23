@@ -91,13 +91,15 @@ def createAndsendMessageProfTrigger(srcAgent, dstAgent, body, mapper):
 
 def evalLLMResponse(resp):
     print(f"evalLLMResponse::{resp}")
-    nlp = spacy.load(
+    try:
+        nlp = spacy.load(
         "en_core_web_sm"
-    )  # Run this command if you face error: `python -m spacy download en_core_web_sm`
+        )  # Run this command if you face error: `python -m spacy download en_core_web_sm`
+    except Exception:
+        print("python -m spacy download en_core_web_sm")
     nlp.add_pipe("spacytextblob")
     doc = nlp(resp)
     polarity = doc._.blob.polarity
-    print(f"sentiment {polarity}")
     if polarity > 0:
         return True
     return False

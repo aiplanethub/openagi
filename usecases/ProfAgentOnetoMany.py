@@ -2,7 +2,7 @@ import logging
 from openagi.init_agent import kickOffAgents
 from openagi.agent import Agent
 from openagi.tools.integrations import DuckDuckGoSearchTool
-from openagi.llms.azure import AzureChatOpenAIModel
+from openagi.llms import AzureChatOpenAIModel
 
 def onAggregationAction(agentName, consumerAgent, aggrSourceAgentList, aggrResultsList):
     result = ""
@@ -25,7 +25,6 @@ if __name__ == "__main__":
         task="search internet for the goal for the trends after first half of 2023",
         output_consumer_agent=["WRITER1", "WRITER2"],  # the consumer agent after executing task
         tools_list=[DuckDuckGoSearchTool],
-        llm="openai"
     ),
     Agent(
         agentName="WRITER1",
