@@ -73,7 +73,6 @@ It's crucial to clearly define and label the capabilities of each agent. For exa
 **Note**: to understand functions of each attribute click [here](https://openagi.aiplanet.com/components/agent-attributes).
 
 ```python
-#Agent objects configuration as a list
 agent_list = [
     Agent(
         agentName="RESEARCHER",
