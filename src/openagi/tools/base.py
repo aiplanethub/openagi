@@ -1,7 +1,7 @@
 from typing import Any, Callable, Type
 
 from pydantic import BaseModel, Field
-
+import asyncio
 from openagi.llms.base import LLMBaseModel
 
 
@@ -19,6 +19,8 @@ def tool(args_schema: Type[BaseModel], output_schema: Type[BaseModel] = None) ->
         }
 
         def wrapper(self, *args, **kwargs) -> Any:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             return func(self, *args, **kwargs)
 
         # Attach metadata to the wrapper function to ensure it's accessible
