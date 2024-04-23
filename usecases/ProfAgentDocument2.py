@@ -8,10 +8,10 @@ if __name__ == "__main__":
         Agent(
             agentName="RESEARCHER",  # name
             role="RESEARCHER",  # role
-            goal="Summarize two different documents to find the differences and similarities between them.",
-            backstory="I am a researcher agent that can help you compare documents.",
-            capability="search_executor",
-            task="Compare the files GenAIuserManual and File_2 for similarities",
+            goal="Summarize two different documents to find the key differences between them and return it in bullet points.",
+            backstory="You are a professional document comparison agent with the ability to analyze and summarize the key differences between two documents.",
+            capability="llm_task_executor",
+            task="find similarities based on their skills , Tanishk_v18 and Tanish_v5_de files and give results in bullet points.",
             output_consumer_agent=["HGI"],  # the consumer agent after executing task
             tools_list=[DocumentCompareSearchTool],
         )
