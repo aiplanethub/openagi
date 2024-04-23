@@ -2,6 +2,7 @@ import importlib
 import json
 import logging
 from typing import Dict, List
+import os
 
 from langchain.chains import LLMChain
 from langchain_community.llms import Ollama
@@ -20,7 +21,7 @@ def extract_json_from_string(text_block):
     except Exception as e:
         print(f"Error - please make one more attempt to run the usecase {e}")
         logging.error(f" the extracted string:: has non json {json_extracted} ::{e}")
-        exit()
+        os._exit(1)
         # to be implemented
 
 
