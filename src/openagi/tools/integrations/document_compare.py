@@ -34,6 +34,7 @@ def DocuCompare(searchString, llm):
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         docs = text_splitter.split_documents(pages)
         embeddings = AzureOpenAIEmbeddings(
+            api_key = read_yaml_config("AZURE_OPENAI_API_KEY"),
             azure_deployment=deployment_name,
             openai_api_version=read_yaml_config("OPENAI_API_VERSION"),
         )
@@ -46,10 +47,10 @@ def DocuCompare(searchString, llm):
             )
         )
     agent = initialize_agent(
-        agent=AgentType.OPENAI_FUNCTIONS,
+        agent=AgentType.OPENAI_MULTI_FUNCTIONS,
         tools=tools,
         llm=llm,
-        verbose=True,
+        verbose=False,
     )
     result = agent({"input": searchString})
     logging.debug(result)
