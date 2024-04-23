@@ -17,7 +17,7 @@ from openagi.tools.base import BaseTool, tool
 from openagi.utils.yamlParse import read_yaml_config
 
 
-def DocuCompare(searchString, llm):
+def AskDocument(searchString, llm):
     os.environ["AZURE_OPENAI_ENDPOINT"] = read_yaml_config("BASE_URL")
     deployment_name = read_yaml_config("EMBEDDING_DEPLOYMENT")
     tools = []
@@ -57,22 +57,22 @@ def DocuCompare(searchString, llm):
     return result
 
 
-class DocumentCompareInputSchema(BaseModel):
+class AskDocumentInputSchema(BaseModel):
     search_str: str = Field(description="Search string to be passed to the input.")
 
 
-class DocumentCompareOutputSchema(BaseModel):
+class AskDocumentOutputSchema(BaseModel):
     response: str = Field(
         description="Response from the agent regarding action performed by DocumentCompare."
     )
 
 
-class DocumentCompareSearchTool(BaseTool):
-    name: str = "DocumentCompareSearch Tool"
+class AskDocumentTool(BaseTool):
+    name: str = "AskDocumentSearchTool"
     description: str = (
         "A tool which can be used to by the agent to question uploaded files by the user."
     )
 
-    @tool(args_schema=DocumentCompareInputSchema, output_schema=DocumentCompareOutputSchema)
+    @tool(args_schema=AskDocumentInputSchema, output_schema=AskDocumentOutputSchema)
     def _run(self, search_str: str = None):
-        return DocuCompare(searchString=search_str, llm=self.llm.llm)
+        return AskDocument(searchString=search_str, llm=self.llm.llm)

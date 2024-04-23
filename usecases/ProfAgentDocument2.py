@@ -1,7 +1,7 @@
 from openagi.agent import Agent
 from openagi.init_agent import kickOffAgents
 from openagi.llms.azure import AzureChatOpenAIModel
-from openagi.tools.integrations import DocumentCompareSearchTool
+from openagi.tools.integrations import AskDocumentTool
 
 if __name__ == "__main__":
     agent_list = [
@@ -13,7 +13,7 @@ if __name__ == "__main__":
             capability="llm_task_executor",
             task="find similarities based on their skills , Tanishk_v18 and Tanish_v5_de files and give results in bullet points.",
             output_consumer_agent=["HGI"],  # the consumer agent after executing task
-            tools_list=[DocumentCompareSearchTool],
+            tools_list=[AskDocumentTool],
         )
     ]
     config = AzureChatOpenAIModel.load_from_yaml_config()

@@ -1,4 +1,4 @@
-from openagi.tools.integrations.document_compare import DocumentCompareSearchTool
+from openagi.tools.integrations.AskDocument import AskDocumentTool
 from openagi.tools.integrations.duckducksearch import DuckDuckGoSearchTool
 from openagi.tools.integrations.exa_search_tool import ExaSearchTool
 from openagi.tools.integrations.github import GithubSearchTool

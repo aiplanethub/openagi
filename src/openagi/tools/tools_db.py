@@ -1,5 +1,5 @@
 from openagi.tools.integrations import (
-    DocumentCompareSearchTool,
+    AskDocumentTool,
     DuckDuckGoSearchTool,
     ExaSearchTool,
     GithubSearchTool,
@@ -36,7 +36,7 @@ TOOLS_DICT = [
     },
     {
         "category": "Compare",
-        **DocumentCompareSearchTool.get_tool_info(),
+        **AskDocumentTool.get_tool_info(),
         "output": "Document comparison results after using the tool.",
     },
     {
