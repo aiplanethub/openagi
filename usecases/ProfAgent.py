@@ -14,6 +14,7 @@ if __name__ == "__main__":
             task="search internet for the goal for the trends after first half of 2023",
             output_consumer_agent=["WRITER"],  # the consumer agent after executing task
             tools_list=[DuckDuckGoSearchTool],
+            memory=True,
         ),
         Agent(
             agentName="WRITER",

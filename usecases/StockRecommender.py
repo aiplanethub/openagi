@@ -3,8 +3,6 @@ from openagi.init_agent import kickOffAgents
 from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.tools.integrations import (
     ExaSearchTool,
-    GoogleFinanceSearchTool,
-    SerperSpecificSearchTool,
     WikipediaTool,
 )
 
@@ -20,9 +18,7 @@ if __name__ == "__main__":
             output_consumer_agent=["ANALYZER"],
             tools_list=[
                 WikipediaTool,
-                GoogleFinanceSearchTool,
                 ExaSearchTool,
-                SerperSpecificSearchTool,
             ],
         ),
         Agent(
