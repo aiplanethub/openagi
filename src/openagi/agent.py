@@ -7,6 +7,7 @@ from spacytextblob.spacytextblob import SpacyTextBlob
 from openagi.llms.base import LLMBaseModel
 from openagi.queue.message_broker import NameIndexMapper
 from openagi.queue.pq import Message, MessageType, MultiThreadPriorityQueue
+from openagi.memory.memory import Memory
 from openagi.tools.integrations.duckducksearch import getDuckduckgoSearchResults
 from openagi.tools.tools_db import (
     TOOLS_DICT_MAPPING,
@@ -154,6 +155,7 @@ class Agent:
         task,
         output_consumer_agent=[],
         llm_api=None,
+        memory=False,
         tools_list=[],
         feedback=False,
         agent_type="STATIC",
@@ -191,6 +193,7 @@ class Agent:
         self.capability = capability
         self.agent_type = agent_type
         self.multiplicity = multiplicity
+        self.memory = memory     # memory flag
         self.task = task
         self.output_consumer_agent = output_consumer_agent
         self.HGI_Intf = HGI_Intf
@@ -216,7 +219,9 @@ class Agent:
             message.body = self.onAggregationAction(
                 self.llm, self.consumerAgent, None, messageList
             )
-
+        if self.memory:
+            memory = Memory(self.agentName)
+            memory._save_agent_exec(self.agentName, self.task, self.tools_list, self.consumerAgent)
         consumer = self.consumerAgent
         resp = f"sending mesage from {self.agentName}"
         if self.tools_list:
@@ -251,6 +256,7 @@ class Agent:
                     },
                     llm=self.llm,
                 )
+                memory._save_tool_exec(tool_name, resp)                
                 logging.info(f"resp from tools_handler : {resp}")
 
         elif self.capability == "search_executor":
@@ -275,7 +281,8 @@ class Agent:
             else:
                 logging.info("response for  final feedback ")
                 resp = message.body
-        logging.debug(f"response of agent {self.agentName} is { resp}")
+        logging.debug(f"response of agent {self.agentName} is {resp}")
+
         # STOP THE TIMER
         self.mapper.timerStopMapper(agentName=self.agentName, timerName=self.timerNameLLM)
         # feedback is supported for only non aggregator agents
@@ -340,6 +347,7 @@ class Agent:
             else:
                 logging.debug(f"{myname} agent found no messages from PQ .. going to wait.")
                 waitonConditionAgent(self.mapper, self.agentName, 100)
+            
 
     def start_agent(self, mapper):
         # Start the agent in a new thread
