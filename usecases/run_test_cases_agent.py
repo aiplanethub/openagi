@@ -1,12 +1,12 @@
-from openagi.agent import Agent
-from openagi.init_agent import kickOffAgents
+from openagi.agent import AIAgent
+from openagi.init_agent import kickOffGenAIAgents
 from openagi.llms.azure import AzureChatOpenAIModel
 
 if __name__ == "__main__":
-    agent_name = ["Coder", "Test case Developer"]
-    agent_list = [
-        Agent(
-            agentName=agent_name[0],
+    agent_list = ["Coder", "Test case Developer"]
+    AgentObjects = [
+        AIAgent(
+            agentName=agent_list[0],
             aggregator=0,
             onAggregationAction=None,
             creator=None,
@@ -18,13 +18,13 @@ if __name__ == "__main__":
             agent_type="STATIC",
             multiplicity=0,
             task="Develop a Python script for the above presenting the code in a line-by-line format to ensure clarity and ease of use for users.",
-            output_consumer_agent=[agent_name[1]],
+            output_consumer_agent=agent_list[1],
             HGI_Intf=None,
             llm_resp_timer_value=2000,
             tools_list=[],
         ),
-        Agent(
-            agentName=agent_name[1],
+        AIAgent(
+            agentName=agent_list[1],
             aggregator=0,
             onAggregationAction=None,
             creator=None,
@@ -36,12 +36,12 @@ if __name__ == "__main__":
             agent_type="STATIC",
             multiplicity=0,
             task="Conduct a comprehensive test cases for the Python code, paying particular attention to functional and acceptance testing including edge cases. Also provide no of positive and edge test cases to enable the management to understand the quality of testing",
-            output_consumer_agent=["HGI"],
+            output_consumer_agent="HGI",
             HGI_Intf=None,
             llm_resp_timer_value=1300,
             tools_list=[],
         ),
     ]
-    config = AzureChatOpenAIModel.load_from_yaml_config()
+    config = AzureChatOpenAIModel.load_from_yml_config()
     azure_chat_model = AzureChatOpenAIModel(config=config)
-    kickOffAgents(agent_list, [agent_list[0]], llm=azure_chat_model)
+    kickOffGenAIAgents(AgentObjects, [AgentObjects[0]], llm=azure_chat_model)
