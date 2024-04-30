@@ -1,6 +1,6 @@
 import logging
-from openagi.init_agent import kickOffAgents
-from openagi.agent import Agent
+from openagi.init_agent import kickOffGenAIAgents
+from openagi.agent import AIAgent
 from openagi.tools.integrations import DuckDuckGoSearchTool
 from openagi.llms.azure import AzureChatOpenAIModel
 
@@ -21,28 +21,31 @@ def onAggregationAction(agentName, consumerAgent, aggrSourceAgentList, aggrResul
     return result
 
 if __name__ == "__main__":
-    agent_name = ["RESEARCHER1", "RESEARCHER2", "WRITER", "EMAILER"]
-    agent_list = [
-    Agent(
-        agentName=agent_name[0],
+    agent_list = ["RESEARCHER1", "RESEARCHER2", "WRITER", "EMAILER"]
+    llm = "azure"
+    AgentObjects=[]
+    AgentObjects = [
+    AIAgent(
+        agentName=agent_list[0],
         aggregator=0,
         onAggregationAction=None,
         creator=None,
         role="RESEARCHER",
         feedback=False,
-        goal="search for latest trends in COVID-19 treatment that includes medicines, physical exercises, overall management and prevention aspects",
+        goal="search for latest trends in Carona treatment that includes medicines, physical exercises, overall management and prevention aspects",
         backstory="backstory",
         capability="search_executor",
         agent_type="STATIC",
         multiplicity=0,
         task="search internet for the goal for the trends in 2H 2023 onwards",
-        output_consumer_agent=[agent_name[2]],
+        output_consumer_agent=agent_list[2],
         HGI_Intf=onResultHGI,
+        llm_api=llm,
         llm_resp_timer_value=20,
         tools_list=[DuckDuckGoSearchTool],
     ),
-    Agent(
-        agentName=agent_name[1],
+    AIAgent(
+        agentName=agent_list[1],
         aggregator=0,
         onAggregationAction=None,
         creator=None,
@@ -54,13 +57,14 @@ if __name__ == "__main__":
         agent_type="STATIC",
         multiplicity=0,
         task="search internet for the goal for the trends in 2H 2023 onwards",
-        output_consumer_agent=[agent_name[2]],
+        output_consumer_agent=agent_list[2],
         HGI_Intf=onResultHGI,
+        llm_api=llm,
         llm_resp_timer_value=20,
         tools_list=[DuckDuckGoSearchTool],
     ),
-    Agent(
-        agentName=agent_name[2],
+    AIAgent(
+        agentName=agent_list[2],
         aggregator=2,
         onAggregationAction=onAggregationAction,
         creator=None,
@@ -72,13 +76,14 @@ if __name__ == "__main__":
         agent_type="STATIC",
         multiplicity=0,
         task="summarize points to present to health care professionals and general public separately",
-        output_consumer_agent=[agent_name[3]],
+        output_consumer_agent=agent_list[3],
         HGI_Intf=onResultHGI,
+        llm_api=llm,
         llm_resp_timer_value=130,
         tools_list=[],
     ),
-    Agent(
-        agentName=agent_name[3],
+    AIAgent(
+        agentName=agent_list[3],
         aggregator=0,
         onAggregationAction=None,
         creator=None,
@@ -90,12 +95,13 @@ if __name__ == "__main__":
         agent_type="STATIC",
         multiplicity=0,
         task="composes email based on summary to doctors and general public separately into a file with subject-summary and details",
-        output_consumer_agent=["HGI"],
+        output_consumer_agent="HGI",
         HGI_Intf=onResultHGI,
+        llm_api=llm,
         llm_resp_timer_value=130,
         tools_list=[],
     )
     ]
-    config = AzureChatOpenAIModel.load_from_yaml_config()
+    config = AzureChatOpenAIModel.load_from_yml_config()
     azure_chat_model = AzureChatOpenAIModel(config=config)
-    kickOffAgents(agent_list,[agent_list[0], agent_list[1]], llm=azure_chat_model)
+    kickOffGenAIAgents(AgentObjects,[AgentObjects[0], AgentObjects[1]], llm=azure_chat_model)
