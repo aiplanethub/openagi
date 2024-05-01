@@ -1,5 +1,4 @@
 import logging
-import sys
 import threading
 from openagi.tools.utils import Number_of_HGI, setGHGI
 from openagi.agent import (
