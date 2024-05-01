@@ -62,7 +62,6 @@ def triggerAgent(agent_list, godTimerDuration):
 
     waitonConditionMain(main_condition, godTimerDuration)
     logging.info("final exit")
-    sys.exit()
 
 def searchItemInList(DynamicAgentObjectsList, target):
     for item in DynamicAgentObjectsList:
