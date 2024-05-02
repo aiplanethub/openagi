@@ -7,7 +7,7 @@ from spacytextblob.spacytextblob import SpacyTextBlob
 from openagi.llms.base import LLMBaseModel
 from openagi.queue.message_broker import NameIndexMapper
 from openagi.queue.pq import Message, MessageType, MultiThreadPriorityQueue
-from openagi.memory.memory import Memory
+from openagi.memory import STMemory, LTMemory
 from openagi.tools.integrations.duckducksearch import getDuckduckgoSearchResults
 from openagi.tools.tools_db import (
     TOOLS_DICT_MAPPING,
@@ -220,8 +220,9 @@ class Agent:
                 self.llm, self.consumerAgent, None, messageList
             )
         if self.memory:
-            memory = Memory(self.agentName)
+            memory = STMemory(self.agentName)
             memory._save_agent_exec(self.agentName, self.task, self.tools_list, self.consumerAgent)
+            
         consumer = self.consumerAgent
         resp = f"sending mesage from {self.agentName}"
         if self.tools_list:
@@ -311,6 +312,8 @@ class Agent:
             if sendMessagetoHGI(consumer, resp):
                 logging.debug("before wake for exit..........")
                 wakeupMainForKill(main_condition)
+                LTMemory(self.agentName).memorize(memory)
+                print(LTMemory.display_memory())
 
         if consumer and consumer != "HGI":
             logging.debug(f"{self.agentName}..to.. {consumer} content:: {resp}")

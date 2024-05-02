@@ -24,6 +24,7 @@ if __name__ == "__main__":
             capability="llm_task_executor",
             task="summarize points to present to health care professionals and general public separately",
             output_consumer_agent=["EMAILER"],
+            memory=True,
         ),
         Agent(
             agentName="EMAILER",
