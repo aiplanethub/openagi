@@ -9,9 +9,9 @@ class BasePrompt(BaseModel):
     )
     param_docs: dict = Field(
         default_factory={},
-        description="A dictionary to explain the input parameters to the execute",
+        description="A dictionary to explain the parameters that the promp supports.",
     )
-    prompt: str = Field()
+    prompt: str = Field(...)
 
     def get_prompt(self):
         raise NotImplementedError("Subclasses must implement this method.")
@@ -19,3 +19,6 @@ class BasePrompt(BaseModel):
     @classmethod
     def from_template(cls):
         raise NotImplementedError("Subclasses must implement this method.")
+
+    @classmethod
+    def from_template(cls): ...
