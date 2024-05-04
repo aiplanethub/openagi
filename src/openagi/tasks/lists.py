@@ -16,6 +16,9 @@ class TaskLists:
         for task in tasks:
             self.add_task(task)
 
+    def get_tasks(self):
+        return self.tasks
+
     def get_next_unprocessed_task(self) -> Task:
         """Retrieves the next unprocessed task from the queue."""
         if not self.tasks.empty():

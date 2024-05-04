@@ -16,7 +16,7 @@ class LLMConfigModel(BaseModel):
     pass  # Common fields could be defined here, if any.
 
 
-class LLMBaseModel(ABC):
+class LLMBaseModel(BaseModel):
     """Abstract base class for language learning models.
 
     Attributes:
@@ -24,10 +24,12 @@ class LLMBaseModel(ABC):
         llm: Placeholder for the actual LLM instance, to be defined in subclasses.
     """
 
-    def __init__(self, config: LLMConfigModel):
-        self.config = config
-        self.llm = None
-        self.load()
+    config: Any
+    # def __init__(self, config: LLMConfigModel):
+    #     self.config = config
+    #     self.llm = None
+    #     self.load()
+    llm: Any = None
 
     @abstractmethod
     def load(self):

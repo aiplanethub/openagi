@@ -1,17 +1,11 @@
-from typing import Any
-from openagi.actions.base import BaseAction, ActionConfig
+from typing import Any, Dict
+from openagi.actions.base import BaseAction
 from pydantic import Field
 
 
-class HumanCLIInputActionConfig(ActionConfig):
-    query: str = Field(
-        description="Query to be included while taking input from the Humans via CLI.",
-        strict=True,
-    )
-
-
 class HumanCLIInput(BaseAction):
+    param_docs: Dict = Field(default={"query": "Query to ask the human."})
 
-    def execute(self, config: HumanCLIInputActionConfig):
-        response = input(config.query)
+    def execute(self, query: str):
+        response = input(query)
         return response

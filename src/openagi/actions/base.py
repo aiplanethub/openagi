@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from abc import ABC, abstractmethod
 
 
-class BaseAction(ABC):
+class BaseAction(BaseModel):
     """Base Actions class to be inherited by other actions, providing basic functionality and structure."""
 
     name: str = Field(default="BaseAction", description="Name of the action.")
@@ -12,7 +12,7 @@ class BaseAction(ABC):
         description="Description of the action.",
     )
     param_docs: dict = Field(
-        default_factory={},
+        default_factory=dict,
         description="A dictionary to explain the input parameters to the execute",
     )
 
