@@ -1,3 +1,4 @@
+from typing import Any
 from langchain_core.messages import HumanMessage
 from langchain_openai import AzureChatOpenAI  # Assuming this import is correct
 
@@ -21,8 +22,10 @@ class AzureChatOpenAIModel(LLMBaseModel):
     This class implements the specific logic required to work with Azure's OpenAI service.
     """
 
-    def __init__(self, config: AzureChatConfigModel):
-        super().__init__(config)
+    config: Any
+
+    # def __init__(self, config: AzureChatConfigModel):
+    #     super().__init__(config)
 
     def load(self):
         """Initializes the AzureChatOpenAI instance with configurations."""
@@ -63,7 +66,9 @@ class AzureChatOpenAIModel(LLMBaseModel):
             base_url=read_yaml_config("BASE_URL", raise_exception=True),
             deployment_name=read_yaml_config("DEPLOYMENT_NAME", raise_exception=True),
             model_name=read_yaml_config("MODEL_NAME", raise_exception=True),
-            openai_api_version=read_yaml_config("OPENAI_API_VERSION", raise_exception=True),
+            openai_api_version=read_yaml_config(
+                "OPENAI_API_VERSION", raise_exception=True
+            ),
             api_key=read_yaml_config("AZURE_OPENAI_API_KEY", raise_exception=True),
         )
 

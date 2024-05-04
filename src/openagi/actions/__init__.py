@@ -1,2 +1,2 @@
 from openagi.actions.base import BaseAction
-from openagi.actions.human_input import HumanCLIInputActionConfig, HumanCLIInput
+from openagi.actions.human_input import HumanCLIInput

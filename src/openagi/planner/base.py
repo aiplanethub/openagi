@@ -8,7 +8,7 @@ from openagi.prompts.base import BasePrompt
 
 class BasePlanner(BaseModel):
     human_intervene: bool = Field(
-        default_factory=True,
+        default=True,
         description="If human internvention is required or not.",
     )
     actions: Optional[BaseAction] = Field(

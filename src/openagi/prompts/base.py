@@ -1,3 +1,4 @@
+from typing import Dict
 from pydantic import BaseModel, Field
 
 
@@ -8,17 +9,14 @@ class BasePrompt(BaseModel):
         description="Description of the prompt.",
     )
     param_docs: dict = Field(
-        default_factory={},
+        default={},
         description="A dictionary to explain the parameters that the promp supports.",
     )
-    prompt: str = Field(...)
+    base_prompt: str = Field(...)
 
     def get_prompt(self):
         raise NotImplementedError("Subclasses must implement this method.")
 
     @classmethod
-    def from_template(cls):
-        raise NotImplementedError("Subclasses must implement this method.")
-
-    @classmethod
-    def from_template(cls): ...
+    def from_template(cls, variables: Dict):
+        return cls.base_prompt.format(**variables)
