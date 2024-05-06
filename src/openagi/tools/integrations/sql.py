@@ -7,11 +7,11 @@ from langchain_community.utilities.sql_database import SQLDatabase
 from pydantic import BaseModel, Field
 
 from openagi.tools.base import BaseTool, tool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 def sql_toolkit(searchString, llm):
-    sqlLiteDBName = read_yaml_config("sqlLiteDBName")
+    sqlLiteDBName = read_from_env("sqlLiteDBName")
     db = SQLDatabase.from_uri(sqlLiteDBName)
     agent_executor = create_sql_agent(llm, db=db, agent_type="openai-tools", verbose=True)
     result = agent_executor.invoke(searchString)

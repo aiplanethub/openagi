@@ -5,11 +5,11 @@ from langchain_experimental.agents.agent_toolkits import create_xorbits_agent
 from pydantic import BaseModel, Field
 
 from openagi.tools.base import BaseTool, tool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 def xorbits_toolkit(searchString, llm):
-    xorbotsCSVFileName = read_yaml_config("xorbotsCSVFileName")
+    xorbotsCSVFileName = read_from_env("xorbotsCSVFileName")
     data = pd.read_csv(xorbotsCSVFileName)
     agent = create_xorbits_agent(llm, data, verbose=True, handle_parsing_errors=True)
     result = agent.run(searchString)

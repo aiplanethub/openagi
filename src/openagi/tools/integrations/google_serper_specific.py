@@ -5,7 +5,7 @@ from langchain_community.utilities import GoogleSerperAPIWrapper
 from pydantic import BaseModel, Field
 
 from openagi.tools.base import BaseTool, tool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 class SerperSpecificInputSchema(BaseModel):
@@ -13,7 +13,7 @@ class SerperSpecificInputSchema(BaseModel):
 
 
 def getSerperScrapeForSpecificTypeAndPeriod(searchString, type="news", tbs="qdr:m"):
-    os.environ["SERPAPI_API_KEY"] = read_yaml_config("SERPER_API_KEY", raise_exception=True)
+    os.environ["SERPAPI_API_KEY"] = read_from_env("SERPER_API_KEY", raise_exception=True)
     search = GoogleSerperAPIWrapper(type=type, tbs=tbs)
     logging.debug(f"searchString: {searchString}, type: {type}, tbs: {tbs}")
     output = search.results(searchString)

@@ -6,7 +6,7 @@ from langchain.agents import (
 )
 import threading
 from openagi.tools.integrations.duckducksearch import getDuckduckgoSearchResults
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 g_num_of_HGI = 0
 lock = threading.Lock()
@@ -74,7 +74,7 @@ def isLastHGI():
             return False
 
 def ExaAdvToolSetup():
-    exa = Exa(api_key=read_yaml_config("EXA_API_KEY", raise_exception=True))
+    exa = Exa(api_key=read_from_env("EXA_API_KEY", raise_exception=True))
 
     @tool
     def search(query: str, include_domains=None, start_published_date=None):
@@ -85,7 +85,7 @@ def ExaAdvToolSetup():
         return exa.search_and_contents(
             f"{query}",
             use_autoprompt=True,
-            num_results=read_yaml_config("EXA_NUM_SEARCH_RESULTS", raise_exception=True),
+            num_results=read_from_env("EXA_NUM_SEARCH_RESULTS", raise_exception=True),
             include_domains=include_domains,
             start_published_date=start_published_date,
         )

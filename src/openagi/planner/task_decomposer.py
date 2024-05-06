@@ -1,5 +1,4 @@
 import json
-import re
 from typing import Dict, Optional, Union
 
 from pydantic import Field
@@ -9,7 +8,7 @@ from openagi.actions.human_input import HumanCLIInput
 from openagi.llms.azure import LLMBaseModel
 from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
-from openagi.prompts.custom_prompt import TaskCreator
+from openagi.prompts.task_creator import TaskCreator
 
 
 class TaskPlanner(BasePlanner):
@@ -63,6 +62,7 @@ class TaskPlanner(BasePlanner):
         prompt = prompt.replace("{objective}", query)
         resp = self.llm.run(prompt)
         while self.human_intervene and self._should_clarify(resp):
+            # TODO: Add logic for taking input from the user using actions
             pass
         tasks = self._extract_task_from_response(llm_response=resp)
         return tasks

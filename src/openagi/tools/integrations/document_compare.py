@@ -14,14 +14,14 @@ from langchain_text_splitters import CharacterTextSplitter
 from pydantic import BaseModel, Field
 
 from openagi.tools.base import BaseTool, tool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 def DocuCompare(searchString, llm):
-    os.environ["AZURE_OPENAI_ENDPOINT"] = read_yaml_config("BASE_URL")
-    deployment_name = read_yaml_config("EMBEDDING_DEPLOYMENT")
+    os.environ["AZURE_OPENAI_ENDPOINT"] = read_from_env("BASE_URL")
+    deployment_name = read_from_env("EMBEDDING_DEPLOYMENT")
     tools = []
-    directory = read_yaml_config("pdfFile")  # Specify the directory path here
+    directory = read_from_env("pdfFile")  # Specify the directory path here
     files = []
     for filename in os.listdir(directory):
         if filename.endswith(".pdf"):
@@ -34,9 +34,9 @@ def DocuCompare(searchString, llm):
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         docs = text_splitter.split_documents(pages)
         embeddings = AzureOpenAIEmbeddings(
-            api_key = read_yaml_config("AZURE_OPENAI_API_KEY"),
+            api_key = read_from_env("AZURE_OPENAI_API_KEY"),
             azure_deployment=deployment_name,
-            openai_api_version=read_yaml_config("OPENAI_API_VERSION"),
+            openai_api_version=read_from_env("OPENAI_API_VERSION"),
         )
         retriever = FAISS.from_documents(docs, embeddings).as_retriever()
         tools.append(

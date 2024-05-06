@@ -1,6 +1,6 @@
 from transformers import pipeline
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 class HuggingFaceConfigModel(LLMConfigModel):
     """Configuration model for Hugging Face."""
@@ -46,5 +46,5 @@ class HuggingFaceModel(LLMBaseModel):
             An instance of HuggingFaceConfigModel with loaded configurations.
         """
         return HuggingFaceConfigModel(
-            huggingface_model=read_yaml_config("HUGGINGFACE_MODEL", raise_exception=True),
+            huggingface_model=read_from_env("HUGGINGFACE_MODEL", raise_exception=True),
         )
