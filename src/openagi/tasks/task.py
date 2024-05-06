@@ -10,5 +10,5 @@ class Task:
     result: str = Field(..., description="Result of the task.")
 
     @property
-    def is_completed(self):
+    def is_done(self):
         return bool(self.result)

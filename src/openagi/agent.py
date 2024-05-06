@@ -37,3 +37,7 @@ class Admin(BaseModel):
         logging.debug(f"Created total {task_lists.get_tasks().qsize()} Tasks.")
 
         # Tasks execution
+        cur_task = None
+        while not task_lists.all_tasks_completed:
+            cur_task = task_lists.get_next_unprocessed_task()
+            # Execute tasks using
