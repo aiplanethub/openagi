@@ -8,12 +8,12 @@ from langchain.agents import (
 from pydantic import BaseModel, Field
 
 from openagi.tools.base import BaseTool, tool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 def googleFinanceStockSearch(searchString, llm):
-    os.environ["SERPAPI_API_KEY"] = read_yaml_config("SERPER_API_KEY", raise_exception=True)
-    os.environ["SERP_API_KEY"] = read_yaml_config("SERPER_API_KEY", raise_exception=True)
+    os.environ["SERPAPI_API_KEY"] = read_from_env("SERPER_API_KEY", raise_exception=True)
+    os.environ["SERP_API_KEY"] = read_from_env("SERPER_API_KEY", raise_exception=True)
     tools = load_tools(["google-scholar", "google-finance"], llm=llm)
     agent = initialize_agent(
         tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=False

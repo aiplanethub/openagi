@@ -2,7 +2,7 @@ from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 class OpenAIConfigModel(LLMConfigModel):
@@ -50,5 +50,5 @@ class OpenAIModel(LLMBaseModel):
             An instance of OpenAIConfigModel with loaded configurations.
         """
         return OpenAIConfigModel(
-            openai_api_key=read_yaml_config("OPENAI_API_KEY", raise_exception=True),
+            openai_api_key=read_from_env("OPENAI_API_KEY", raise_exception=True),
         )

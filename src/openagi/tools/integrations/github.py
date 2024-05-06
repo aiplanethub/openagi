@@ -10,13 +10,13 @@ from langchain_community.utilities.github import GitHubAPIWrapper
 from pydantic import BaseModel, Field
 
 from openagi.tools.base import BaseTool, tool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 def github_toolkit(searchString, llm):
-    os.environ["GITHUB_APP_ID"] = read_yaml_config("GITHUB_APP_ID")
-    os.environ["GITHUB_APP_PRIVATE_KEY"] = read_yaml_config("GITHUB_APP_PRIVATE_KEY")
-    os.environ["GITHUB_REPOSITORY"] = read_yaml_config("GITHUB_REPOSITORY")
+    os.environ["GITHUB_APP_ID"] = read_from_env("GITHUB_APP_ID")
+    os.environ["GITHUB_APP_PRIVATE_KEY"] = read_from_env("GITHUB_APP_PRIVATE_KEY")
+    os.environ["GITHUB_REPOSITORY"] = read_from_env("GITHUB_REPOSITORY")
     github = GitHubAPIWrapper()
     toolkit = GitHubToolkit.from_github_api_wrapper(github)
     tools = toolkit.get_tools()

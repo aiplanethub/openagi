@@ -9,11 +9,11 @@ from langchain_community.agent_toolkits import (
 from pydantic import BaseModel, Field
 
 from openagi.tools.base import BaseTool, tool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 
 def gmail_toolkit(searchString, llm):
-    credentials = read_yaml_config("GMAIL_CREDS")
+    credentials = read_from_env("GMAIL_CREDS")
     toolkit = GmailToolkit()
     base_prompt = hub.pull("langchain-ai/openai-functions-template")
     instructions = "Use the Gmail API to search for emails in your inbox and return the results."
