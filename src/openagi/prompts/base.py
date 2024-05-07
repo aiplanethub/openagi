@@ -7,15 +7,18 @@ class BasePrompt(BaseModel):
     description: str = Field(
         default="BasePrompt class to be used by other actions that get created.",
         description="Description of the prompt.",
-    )
-    param_docs: dict = Field(
-        default={},
-        description="A dictionary to explain the parameters that the promp supports.",
-    )
-    base_prompt: str = Field(...)
+    )    
+    base_prompt: str = Field(..., description="Base prompt to be used.")
 
     def get_prompt(self):
         raise NotImplementedError("Subclasses must implement this method.")
+
+    @classmethod
+    def prompt_variables(cls):
+        return {
+            field_name: field.description
+            for field_name, field in cls.model_fields.items()
+        }
 
     @classmethod
     def from_template(cls, variables: Dict):

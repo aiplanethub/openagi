@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 from abc import ABC, abstractmethod
 
@@ -15,6 +15,7 @@ class BaseAction(BaseModel):
         default_factory=dict,
         description="A dictionary to explain the input parameters to the execute",
     )
+    previous_obs: Optional[Any] = None
 
     @abstractmethod
     def execute(self):
@@ -22,8 +23,11 @@ class BaseAction(BaseModel):
         raise NotImplementedError("Subclasses must implement this method.")
 
     @classmethod
-    def docs(cls) -> Dict[str, str]:
-        """Returns a dictionary documenting the parameters required for the execute method,
-        based on the param fields.
-        """
-        return cls.param_docs
+    def cls_doc(cls):
+        {
+            "cls": {
+                "kls": cls.__class__,
+                "module": cls.__module__,
+            },
+            "params": cls.param_docs,
+        }
