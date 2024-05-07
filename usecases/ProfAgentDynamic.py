@@ -74,7 +74,7 @@ if __name__ == "__main__":
     )
 
     agent_list = [research_agent, writer_agent, mailer_agent]
-    config = AzureChatOpenAIModel.load_from_yaml_config()
+    config = AzureChatOpenAIModel.load_from_env_config()
     azure_chat_model = AzureChatOpenAIModel(config=config)
     kickOffAgents(
         agent_list,

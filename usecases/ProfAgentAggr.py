@@ -96,6 +96,6 @@ if __name__ == "__main__":
         tools_list=[],
     )
     ]
-    config = AzureChatOpenAIModel.load_from_yaml_config()
+    config = AzureChatOpenAIModel.load_from_env_config()
     azure_chat_model = AzureChatOpenAIModel(config=config)
     kickOffAgents(agent_list,[agent_list[0], agent_list[1]], llm=azure_chat_model)
