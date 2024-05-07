@@ -56,7 +56,7 @@ class AzureChatOpenAIModel(LLMBaseModel):
         return resp.content
 
     @staticmethod
-    def load_from_yaml_config() -> AzureChatConfigModel:
+    def load_from_env_config() -> AzureChatConfigModel:
         """Loads the AzureChatOpenAI configurations from a YAML file.
 
         Returns:

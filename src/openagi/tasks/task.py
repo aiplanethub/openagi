@@ -12,3 +12,6 @@ class Task:
     @property
     def is_done(self):
         return bool(self.result)
+
+    def set_result(self, result):
+        self.result = result

@@ -9,6 +9,7 @@ from openagi.llms.azure import LLMBaseModel
 from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.task_creator import TaskCreator
+from openagi.utils.extraction import get_last_json
 
 
 class TaskPlanner(BasePlanner):
@@ -27,30 +28,6 @@ class TaskPlanner(BasePlanner):
     )
 
     def _extract_task_from_response(self, llm_response: str) -> Union[str, None]:
-        def get_last_json(string):
-            """
-            Extracts the last JSON element from a string that might contain multiple JSON objects by iterating from the end.
-
-            Args:
-                string: The string containing potential JSON data.
-
-            Returns:
-                The last JSON element as a parsed object, or None if no valid JSON is found.
-            """
-            # Brute force approach: try to parse each substring from the back
-            for i in range(len(string), 0, -1):
-                for j in range(0, i):
-                    substring = string[j:i]
-                    try:
-                        # Try to parse the substring as JSON
-                        potential_json = json.loads(substring)
-                        # If parsing is successful, return the JSON object
-                        return potential_json
-                    except json.JSONDecodeError:
-                        continue  # If not successful, continue trying other substrings
-
-            return None  # Return None if no valid JSON is found after all attempts
-
         return get_last_json(llm_response)
 
     def _should_clarify(self, response: str) -> bool:

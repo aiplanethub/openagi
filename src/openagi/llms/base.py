@@ -50,6 +50,6 @@ class LLMBaseModel(BaseModel):
 
     @staticmethod
     @abstractmethod
-    def load_from_yaml_config():
+    def load_from_env_config():
         """Loads configuration values from a YAML file."""
         pass
