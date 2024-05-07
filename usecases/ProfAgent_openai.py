@@ -38,7 +38,7 @@ if __name__ == "__main__":
             output_consumer_agent=["HGI"],
         ),
     ]
-    config = OpenAIModel.load_from_yaml_config()
+    config = OpenAIModel.load_from_env_config()
     llm = OpenAIModel(config=config)
     for agent in agent_list:
         logging.info(f"Initializing agent: {agent.agentName}")

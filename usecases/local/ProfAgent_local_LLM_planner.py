@@ -5,7 +5,7 @@ from openagi.init_agent import kickOffAgents
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.llms.openai import OpenAIModel
 from openagi.tools.integrations import DuckDuckGoSearchTool
-from openagi.utils.yamlParse import read_yaml_config
+from openagi.utils.yamlParse import read_from_env
 
 class OllamaConfigModel(LLMConfigModel):
     """Configuration model for OLLAMA."""
@@ -40,8 +40,8 @@ class OllamaModel(LLMBaseModel):
         return resp
 
     @staticmethod
-    def load_from_yaml_config():
-        return OllamaConfigModel(model_name=read_yaml_config("OLLAMA_MODEL_NAME") or "llama2")
+    def load_from_env_config():
+        return OllamaConfigModel(model_name=read_from_env("OLLAMA_MODEL_NAME") or "llama2")
 
 
 def onResultHGI(agentName, result, consumerAgent):
@@ -52,7 +52,7 @@ def onResultHGI(agentName, result, consumerAgent):
 
 # Example Usage:
 if __name__ == "__main__":
-    config = OllamaModel.load_from_yaml_config()
+    config = OllamaModel.load_from_env_config()
     llm = OllamaModel(config=config)
     agent_list = [
         Agent(
@@ -86,6 +86,6 @@ if __name__ == "__main__":
             llm=llm,
         ),
     ]
-    config_openai = OpenAIModel.load_from_yaml_config()
+    config_openai = OpenAIModel.load_from_env_config()
     llm_openai = OpenAIModel(config=config_openai)
     kickOffAgents(agent_list, [agent_list[0]], llm=llm_openai)
