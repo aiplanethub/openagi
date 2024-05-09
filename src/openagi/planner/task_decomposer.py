@@ -23,15 +23,14 @@ class TaskPlanner(BasePlanner):
     prompt: BasePrompt = Field(
         default=TaskCreator(), description="Prompt to be used"
     )  # TODO: Add default planner
-    llm: Optional[LLMBaseModel] = Field(
-        default=None, description="LLM Model to be used"
-    )
+    llm: Optional[LLMBaseModel] = Field(default=None, description="LLM Model to be used")
 
     def _extract_task_from_response(self, llm_response: str) -> Union[str, None]:
         return get_last_json(llm_response)
 
-    def _should_clarify(self, response: str) -> bool:
+    def _should_clarify(self, query: str) -> bool:
         # TODO: Setup a way for human intervention
+
         return False
 
     def plan(self, query: str) -> Dict:
@@ -40,6 +39,8 @@ class TaskPlanner(BasePlanner):
         resp = self.llm.run(prompt)
         while self.human_intervene and self._should_clarify(resp):
             # TODO: Add logic for taking input from the user using actions
+            human_intervene = self.actions(query=query)
+            human_intervene.execute()
             pass
         tasks = self._extract_task_from_response(llm_response=resp)
         return tasks

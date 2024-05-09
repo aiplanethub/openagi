@@ -1,13 +1,16 @@
 import logging
 from typing import Any, Dict, List, Optional
+from typing_extensions import Annotated
+from pydantic.functional_validators import AfterValidator
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
 from openagi.llms.azure import LLMBaseModel
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
 from openagi.tasks.lists import TaskLists
 from openagi.prompts.execution import TaskExecutor
+from openagi.tasks.task import Task
 from openagi.utils.extraction import get_classes_from_json, get_last_json
 
 
@@ -21,137 +24,104 @@ class Admin(BaseModel):
     )
     st_memory: Optional[Any] = None
     lt_memory: Optional[Any] = None
-    actions: Optional[BaseAction] = Field(
-        default=None,
+    actions: Optional[List[Any]] = Field(
         description="Actions that the Agent supports",
+        default_factory=list,
     )
     max_steps: int = Field(
         default=20,
         description="Maximum number of steps to achieve the objective.",
     )
 
-    def _run_planner(self, query: str):
+    @field_validator("actions")
+    @classmethod
+    def actions_validator(cls, act_clss):
+        for act_cls in act_clss:
+            if not issubclass(act_cls, BaseAction):
+                raise ValueError(f"{act_cls} is not a subclass of BaseAction")
+        return act_clss
+
+    def run_planner(self, query: str):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
         return self.planner.plan(query=query)
 
+    def generate_tasks_list(self, planned_tasks):
+        task_lists = TaskLists()
+        task_lists.add_tasks(tasks=planned_tasks)
+        logging.debug(f"Created total {task_lists.get_tasks_queue().qsize()} Tasks.")
+        return task_lists
+
     def run(self, query: str):
+        logging.info("Running Admin Agent...")
         # Planning stage to create list of tasks
-        tasks = self._run_planner(
+        planned_tasks = self.run_planner(
             query=query,
         )
+        logging.info("Tasks Planned")
+        logging.debug(planned_tasks)
 
         # Tasks List
-        task_lists = TaskLists()
-        task_lists.add_tasks(tasks=tasks)
-        logging.debug(f"Created total {task_lists.get_tasks().qsize()} Tasks.")
+        task_lists: TaskLists = self.generate_tasks_list(planned_tasks=planned_tasks)
 
         # Tasks execution
         cur_task = None
         steps = 0
+        res = None
+        _tasks_lists = task_lists.get_tasks_lists()
         while not task_lists.all_tasks_completed and steps <= self.max_steps:
+            logging.info(f"Execuing Step {steps}")
             cur_task = task_lists.get_next_unprocessed_task()
+            print(f"{cur_task=}")
             # Execute tasks using
-            res = self.execute(cur_task)
+            res = self.execute(query=query, task=cur_task, all_tasks=_tasks_lists)
             # Add task and res to STMemory
             # self.st_memory.add(curr_task)
             cur_task.set_result(res)
             steps += 1
 
+        # Final result
+        return res
+
+    def run_action(self, action_name: str, **kwargs):
+        # Find the action class by name
+        for action_cls in self.actions:
+            if action_cls.__name__ == action_name:
+                action = action_cls(**kwargs)  # Create an instance with provided kwargs
+                return action.execute()
+        return None
+
     def execute(
         self,
-        query,
-        task,
-        all_tasks,
+        query: str,
+        task: Task,
+        all_tasks: TaskLists,
     ):
         # Get supported actions and convert to array of dict(actions)
         actions_dict: List[BaseAction] = []
         for act in self.actions:
             act: BaseAction
-            actions_dict.append(act.cls_doc)
-
+            actions_dict.append(act.cls_doc())
         te_vars = dict(
-            objective=task,
+            objective=task.name,
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=self.st_memory.get_previous_task(),
+            previous_task=None,  # self.st_memory.get_previous_task()
             supported_actions=actions_dict,
         )
-        te = TaskExecutor.from_template(**te_vars)
+        # TODO: Make TaskExecutor class customizable
+        te = TaskExecutor.from_template(variables=te_vars)
 
-        resp = self.llm.run(input_data=te)
+        resp = self.llm.run(te)
         te_actions = get_last_json(resp)
         actions = get_classes_from_json(te_actions)
 
         res = None
         for act_cls, params in actions:
             params["prev_obs"] = res
-            act = act_cls(**params)
-            res = act()
+            res = self.run_action(action_name=act_cls, **params)
 
         # TODO: Memory
         return res
-
-
-{
-    "name": "Name of the prompt.",
-    "description": "Description of the prompt.",
-    "base_prompt": "Base prompt to be used.",
-}
-
-
-"""
-- Task Creation(includes decomposition)
-[
-    1. {"task_name": "..., "description: "..."},
-    2. {"task_name": "..., "description: "..."},
-    3. {"task_name": "..., "description: "..."},
-    4. {"task_name": "..., "description: "..."},
-    5. {"task_name": "..., "description: "..."},
-]
-- To run each task:
-    Task 1.  task_creation_prompt
-    user_provided_tools(json)
-
-    Task2:
-    {previous_completed tasks}
-
-- 
-"""
-
-[
-    {
-        "task_name": "Define Chess Pieces",
-        "description": "Create classes or functions to define the properties and movements of each chess piece (pawn, rook, knight, bishop, queen, king)",
-    },
-    {
-        "task_name": "Create Chess Board",
-        "description": "Design a 8x8 chess board using python. The board should be able to display the current position of all pieces.",
-    },
-    {
-        "task_name": "Implement Player Turns",
-        "description": "Develop a function to handle player turns. The game should alternate between two players after each move.",
-    },
-    {
-        "task_name": "Check Valid Moves",
-        "description": "Create a function to validate the moves of the chess pieces according to the rules of the game.",
-    },
-    {
-        "task_name": "Checkmate and Stalemate Detection",
-        "description": "Implement a function to detect checkmate or stalemate situations, to end the game when these conditions are met.",
-    },
-    {
-        "task_name": "Design User Interface",
-        "description": "Develop a simple and intuitive user interface for the players to interact with the game.",
-    },
-    {
-        "task_name": "Implement Game Rules",
-        "description": "Incorporate all the chess rules into the game such as castling, pawn promotion and en passant.",
-    },
-    {
-        "task_name": "Test the Game",
-        "description": "Conduct extensive testing of the game to ensure all functions and rules are correctly implemented and the game runs smoothly.",
-    },
-]

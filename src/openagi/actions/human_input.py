@@ -4,8 +4,8 @@ from pydantic import Field
 
 
 class HumanCLIInput(BaseAction):
-    param_docs: Dict = Field(default={"query": "Query to ask the human."})
+    query: str = Field(..., description="Query to ask the user")
 
-    def execute(self, query: str):
-        response = input(query)
+    def execute(self):
+        response = input(self.query)
         return response
