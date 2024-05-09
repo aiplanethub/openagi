@@ -38,11 +38,11 @@ class AzureChatOpenAIModel(LLMBaseModel):
         )
         return self.llm
 
-    def run(self, input_text: str):
+    def run(self, input_data: str):
         """Runs the Azure Chat OpenAI model with the provided input text.
 
         Args:
-            input_text: The input text to process.
+            input_data: The input text to process.
 
         Returns:
             The response from Azure's OpenAI service.
@@ -51,7 +51,7 @@ class AzureChatOpenAIModel(LLMBaseModel):
             self.load()
         if not self.llm:
             raise ValueError("`llm` attribute not set.")
-        message = HumanMessage(content=input_text)
+        message = HumanMessage(content=input_data)
         resp = self.llm([message])
         return resp.content
 
@@ -63,11 +63,9 @@ class AzureChatOpenAIModel(LLMBaseModel):
             An instance of AzureChatConfigModel with loaded configurations.
         """
         return AzureChatConfigModel(
-            base_url=read_from_env("BASE_URL", raise_exception=True),
-            deployment_name=read_from_env("DEPLOYMENT_NAME", raise_exception=True),
-            model_name=read_from_env("MODEL_NAME", raise_exception=True),
-            openai_api_version=read_from_env(
-                "OPENAI_API_VERSION", raise_exception=True
-            ),
+            base_url=read_from_env("AZURE_BASE_URL", raise_exception=True),
+            deployment_name=read_from_env("AZURE_DEPLOYMENT_NAME", raise_exception=True),
+            model_name=read_from_env("AZURE_MODEL_NAME", raise_exception=True),
+            openai_api_version=read_from_env("AZURE_OPENAI_API_VERSION", raise_exception=True),
             api_key=read_from_env("AZURE_OPENAI_API_KEY", raise_exception=True),
         )

@@ -7,7 +7,12 @@ Based on the result, create new tasks to be completed
 by the AI system that do not overlap with incomplete tasks.
 Task must be answered in english.
 Consider the ultimate objective of your team.
-Return the tasks in a json with keys "task_name" and "description", without any other content in the response;
+Return the list of tasks(ordered by tasks) in json of the form:
+[
+    {"task_name": "....", "description": "..."},
+    {"task_name": "....", "description": "..."},
+]
+, without any other content in the response;
 """
 
 

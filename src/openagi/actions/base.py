@@ -15,7 +15,10 @@ class BaseAction(BaseModel):
         default_factory=dict,
         description="A dictionary to explain the input parameters to the execute",
     )
-    previous_obs: Optional[Any] = None
+    previous_obs: Optional[Any] = Field(
+        default=None,
+        description="Observation or Result of the previous action that might needed to run the current action.",
+    )
 
     @abstractmethod
     def execute(self):
@@ -24,10 +27,12 @@ class BaseAction(BaseModel):
 
     @classmethod
     def cls_doc(cls):
-        {
+        return {
             "cls": {
-                "kls": cls.__class__,
+                "kls": cls.__name__,
                 "module": cls.__module__,
             },
-            "params": cls.param_docs,
+            "params": {
+                field_name: field.description for field_name, field in cls.model_fields.items()
+            },
         }

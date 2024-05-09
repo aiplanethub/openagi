@@ -12,7 +12,7 @@ filename = (
 # Setup basic logging configuration
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(pathname)s:%(lineno)d:%(funcName)s:%(message)s",
+    format="%(asctime)s %(pathname)s:%(lineno)d:%(funcName)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     # filename=f'{pth.absolute()}/application_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log',
     # filemode="w",

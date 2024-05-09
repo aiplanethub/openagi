@@ -1,13 +1,14 @@
+from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 
-class Task:
+class Task(BaseModel):
     id: UUID = Field(default=uuid4)
     name: str = Field(..., description="Name of task being.")
     description: str = Field(..., description="Description of the individual task.")
-    result: str = Field(..., description="Result of the task.")
+    result: Optional[str] = Field(..., default_factory=str, description="Result of the task.")
 
     @property
     def is_done(self):
