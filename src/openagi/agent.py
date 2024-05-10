@@ -30,16 +30,17 @@ class Admin(BaseModel):
         description="Maximum number of steps to achieve the objective.",
     )
 
-    def _run_planner(self, query: str):
+    def _run_planner(self, query: str,descripton:str):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
-        return self.planner.plan(query=query)
+        return self.planner.plan(query=query,descripton=descripton)
 
-    def run(self, query: str):
+    def run(self, query: str,description:str):
         # Planning stage to create list of tasks
         tasks = self._run_planner(
             query=query,
+            description=description
         )
 
         # Tasks List
@@ -93,65 +94,3 @@ class Admin(BaseModel):
 
         # TODO: Memory
         return res
-
-
-{
-    "name": "Name of the prompt.",
-    "description": "Description of the prompt.",
-    "base_prompt": "Base prompt to be used.",
-}
-
-
-"""
-- Task Creation(includes decomposition)
-[
-    1. {"task_name": "..., "description: "..."},
-    2. {"task_name": "..., "description: "..."},
-    3. {"task_name": "..., "description: "..."},
-    4. {"task_name": "..., "description: "..."},
-    5. {"task_name": "..., "description: "..."},
-]
-- To run each task:
-    Task 1.  task_creation_prompt
-    user_provided_tools(json)
-
-    Task2:
-    {previous_completed tasks}
-
-- 
-"""
-
-[
-    {
-        "task_name": "Define Chess Pieces",
-        "description": "Create classes or functions to define the properties and movements of each chess piece (pawn, rook, knight, bishop, queen, king)",
-    },
-    {
-        "task_name": "Create Chess Board",
-        "description": "Design a 8x8 chess board using python. The board should be able to display the current position of all pieces.",
-    },
-    {
-        "task_name": "Implement Player Turns",
-        "description": "Develop a function to handle player turns. The game should alternate between two players after each move.",
-    },
-    {
-        "task_name": "Check Valid Moves",
-        "description": "Create a function to validate the moves of the chess pieces according to the rules of the game.",
-    },
-    {
-        "task_name": "Checkmate and Stalemate Detection",
-        "description": "Implement a function to detect checkmate or stalemate situations, to end the game when these conditions are met.",
-    },
-    {
-        "task_name": "Design User Interface",
-        "description": "Develop a simple and intuitive user interface for the players to interact with the game.",
-    },
-    {
-        "task_name": "Implement Game Rules",
-        "description": "Incorporate all the chess rules into the game such as castling, pawn promotion and en passant.",
-    },
-    {
-        "task_name": "Test the Game",
-        "description": "Conduct extensive testing of the game to ensure all functions and rules are correctly implemented and the game runs smoothly.",
-    },
-]
