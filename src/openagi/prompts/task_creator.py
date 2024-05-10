@@ -7,20 +7,20 @@ Based on the result, create new tasks to be completed
 by the AI system that do not overlap with incomplete tasks.
 Task must be answered in english.
 Consider the ultimate objective of your team.
-Return the list of tasks(ordered by tasks) in json of the form:
+Return the list of tasks(ordered by tasks) in json of the format below include the delimeter ```json ```:
+
+OUTPUT_FORMAT:
+```json
 [
     {"task_name": "....", "description": "..."},
     {"task_name": "....", "description": "..."},
 ]
+```
+
 , without any other content in the response;
 """
 
 
 class TaskCreator(BasePrompt):
-    param_docs: dict = {
-        "objective": "The objective to be achieved.",
-        "result": "",
-        "incomplete_tasks": "",
-        "previous_tasks": "...",
-    }
+    # TODO: refer task executor to add params related 
     base_prompt: str = task_creation

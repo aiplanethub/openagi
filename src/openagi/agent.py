@@ -53,7 +53,7 @@ class Admin(BaseModel):
         logging.debug(f"Created total {task_lists.get_tasks_queue().qsize()} Tasks.")
         return task_lists
 
-    def run(self, query: str):
+    def run(self, query: str, description: str):
         logging.info("Running Admin Agent...")
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(
@@ -61,6 +61,7 @@ class Admin(BaseModel):
         )
         logging.info("Tasks Planned")
         logging.debug(planned_tasks)
+        print(planned_tasks)
 
         # Tasks List
         task_lists: TaskLists = self.generate_tasks_list(planned_tasks=planned_tasks)
@@ -80,17 +81,20 @@ class Admin(BaseModel):
             # self.st_memory.add(curr_task)
             cur_task.set_result(res)
             steps += 1
+            # TODO:
+            # If task as not completed and failed:
+            # Fail the whole processs & convey to the users
 
         # Final result
         return res
 
-    def run_action(self, action_name: str, **kwargs):
-        # Find the action class by name
-        for action_cls in self.actions:
-            if action_cls.__name__ == action_name:
-                action = action_cls(**kwargs)  # Create an instance with provided kwargs
-                return action.execute()
-        return None
+    def run_action(self, action_cls: str, **kwargs):
+        try:
+            logging.info(f"Running Action - {action_cls}")
+            action: BaseAction = action_cls(**kwargs)  # Create an instance with provided kwargs
+            return action.execute()
+        except Exception:
+            return None
 
     def execute(
         self,
@@ -113,15 +117,21 @@ class Admin(BaseModel):
         )
         # TODO: Make TaskExecutor class customizable
         te = TaskExecutor.from_template(variables=te_vars)
-
+        logging.info("TastExecutor Prompt initiated...")
+        print(">>>", te)
         resp = self.llm.run(te)
+        print(f"{resp=}")
+        logging.debug(f"{resp=}")
         te_actions = get_last_json(resp)
+        logging.debug(f"{te_actions}")
+        print(f"{te_actions=}")
         actions = get_classes_from_json(te_actions)
-
+        print(f"{actions=}")
+        # Pass previous action result of the current task to the next action as previous_obs
         res = None
         for act_cls, params in actions:
             params["prev_obs"] = res
-            res = self.run_action(action_name=act_cls, **params)
+            res = self.run_action(action_cls=act_cls, **params)
 
         # TODO: Memory
         return res
