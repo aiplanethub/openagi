@@ -19,6 +19,9 @@ class BasePrompt(BaseModel):
 
     @classmethod
     def from_template(cls, variables: Dict):
-        print(">>>>", variables)
         x = cls(**variables)
-        return x.base_prompt.format(variables)
+        for k, v in variables.items():
+            placeholder = "{" + f"{k}" + "}"
+            x.base_prompt = x.base_prompt.replace(placeholder, f"{v}")
+        # return x.base_prompt.format(**variables)
+        return x.base_prompt

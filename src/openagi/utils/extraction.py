@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import json
+import re
 from typing import Callable, Dict, List, Optional, Tuple, Type
 
 
@@ -22,29 +23,29 @@ def extract_cls_method_params(clss: Type, method: Callable):
     return extract_func_params(getattr(clss, method))
 
 
-def get_last_json(string):
+def get_last_json(text):
     """
-    Extracts the last JSON element from a string that might contain multiple JSON objects by iterating from the end.
+    Extracts the last block of text between ```json and ``` markers from a given string.
 
     Args:
-        string: The string containing potential JSON data.
+        text (str): The string from which to extract the JSON block.
 
     Returns:
-        The last JSON element as a parsed object, or None if no valid JSON is found.
+        str or None: The last JSON block including the delimiters if found, otherwise None.
     """
-    # Brute force approach: try to parse each substring from the back
-    for i in range(len(string), 0, -1):
-        for j in range(0, i):
-            substring = string[j:i]
-            try:
-                # Try to parse the substring as JSON
-                potential_json = json.loads(substring)
-                # If parsing is successful, return the JSON object
-                return potential_json
-            except json.JSONDecodeError:
-                continue  # If not successful, continue trying other substrings
+    # Pattern to find the last occurrence of content between ```json and ```
+    pattern = r"```json(.*?)```"
 
-    return None  # Return None if no valid JSON is found after all attempts
+    # Find all matches in the text
+    matches = re.findall(pattern, text, flags=re.DOTALL)
+
+    # Return the last match if any
+    try:
+        if matches:
+            return json.loads(matches[-1])
+    except json.JSONDecodeError:
+        return None
+    return None
 
 
 def get_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
@@ -68,3 +69,8 @@ def get_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
         instances.append((cls, params))
 
     return instances
+
+
+llm_response = '[\n    {"task_name": "Design the Chessboard", "description": "Create a 8x8 grid to represent the chessboard."},\n    {"task_name": "Create Chess Pieces", "description": "Define classes for each type of chess pieces including their movements."},\n    {"task_name": "Implement Chess Rules", "description": "Implement the rules for each chess piece and their valid movements."},\n    {"task_name": "Create Player Classes", "description": "Create classes for players to control the pieces and make moves."},\n    {"task_name": "Design Game Interface", "description": "Design a simple text-based user interface for players to interact with the game."},\n    {"task_name": "Implement Game Loop", "description": "Create the main game loop which will handle the game process, turns and check for game over conditions."},\n    {"task_name": "Check Mate and Stale Mate Implementation", "description": "Implement the conditions to check for Checkmate and Stalemate."},\n    {"task_name": "Pawn Promotion Rule", "description": "Implement the rule for pawn promotion when it reaches the other end of the board."},\n    {"task_name": "En Passant Rule Implementation", "description": "Implement the \'En Passant\' rule that is a special pawn capture move in chess."},\n    {"task_name": "Castling Rule Implementation", "description": "Implement the \'Castling\' rule that involves a player\'s king and one of their rooks."},\n    {"task_name": "Implement Game Saving and Loading", "description": "Add functionality to save and load game progress."},\n    {"task_name": "Test the Game", "description": "Play test the game to ensure all rules are implemented correctly and the game is working as expected."}\n]'
+
+# print(get_last_json(llm_response))

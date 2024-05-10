@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional, Any
 from pydantic import Field
 from openagi.actions.base import BaseAction
@@ -23,6 +24,7 @@ class CreateFileAction(BaseAction):
 
     def execute(self):
         output_file = Path(self.filename)
+        print(f"Created file - {output_file.absolute()}")
         output_file.parent.mkdir(
             parents=self.parent_mkdir,
             exist_ok=self.exist_ok,
@@ -55,5 +57,6 @@ class WriteFileAction(BaseAction):
         # )
         # return output_file.write_text(data=self.file_content)
         output_file = Path(self.filename)
+        print(f"Writing file - {output_file.absolute()}")
         with open(output_file.absolute(), self.file_mode) as f:
             f.write(self.file_content)
