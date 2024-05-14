@@ -28,7 +28,7 @@ class Admin(BaseModel):
         description="LLM Model to be used.",
     )
     st_memory: Optional[Any] = Field(
-        description="Short Term Memory to be used.",            #TODO: Add base model of memory (which will have add, save, search, method)
+        description="Short Term Memory to be used.",            #TODO: Add base model of memory (which will have add, save, search method)
     )
     lt_memory: Optional[Any] = Field(
         description="Long Term Memory to be used.",

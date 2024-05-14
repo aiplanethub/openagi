@@ -37,6 +37,7 @@ numpy = "^1.26.4"
 transformers = "^4.40.0"
 pypdf = "^4.2.0"
 faiss-cpu = "^1.8.0"
+pytest = "^8.2.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.11"
