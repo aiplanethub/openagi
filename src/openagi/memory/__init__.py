@@ -1,2 +1,2 @@
-from .STmemory import STMemory
-from .LTmemory import LTMemory
+from .STMemory import STMemory
+from .LTMemory import LTMemory

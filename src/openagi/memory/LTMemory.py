@@ -1,24 +1,37 @@
+from .base import BaseMemory
 import uuid
-from typing import Any, Dict
-import chromadb
+from typing import Any, Dict, List
 
-class LTMemory:
-    def __init__(self, agent_name: str) -> None:
+class LTMemory(BaseMemory):
+    def __init__(self, agent_name: str):
+        super().__init__('LT')
         self.agent_name = agent_name
         self.session_id = self._generate_session_id()
-        self.long_term_memory = chromadb.Client()
 
     def _generate_session_id(self) -> str:
+        """Generate a unique session ID incorporating the agent's name."""
         session_id = str(uuid.uuid4())
         return f"{self.agent_name}_{session_id}"
 
-    def memorize(self, information: Dict[str, Any]) -> None:
-        self.long_term_memory.add(information)
+    def memorize(self, task: str, information: Dict[str, Any]) -> None:
+        """Store information long-term in ChromaDB."""
+        document = f"Task: {task}, Details: {information}"
+        metadata = {
+            'agent': self.agent_name,
+            'task': task,
+            'information': information,
+            'session_id': self.session_id
+        }
+        document_id = self.session_id
+        self.add_document(document, metadata, document_id)
 
-    def get(self, task: str) -> Dict[str, Any]:
-        relevant_results: Dict[str, Any] = {}
-        relevant_results = self.long_term_memory.query(task, n_results=2)
-        return relevant_results
+    def get(self, query: str) -> List[Dict[str, Any]]:
+        """Retrieve long-term memory based on a query."""
+        return self.get_documents(query, n_results=2)
 
     def display_memory(self) -> Dict[str, Any]:
-        return self.long_term_memory
+        """Retrieve and display the current memory state from the database."""
+        result = self.get_documents(self.session_id, n_results=2)
+        if result:
+            return result
+        return {}
