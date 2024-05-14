@@ -3,13 +3,10 @@ import chromadb
 client = chromadb.Client()
 collection = client.get_or_create_collection("agent_memory")
 
-document_ids = []
-
 def save_document(documents, metadatas, ids):
     """Save documents to the ChromaDB collection with metadata."""
     try:
         collection.add(documents=documents, metadatas=metadatas, ids=ids)
-        document_ids.extend(ids)  # Keep track of the document IDs
         print("Documents added to the collection.")
     except Exception as e:
         print(f"Error saving documents: {e}")
@@ -39,12 +36,3 @@ def query_documents(query_texts, n_results):
     except Exception as e:
         print(f"Error querying documents: {e}")
         return []
-
-def clear_collection():
-    """Clear all documents from the collection for testing purposes."""
-    try:
-        collection.delete(ids=document_ids)
-        document_ids.clear()
-        print("Collection cleared.")
-    except Exception as e:
-        print(f"Error clearing collection: {e}")
