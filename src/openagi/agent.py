@@ -27,10 +27,10 @@ class Admin(BaseModel):
     llm: Optional[LLMBaseModel] = Field(
         description="LLM Model to be used.",
     )
-    st_memory: Optional[Any] = Field(
+    st_memory: Optional[STMemory] = Field(
         description="Short Term Memory to be used.",            #TODO: Add base model of memory (which will have add, save, search method)
     )
-    lt_memory: Optional[Any] = Field(
+    lt_memory: Optional[LTMemory] = Field(
         description="Long Term Memory to be used.",
     )
     actions: Optional[BaseAction] = Field(
@@ -86,7 +86,11 @@ class Admin(BaseModel):
             print(f"{cur_task=}")
             # Execute tasks using
             res = self.execute(cur_task)
-            self.st_memory.add(res, task=cur_task)
+            if self.st_memory:
+                self.st_memory.save_agent_exec(cur_task.name, [act.cls_doc for act in self.actions], 'admin')
+                self.st_memory.save_tool_exec(cur_task.name, res)
+            if self.lt_memory:
+                self.lt_memory.memorize(cur_task.name, {'result': res})
             cur_task.set_result(res)
             steps += 1
             # TODO:
@@ -125,7 +129,6 @@ class Admin(BaseModel):
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=None,  # self.st_memory.get_previous_task()
             supported_actions=actions_dict,
         )
         # TODO: Make TaskExecutor class customizable
@@ -154,7 +157,6 @@ class Admin(BaseModel):
         res = None
         for act_cls, params in actions:
             params["prev_obs"] = res
-            res = self.run_action(action_cls=act_cls, **params)
-
-        self.lt_memory.add(st_memory=self.st_memory, task_id = self.task_id)
+            act = act_cls(**params)
+            res = act()
         return res
