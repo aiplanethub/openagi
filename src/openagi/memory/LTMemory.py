@@ -5,19 +5,18 @@ from typing import Any, Dict, List
 class LTMemory(BaseMemory):
     def __init__(self, agent_name: str):
         super().__init__('LT')
-        self.agent_name = agent_name
+        # self.agent_name = agent_name
         self.session_id = self._generate_session_id()
 
     def _generate_session_id(self) -> str:
         """Generate a unique session ID incorporating the agent's name."""
         session_id = str(uuid.uuid4())
-        return f"{self.agent_name}_{session_id}"
+        return f"{session_id}"                      #TODO: after implementation use worker_id
 
-    def memorize(self, task: str, information: Dict[str, Any]) -> None:
+    def memorize(self, task: str, information: str) -> None:
         """Store information long-term in ChromaDB."""
-        document = f"Task: {task}, Details: {information}"
+        document = f"Task: {task}, Result: {information}"
         metadata = {
-            'agent': self.agent_name,
             'task': task,
             'information': information,
             'session_id': self.session_id
