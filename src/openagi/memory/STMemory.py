@@ -3,9 +3,9 @@ import uuid
 from typing import Any, Dict, List
 
 class STMemory(BaseMemory):
-    def __init__(self, agent: str):
+    def __init__(self):
         super().__init__('ST')
-        self.agent_name = agent
+        # self.agent_name = agent
         self.session_id = self._generate_session_id()
 
     def _generate_session_id(self) -> str:
@@ -13,14 +13,13 @@ class STMemory(BaseMemory):
         session_id = str(uuid.uuid4())
         return f"{self.agent_name}_{session_id}"
 
-    def save_agent_exec(self, task: str, tools: List[str], consumer: str) -> None:
+    def save_admin_exec(self, query: str, planned_tasks: List[str], final_res: str) -> None:
         """Save execution details into ChromaDB."""
-        document = f"Task: {task}, Tools: {', '.join(tools)}, Consumer: {consumer}"
+        document = f"Task: {query}, Subtasks: {', '.join(planned_tasks)}, Response: {final_res}"
         metadata = {
-            'agent': self.agent_name,
-            'task': task,
-            'tools': tools,
-            'consumer': consumer,
+            'task': query,
+            'subtasks': planned_tasks,
+            'res': final_res,
             'session_id': self.session_id
         }
         document_id = self.session_id

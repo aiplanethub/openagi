@@ -22,7 +22,7 @@ def test_stmemory_add_and_search():
     consumer = "Test Consumer"
 
     # Save to STMemory
-    st_memory.save_agent_exec(task, tools, consumer)
+    st_memory.save_admin_exec(task, tools, consumer)
 
     # Search for the task
     query = "Test Task"
@@ -41,7 +41,7 @@ def test_stmemory_update_tool_exec():
     consumer = "Consumer1"
 
     # Save to STMemory
-    st_memory.save_agent_exec(task, tools, consumer)
+    st_memory.save_admin_exec(task, tools, consumer)
 
     # Update tool execution
     tool_name = "Tool1"
@@ -65,7 +65,7 @@ def test_stmemory_display_memory():
     consumer = "Consumer1"
 
     # Save to STMemory
-    st_memory.save_agent_exec(task, tools, consumer)
+    st_memory.save_admin_exec(task, tools, consumer)
 
     # Display memory
     memory = st_memory.display_memory()

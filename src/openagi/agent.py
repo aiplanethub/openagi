@@ -28,7 +28,7 @@ class Admin(BaseModel):
         description="LLM Model to be used.",
     )
     st_memory: Optional[STMemory] = Field(
-        description="Short Term Memory to be used.",            #TODO: Add base model of memory (which will have add, save, search method)
+        description="Short Term Memory to be used.",
     )
     lt_memory: Optional[LTMemory] = Field(
         description="Long Term Memory to be used.",
@@ -86,11 +86,6 @@ class Admin(BaseModel):
             print(f"{cur_task=}")
             # Execute tasks using
             res = self.execute(cur_task)
-            if self.st_memory:
-                self.st_memory.save_agent_exec(cur_task.name, [act.cls_doc for act in self.actions], 'admin')
-                self.st_memory.save_tool_exec(cur_task.name, res)
-            if self.lt_memory:
-                self.lt_memory.memorize(cur_task.name, {'result': res})
             cur_task.set_result(res)
             steps += 1
             # TODO:
@@ -98,6 +93,18 @@ class Admin(BaseModel):
             # Fail the whole processs & convey to the users
 
         # Final result
+        logging.info(f"Final Result: {res}")
+        if self.st_memory:
+            self.st_memory.save_admin_exec(
+                query=query,
+                planned_tasks=list(task_lists),
+                final_res=res,
+            )
+        if self.lt_memory:
+            self.lt_memory.memorize(
+                task=query,
+                information=f"Admin agent executed the query: {query}, with the following tasks: {task_lists}, and the final result: {res}"
+            )
         return res
 
     def run_action(self, action_cls: str, **kwargs):
@@ -129,6 +136,7 @@ class Admin(BaseModel):
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
+            previous_task=self.lt_memory.search(task.name),
             supported_actions=actions_dict,
         )
         # TODO: Make TaskExecutor class customizable
