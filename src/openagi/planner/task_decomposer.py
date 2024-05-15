@@ -49,7 +49,7 @@ class TaskPlanner(BasePlanner):
             human_intervene = self.actions(query=query)
             resp , feedback = human_intervene.execute()
 
-            if resp == 'n':
+            if resp in ['n' , 'No' , 'no' , 'NO']:
                 prompt = feedback + ' Based on the feedback given can you update the output provided for the prompt ' + prompt
                 resp = self.llm.run(prompt)
                 resp = resp + "<clarify_from_human>"
