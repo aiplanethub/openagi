@@ -40,9 +40,21 @@ class TaskPlanner(BasePlanner):
         prompt: str = self.prompt.base_prompt
         prompt = prompt.replace("{objective}", query)
         resp = self.llm.run(prompt)
-        while self.human_intervene and self._should_clarify(resp):
+
+        if self.human_intervene:
+            resp = resp + "<clarify_from_human>"
+
+        while self._should_clarify(resp):
             # TODO: Add logic for taking input from the user using actions
             human_intervene = self.actions(query=query)
-            resp = human_intervene.execute()
+            resp , feedback = human_intervene.execute()
+
+            if resp == 'n':
+                prompt = feedback + ' Based on the feedback given can you update the output provided for the prompt ' + prompt
+                resp = self.llm.run(prompt)
+                resp = resp + "<clarify_from_human>"
+            else:
+                break
+
         tasks = self._extract_task_from_response(llm_response=resp)
         return tasks
