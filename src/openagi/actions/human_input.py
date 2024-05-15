@@ -15,7 +15,7 @@ class HumanCLIInput(BaseAction):
             print("Please provide a valide answer something like : ('y' , 'n' , 'yes' , 'no' , 'NO' ,'YES' , 'No' , 'Yes')")
             response , feedback = self.execute()
 
-        if response=='n':
+        if response in ['n' , 'No' , 'no' , 'NO']:
             feedback = input('Do provide your feedback on what you think is needed to be modified: ')
 
         return response , feedback
