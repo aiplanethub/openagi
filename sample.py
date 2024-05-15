@@ -13,6 +13,8 @@ admin = Admin(
     llm=llm,
     actions=[CreateFileAction, WriteFileAction],
     planner=TaskPlanner(human_intervene=False),
+    st_memory=True,
+    lt_memory=True
 )
 print("Admin init")
 print(admin.run(query="Create a chess game in python.", description="....."))
