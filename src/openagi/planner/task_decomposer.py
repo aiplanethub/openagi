@@ -10,7 +10,7 @@ from openagi.llms.azure import LLMBaseModel
 from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.task_creator import TaskCreator
-from openagi.utils.extraction import get_last_json
+from openagi.utils.extraction import get_last_json , extract_ques_and_task
 
 
 class TaskPlanner(BasePlanner):
@@ -32,7 +32,7 @@ class TaskPlanner(BasePlanner):
 
     def _should_clarify(self, query: str) -> bool:
         # TODO: Setup a way for human intervention
-        if "<clarify_from_human>" in query:
+        if len(query)>0:
             return True
         return False
 
@@ -41,20 +41,17 @@ class TaskPlanner(BasePlanner):
         prompt = prompt.replace("{objective}", query)
         resp = self.llm.run(prompt)
 
-        if self.human_intervene:
-            resp = resp + "<clarify_from_human>"
+        prompt , ques_to_human = extract_ques_and_task(resp)
 
-        while self._should_clarify(resp):
+
+        while self.human_intervene and self._should_clarify(ques_to_human):
             # TODO: Add logic for taking input from the user using actions
-            human_intervene = self.actions(query=query)
-            resp , feedback = human_intervene.execute()
-
-            if resp in ['n' , 'No' , 'no' , 'NO']:
-                prompt = feedback + ' Based on the feedback given can you update the output provided for the prompt ' + prompt
-                resp = self.llm.run(prompt)
-                resp = resp + "<clarify_from_human>"
-            else:
-                break
+            human_intervene = self.actions(query=query , ques_prompt=ques_to_human)
+            human_resp = human_intervene.execute()
+            prompt = prompt + r'\n'+ ques_to_human + r'\n' + human_resp
+            resp = self.llm.run(prompt)
+            prompt , ques_to_human = extract_ques_and_task(resp)
+ 
 
         tasks = self._extract_task_from_response(llm_response=resp)
         return tasks
