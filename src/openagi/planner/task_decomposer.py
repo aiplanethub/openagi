@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import Dict, Optional, Union
 
@@ -10,7 +9,7 @@ from openagi.llms.azure import LLMBaseModel
 from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.task_creator import TaskCreator
-from openagi.utils.extraction import get_last_json , extract_ques_and_task
+from openagi.utils.extraction import get_last_json, extract_ques_and_task
 
 
 class TaskPlanner(BasePlanner):
@@ -22,7 +21,7 @@ class TaskPlanner(BasePlanner):
         description="If `human_intervene` is enabled, which action to be performed.",
     )
     prompt: BasePrompt = Field(
-        default=TaskCreator(), description="Prompt to be used"
+        default=TaskCreator, description="Prompt to be used"
     )  # TODO: Add default planner
     llm: Optional[LLMBaseModel] = Field(default=None, description="LLM Model to be used")
 
@@ -32,26 +31,29 @@ class TaskPlanner(BasePlanner):
 
     def _should_clarify(self, query: str) -> bool:
         # TODO: Setup a way for human intervention
-        if len(query)>0:
+        if len(query) > 0:
             return True
         return False
 
-    def plan(self, query: str) -> Dict:
-        prompt: str = self.prompt.base_prompt
-        prompt = prompt.replace("{objective}", query)
+    def plan(self, query: str, description: str) -> Dict:
+        planner_vars = dict(
+            objective=query,
+            task_descriptions=description,
+        )
+        prompt: str = self.prompt.from_template(
+            variables=planner_vars,
+        )
         resp = self.llm.run(prompt)
 
-        prompt , ques_to_human = extract_ques_and_task(resp)
-
+        prompt, ques_to_human = extract_ques_and_task(resp)
 
         while self.human_intervene and self._should_clarify(ques_to_human):
             # TODO: Add logic for taking input from the user using actions
             human_intervene = self.actions(ques_prompt=ques_to_human)
             human_resp = human_intervene.execute()
-            prompt = prompt + r'\n'+ ques_to_human + r'\n' + human_resp
+            prompt = prompt + r"\n" + ques_to_human + r"\n" + human_resp
             resp = self.llm.run(prompt)
-            prompt , ques_to_human = extract_ques_and_task(resp)
- 
+            prompt, ques_to_human = extract_ques_and_task(resp)
 
         tasks = self._extract_task_from_response(llm_response=resp)
         return tasks

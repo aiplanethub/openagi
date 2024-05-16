@@ -73,23 +73,31 @@ def get_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
 
 
 def extract_ques_and_task(ques_prompt):
-    '''
+    """
     Extracts question to be asked to the human and remove delimiters from orignal prompt
-    '''
-    start = CLARIFIYING_VARS['start']
-    end = CLARIFIYING_VARS['end']
-    # pattern to find question to be asked to human 
-    regex = fr"{start}(.*?){end}"
+    """
+    print(ques_prompt, "<<<<")
+    start = CLARIFIYING_VARS["start"]
+    end = CLARIFIYING_VARS["end"]
+    # pattern to find question to be asked to human
+    regex = rf"{start}(.*?){end}"
 
     # Find all matches in the text
-    matches = re.findall(regex, ques_prompt) 
+    matches = re.findall(regex, ques_prompt)
 
-    #remove <clarify from human>...</clarify from human> part from the prompt
-    task = re.sub(regex , '' , ques_prompt)
-  
-    return task , matches[-1]
+    # remove <clarify from human>...</clarify from human> part from the prompt
+    task = re.sub(regex, "", ques_prompt)
+    if not matches:
+        return None, None
+
+    return task, matches[-1]
 
 
-llm_response = '[\n    {"task_name": "Design the Chessboard", "description": "Create a 8x8 grid to represent the chessboard."},\n    {"task_name": "Create Chess Pieces", "description": "Define classes for each type of chess pieces including their movements."},\n    {"task_name": "Implement Chess Rules", "description": "Implement the rules for each chess piece and their valid movements."},\n    {"task_name": "Create Player Classes", "description": "Create classes for players to control the pieces and make moves."},\n    {"task_name": "Design Game Interface", "description": "Design a simple text-based user interface for players to interact with the game."},\n    {"task_name": "Implement Game Loop", "description": "Create the main game loop which will handle the game process, turns and check for game over conditions."},\n    {"task_name": "Check Mate and Stale Mate Implementation", "description": "Implement the conditions to check for Checkmate and Stalemate."},\n    {"task_name": "Pawn Promotion Rule", "description": "Implement the rule for pawn promotion when it reaches the other end of the board."},\n    {"task_name": "En Passant Rule Implementation", "description": "Implement the \'En Passant\' rule that is a special pawn capture move in chess."},\n    {"task_name": "Castling Rule Implementation", "description": "Implement the \'Castling\' rule that involves a player\'s king and one of their rooks."},\n    {"task_name": "Implement Game Saving and Loading", "description": "Add functionality to save and load game progress."},\n    {"task_name": "Test the Game", "description": "Play test the game to ensure all rules are implemented correctly and the game is working as expected."}\n]'
-
-# print(get_last_json(llm_response))
+def find_last_r_failure_content(text):
+    pattern = r"<r_failure>(.*?)</r_failure>"
+    matches = list(re.finditer(pattern, text, re.DOTALL))
+    if matches:
+        last_match = matches[-1]
+        return last_match.group(1)
+    else:
+        return None
