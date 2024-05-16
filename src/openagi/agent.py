@@ -1,17 +1,20 @@
 import logging
-from typing import Any, Dict, List, Optional
-from typing_extensions import Annotated
-from pydantic.functional_validators import AfterValidator
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
+from openagi.exception import ExecutionFailureException
 from openagi.llms.azure import LLMBaseModel
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
-from openagi.tasks.lists import TaskLists
 from openagi.prompts.execution import TaskExecutor
+from openagi.tasks.lists import TaskLists
 from openagi.tasks.task import Task
-from openagi.utils.extraction import get_classes_from_json, get_last_json
+from openagi.utils.extraction import (
+    find_last_r_failure_content,
+    get_classes_from_json,
+    get_last_json,
+)
 
 
 class Admin(BaseModel):
@@ -41,11 +44,12 @@ class Admin(BaseModel):
                 raise ValueError(f"{act_cls} is not a subclass of BaseAction")
         return act_clss
 
-    def run_planner(self, query: str ,descripton:str):
+    def run_planner(self, query: str, descripton: str):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
-        return self.planner.plan(query=query ,descripton=descripton)
+        logging.info("Thinking...")
+        return self.planner.plan(query=query, description=descripton)
 
     def generate_tasks_list(self, planned_tasks):
         task_lists = TaskLists()
@@ -56,11 +60,7 @@ class Admin(BaseModel):
     def run(self, query: str, description: str):
         logging.info("Running Admin Agent...")
         # Planning stage to create list of tasks
-        planned_tasks = self.run_planner(
-            query=query,
-            description=description
-
-        )
+        planned_tasks = self.run_planner(query=query, descripton=description)
         logging.info("Tasks Planned")
         logging.debug(planned_tasks)
         print(planned_tasks)
@@ -98,6 +98,12 @@ class Admin(BaseModel):
         except Exception:
             return None
 
+    def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
+        content: str = find_last_r_failure_content(text=llm_resp)
+        if content:
+            return False, content
+        return True, content
+
     def execute(
         self,
         query: str,
@@ -107,7 +113,6 @@ class Admin(BaseModel):
         # Get supported actions and convert to array of dict(actions)
         actions_dict: List[BaseAction] = []
         for act in self.actions:
-            act: BaseAction
             actions_dict.append(act.cls_doc())
         te_vars = dict(
             objective=task.name,
@@ -124,6 +129,11 @@ class Admin(BaseModel):
         resp = self.llm.run(te)
         print(f"{resp=}")
         logging.debug(f"{resp=}")
+        execute, content = self._can_task_execute(llm_resp=resp)
+        print(f"{execute=}\t{content=}")
+        if not execute and content:
+            raise ExecutionFailureException(f"Execution Failed - {content}")
+
         te_actions = get_last_json(resp)
         logging.debug(f"{te_actions}")
         print(f"{te_actions=}")

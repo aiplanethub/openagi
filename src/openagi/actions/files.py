@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Any
+from typing import Dict, Optional
 from pydantic import Field
 from openagi.actions.base import BaseAction
 
@@ -49,6 +49,7 @@ class WriteFileAction(BaseAction):
     )
 
     def execute(self):
+        logging.debug(f"Running Action {self.__class__.__name__}")
         # output_file = Path(self.filename)
         # output_file.parent.mkdir(
         #     parents=self.parent_mkdir,
