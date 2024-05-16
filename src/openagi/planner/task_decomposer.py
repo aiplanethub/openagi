@@ -46,7 +46,7 @@ class TaskPlanner(BasePlanner):
 
         while self.human_intervene and self._should_clarify(ques_to_human):
             # TODO: Add logic for taking input from the user using actions
-            human_intervene = self.actions(query=query , ques_prompt=ques_to_human)
+            human_intervene = self.actions(ques_prompt=ques_to_human)
             human_resp = human_intervene.execute()
             prompt = prompt + r'\n'+ ques_to_human + r'\n' + human_resp
             resp = self.llm.run(prompt)
