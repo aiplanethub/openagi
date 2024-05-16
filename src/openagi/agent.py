@@ -41,11 +41,11 @@ class Admin(BaseModel):
                 raise ValueError(f"{act_cls} is not a subclass of BaseAction")
         return act_clss
 
-    def run_planner(self, query: str):
+    def run_planner(self, query: str ,descripton:str):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
-        return self.planner.plan(query=query)
+        return self.planner.plan(query=query ,descripton=descripton)
 
     def generate_tasks_list(self, planned_tasks):
         task_lists = TaskLists()
@@ -58,6 +58,8 @@ class Admin(BaseModel):
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(
             query=query,
+            description=description
+
         )
         logging.info("Tasks Planned")
         logging.debug(planned_tasks)

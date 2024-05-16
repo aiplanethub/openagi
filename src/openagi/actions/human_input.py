@@ -4,8 +4,7 @@ from pydantic import Field
 
 
 class HumanCLIInput(BaseAction):
-    query: str = Field(..., description="Query to ask the user")
-    ques_prompt : str = Field(... , default="Do you think this task is being executed as expected [y/n] or [yes/no]: ")
+    ques_prompt : str = Field(... , default="Do you think this task is being executed as expected [y/n] or [yes/no]: " , description='question to be asked to human')
 
     def execute(self):
         response = input(self.ques_prompt)

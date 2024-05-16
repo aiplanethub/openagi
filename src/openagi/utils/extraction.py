@@ -3,6 +3,7 @@ import inspect
 import json
 import re
 from typing import Callable, Dict, List, Optional, Tuple, Type
+from openagi.prompts.constants import CLARIFIYING_VARS
 
 
 def extract_func_params(func: Callable):
@@ -75,8 +76,10 @@ def extract_ques_and_task(ques_prompt):
     '''
     Extracts question to be asked to the human and remove delimiters from orignal prompt
     '''
+    start = {CLARIFIYING_VARS['start']}
+    end = {CLARIFIYING_VARS['end']}
     # pattern to find question to be asked to human 
-    regex = "\\<clarify_from_human>(.*?)\\</clarify_from_human>"
+    regex = fr"{start}(.*?){end}"
 
     # Find all matches in the text
     matches = re.findall(regex, ques_prompt) 
