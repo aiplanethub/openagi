@@ -11,25 +11,23 @@ class GithubTool(BaseAction):
     """Create file Action"""
 
     query: str = Field(..., description="action to be performed on github")
-    access_token: str = Field(default=os.environ['GITHUB_ACCESS_TOKEN'], description="GitHub Personal Access Token.")
-    repository: str = Field(default=os.environ['GITHUB_REPOSITORY'], description="Name of the repository.")
-    github_app_id: Optional[str] = Field(default=os.environ['GITHUB_APP_ID'], description="Github App Id.")
-    github_app_private_key: Optional[str] = Field(default=os.environ['GITHUB_APP_PRIVATE_KEY'], description="Github App Private Key Path.")
+    repository: Optional[str] = Field(..., description="Name of the repository.")
+    access_token: Optional[str] = Field(default=None, description="GitHub Personal Access Token.")
+    github_app_id: Optional[str] = Field(default=None, description="Github App Id.")
+    github_app_private_key: Optional[str] = Field(default=None, description="Github App Private Key Path.")
 
     def execute(self):
         try:
-            access_token = self.access_token
+            access_token = os.environ['GITHUB_ACCESS_TOKEN']
             if not access_token:
                 return {"error": "GitHub access token is missing or invalid in .env file"}
 
-            repo_name = self.repository
+            repo_name = self.repository or os.environ['GITHUB_REPOSITORY']
             if not repo_name:
                 return {"error": "Repository name is not provided in .env file"}
 
-            if self.query == 'get_all_code_files_and_contents':
-                return self.get_all_code_files_and_contents(repo_name, access_token)
-            else:
-                return {"error": "Unsupported query"}
+            return self.get_all_code_files_and_contents(repo_name, access_token)
+
         except Exception as e:
             return {"error": str(e)}
 
