@@ -7,4 +7,4 @@ class GoogleSerperSearchTool(BaseTool):
     def _run(self, search_str: str = None):
         from openagi.tools.tools_db import getSerperScrape
 
-        getSerperScrape(searchString=search_str)
+        return getSerperScrape(searchString=search_str)

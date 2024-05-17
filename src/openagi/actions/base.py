@@ -11,16 +11,11 @@ class BaseAction(BaseModel):
         default="Base Action class to be used by other actions that get created.",
         description="Description of the action.",
     )
-    param_docs: dict = Field(
-        default_factory=dict,
-        description="A dictionary to explain the input parameters to the execute",
-    )
-    previous_task: Optional[Any] = Field(
+    previous_action: Optional[Any] = Field(
         default=None,
         description="Observation or Result of the previous action that might needed to run the current action.",
     )
 
-    @abstractmethod
     def execute(self):
         """Executes the action"""
         raise NotImplementedError("Subclasses must implement this method.")
