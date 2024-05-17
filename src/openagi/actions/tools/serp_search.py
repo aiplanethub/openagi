@@ -1,26 +1,31 @@
 from openagi.actions.base import BaseAction
 from pydantic import Field
-import http.client
+from serpapi import GoogleSearch
 import json
 import os
 
-class SerpSearch(BaseAction):
-    """ Google Serp Search Tool """
+class GoogleSerpAPISearch(BaseAction):
+    """ Google Serp API Search Tool """
 
     query: str = Field(...,description="User query to fetch web search results from Google")
+    hl: str = Field("en", description="Google UI Language")
+    gl: str = Field("us", description="Google Country")
+    num: int = Field(default=5, description="Total results to be executed from the search")
 
     def execute(self):
-       serp_api_key = os.environ['SERP_API_KEY']
-
-       conn = http.client.HTTPSConnection("google.serper.dev")
-       payload = json.dumps({
-          "q": self.query
-          })
-       headers = {
-          'X-API-KEY': serp_api_key,
-          'Content-Type': 'application/json'
-        }
-       conn.request("POST", "/search", payload, headers)
-       res = conn.getresponse()
-       data = res.read().decode("utf-8")
-       return json.loads(data)
+       serp_api_key = os.environ['GOOGLE_SERP_API_KEY']
+       
+       search = GoogleSearch({
+           "q": self.query,
+           "hl": self.hl,
+           "gl": self.gl,
+           "num": self.num,
+           "api_key":serp_api_key
+        })
+       
+       result = search.get_dict()
+       meta_data = ""
+       for info in result.get('organic_results'):
+           meta_data += f"CONTEXT: {info['title']} \ {info['snippet']}"
+           meta_data += f"Reference URL: {info['link']}"
+       return meta_data

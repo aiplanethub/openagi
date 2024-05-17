@@ -1,2 +1,2 @@
 from .ddg_search import DuckDuckGoSearch
-from .serp_search import SerpSearch
+from .serper_search import SerperSearch
