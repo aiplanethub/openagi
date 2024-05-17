@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BaseStorage(BaseModel):
     """Base Storage class to be inherited by other storages, providing basic functionality and structure."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str = Field(title="BaseStorage", description="Name of the Storage.")
 

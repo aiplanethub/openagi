@@ -27,10 +27,10 @@ class Admin(BaseModel):
         description="LLM Model to be used.",
     )
     memory: Optional[Memory] = Field(
-        default=Memory(),
+        default=None,
         description="Memory to be used.",
         exclude=True,
-    )  # memory=Memory(recall=True, remember=True) recall helps recover previous actions, remember helps framework understand to memorize the act_obv
+    )
 
     actions: Optional[List[Any]] = Field(
         description="Actions that the Agent supports",
@@ -40,6 +40,12 @@ class Admin(BaseModel):
         default=20,
         description="Maximum number of steps to achieve the objective.",
     )
+
+    def model_post_init(self, __context: Any) -> None:
+        x = super().model_post_init(__context)
+        if not self.memory:
+            self.memory = Memory()
+        return x
 
     @field_validator("actions")
     @classmethod
@@ -73,8 +79,11 @@ class Admin(BaseModel):
         # Tasks List
         task_lists: TaskLists = self.generate_tasks_list(planned_tasks=planned_tasks)
 
+        self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
+
         # Tasks execution
         cur_task = None
+        prev_task = None
         steps = 0
         res = None
         _tasks_lists = task_lists.get_tasks_lists()
@@ -83,10 +92,13 @@ class Admin(BaseModel):
             cur_task = task_lists.get_next_unprocessed_task()
             print(f"{cur_task=}")
             # Execute tasks using
-            res = self.execute(query=query, task=cur_task, all_tasks=_tasks_lists)
+            res = self.execute(
+                query=query, task=cur_task, all_tasks=_tasks_lists, prev_task=prev_task
+            )
             # Add task and res to STMemory
-            self.st_memory.add(cur_task)
             cur_task.set_result(res)
+            self.memory.save_task(cur_task)
+            prev_task = cur_task
             steps += 1
             # TODO:
             # If task as not completed and failed:
@@ -114,23 +126,28 @@ class Admin(BaseModel):
         query: str,
         task: Task,
         all_tasks: TaskLists,
+        prev_task: Task,
     ):
+        logging.info(f"{'*'*10} Starting execution of {task.name} [{task.id}] {'*'*10}")
         # Get supported actions and convert to array of dict(actions)
         actions_dict: List[BaseAction] = []
         for act in self.actions:
             actions_dict.append(act.cls_doc())
+
         te_vars = dict(
             objective=task.name,
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=self.st_memory.get_previous_task(),
+            previous_task=f"Task: {prev_task.name}. Description: {task.description}. Result: {task.result}"
+            if prev_task
+            else None,
             supported_actions=actions_dict,
         )
         # TODO: Make TaskExecutor class customizable
         te = TaskExecutor.from_template(variables=te_vars)
         logging.info("TastExecutor Prompt initiated...")
-        print(">>>", te)
+        print(">>>", f"{te=}")
         resp = self.llm.run(te)
         print(f"{resp=}")
         logging.debug(f"{resp=}")
@@ -151,9 +168,11 @@ class Admin(BaseModel):
         print(f"{actions=}")
         # Pass previous action result of the current task to the next action as previous_obs
         res = None
+        actions = []
         for act_cls, params in actions:
             params["prev_obs"] = res
             res = self.run_action(action_cls=act_cls, **params)
+            actions.append({"action_cls": act_cls, "params": params})
 
         # TODO: Memory
-        return res
+        return res, actions

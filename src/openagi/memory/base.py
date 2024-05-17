@@ -1,48 +1,55 @@
-import logging
-from typing import Any, Dict, List
-from uuid import UUID, uuid4
+from typing import Any, Dict
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
 from openagi.storage.base import BaseStorage
 from openagi.storage.chroma import ChromaStorage
+from openagi.tasks.lists import TaskLists
+from openagi.tasks.task import Task
+
+# TODO: Fix error handling
 
 
 class BaseMemory(BaseModel):
-    sessiond_id: UUID = Field(default=uuid4())
+    # model_config = ConfigDict(arbitrary_types_allowed=True)
+    sessiond_id: str = Field(default=uuid4().hex)
     storage: BaseStorage = Field(
-        default=ChromaStorage.from_kwargs(),
+        default=ChromaStorage,
         description="Storage to be used for the Memory.",
-        required=True,
         exclude=True,
     )
 
-    def save(self, query: str, planned_tasks: List[str], final_res: str) -> None:
-        """Save execution details into Memory."""
-        document = f"Task: {query}, Subtasks: {', '.join(planned_tasks)}, Response: {final_res}"
-        metadata = {
-            "task": query,
-            "subtasks": planned_tasks,
-            "res": final_res,
-            "session_id": self.session_id,
-        }
-        document_id = self.session_id
-        self.add_document(document, metadata, document_id)
+    def model_post_init(self, __context: Any) -> None:
+        x = super().model_post_init(__context)
+        self.storage = ChromaStorage.from_kwargs()
+        return x
 
-    def search(self, query: str) -> Dict[str, Any]:
+    def search(self, **kwargs) -> Dict[str, Any]:
         """Search for similar tasks based on a query."""
-        return self.get_documents(query, n_results=10)
-
-    def memorize(self, task: str, information: str) -> None:
-        """Store information long-term in Memory."""
-        document = f"Task: {task}, Result: {information}"
-        metadata = {"task": task, "information": information, "session_id": self.session_id}
-        document_id = self.session_id
-        self.add_document(document, metadata, document_id)
+        return self.storage.query_documents(kwargs)
 
     def display_memory(self) -> Dict[str, Any]:
         """Retrieve and display the current memory state from the database."""
-        result = self.get_documents(self.session_id, n_results=2)
+        result = self.storage.query_documents(self.session_id, n_results=2)
         if result:
             return result
         return {}
+
+    def save_task(self, task: Task) -> None:
+        """Save execution details into Memory."""
+        document = f"Task: {task.name}, Description: {task.description}, Response: {task.result}"
+        metadata = {
+            "task_id": task.id,
+            "session_id": self.sessiond_id,
+        }
+
+        return self.storage.save_document(
+            id=task.id,
+            document=document,
+            metadata=metadata,
+        )
+
+    def save_planned_tasks(self, tasks: TaskLists):
+        for task in tasks:
+            self.save_task(task=task)

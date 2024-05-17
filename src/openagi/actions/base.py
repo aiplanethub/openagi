@@ -15,7 +15,7 @@ class BaseAction(BaseModel):
         default_factory=dict,
         description="A dictionary to explain the input parameters to the execute",
     )
-    previous_obs: Optional[Any] = Field(
+    previous_task: Optional[Any] = Field(
         default=None,
         description="Observation or Result of the previous action that might needed to run the current action.",
     )

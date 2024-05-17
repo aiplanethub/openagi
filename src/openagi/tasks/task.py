@@ -1,11 +1,11 @@
 from typing import Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 
 class Task(BaseModel):
-    id: UUID = Field(default=uuid4())
+    id: str = Field(default=uuid4().hex)
     name: str = Field(..., description="Name of task being.")
     description: str = Field(..., description="Description of the individual task.")
     result: Optional[str] = Field(..., default_factory=str, description="Result of the task.")

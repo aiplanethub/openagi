@@ -1,84 +1,78 @@
-from copy import deepcopy
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any
 from uuid import uuid4
 
 import chromadb
-import chromadb.api
+from chromadb import HttpClient, PersistentClient
 from pydantic import Field
 
+from openagi.exception import OpenAGIException
 from openagi.storage.base import BaseStorage
 
 
 class ChromaStorage(BaseStorage):
     name: str = Field(default="ChromaDB Storage")
-    client: Any = Field(default=None, exclude=True)  # Exclude non-serializable fields
-    collection: chromadb.Collection = Field(default_factory=chromadb.Collection, exclude=True)
-
-    # def __deepcopy__(self, memo):
-    #     # Custom deepcopy method to handle non-serializable fields
-    #     cls = self.__class__
-    #     result = cls.__new__(cls)
-    #     memo[id(self)] = result
-    #     for k, v in self.__dict__.items():
-    #         if k not in ["client", "collection"]:  # Avoid copying non-serializable fields
-    #             setattr(result, k, deepcopy(v, memo))
-    #     return result
+    client: chromadb.ClientAPI
+    collection: chromadb.Collection
 
     @classmethod
     def get_default_persistent_path(cls):
-        pth = Path(tempfile.gettempdir()) / "openagi"
-        return str(pth.absolute())
+        path = Path(tempfile.gettempdir()) / "openagi"
+        return str(path.absolute())
 
     @classmethod
     def from_kwargs(cls, **kwargs):
-        client = None
         if kwargs.get("host", None) and kwargs.get("port", None):
-            client = chromadb.HttpClient(
-                host=kwargs.get("host", None),
-                port=kwargs.get("port", None),
-            )
+            _client = HttpClient(host=kwargs["host"], port=kwargs["port"])
         else:
-            client = chromadb.PersistentClient(
-                kwargs.get("persist_path", None) or cls.get_default_persistent_path()
+            _client = PersistentClient(
+                path=kwargs.get("persist_path", cls.get_default_persistent_path())
             )
-        print(client, "<<<<")
-        collection = client.get_or_create_collection(
+
+        _collection = _client.get_or_create_collection(
             kwargs.get("collection_name", f"openagi-chroma-{uuid4()}")
         )
-        return cls(client=client, collection=collection)
+        return cls(client=_client, collection=_collection)
 
-    def save_document(self, documents, metadatas, ids):
-        """Save documents to the ChromaDB collection with metadata."""
+    def save_document(self, id, document, metadata):
+        """Create a new document in the ChromaDB collection."""
         try:
-            self.collection.add(documents=documents, metadatas=metadatas, ids=ids)
-            logging.info("Documents added to the collection.")
-        except Exception as e:
-            logging.error(f"Error saving documents: {e}")
+            if not isinstance(document, list):
+                document = [document]
+            if not isinstance(metadata, list):
+                metadata = [metadata]
 
-    def update_document(self, ids, documents, metadatas):
-        """Update documents in the ChromaDB collection."""
+            self.collection.add(ids=id, documents=document, metadatas=metadata)
+        except Exception as e:
+            logging.error(f"Error creating document: {e}")
+            raise OpenAGIException("Unable to save document") from e
+
+    def update_document(self, doc_id, document, metadata):
+        """Update an existing document in the ChromaDB collection."""
         try:
-            self.collection.update(ids=ids, documents=documents, metadatas=metadatas)
-            logging.info("Documents updated in the collection.")
+            if not isinstance(document, list):
+                document = [document]
+            if not isinstance(metadata, list):
+                metadata = [metadata]
+            self._collection.update(ids=[doc_id], documents=document, metadatas=metadata)
+            logging.info("Document updated successfully.")
         except Exception as e:
-            logging.error(f"Error updating documents: {e}")
+            logging.error(f"Error updating document: {e}")
 
-    def delete_document(self, ids):
-        """Delete documents from the ChromaDB collection."""
+    def delete_document(self, doc_id):
+        """Delete a document from the ChromaDB collection."""
         try:
-            self.collection.delete(ids=ids)
-            logging.INFO("Documents deleted from the collection.")
+            self._collection.delete(ids=[doc_id])
+            logging.debug("Document deleted successfully.")
         except Exception as e:
-            logging.error(f"Error deleting documents: {e}")
+            logging.error(f"Error deleting document: {e}")
 
-    def query_documents(self, query_texts, n_results):
+    def query_documents(self, **kwargs):
         """Query the ChromaDB collection for relevant documents based on the query."""
         try:
-            results = self.collection.query(query_texts=query_texts, n_results=n_results)
-            logging.info(f"Query results: {results}")
+            results = self.collection.get(**kwargs)
+            logging.debug(f"Queried results: {results}")
             return results
         except Exception as e:
             logging.error(f"Error querying documents: {e}")
