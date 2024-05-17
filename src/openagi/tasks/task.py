@@ -5,7 +5,7 @@ from pydantic import Field, BaseModel
 
 
 class Task(BaseModel):
-    id: UUID = Field(default=uuid4)
+    id: UUID = Field(default=uuid4())
     name: str = Field(..., description="Name of task being.")
     description: str = Field(..., description="Description of the individual task.")
     result: Optional[str] = Field(..., default_factory=str, description="Result of the task.")

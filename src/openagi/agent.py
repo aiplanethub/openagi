@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Union
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
-from openagi.exception import ExecutionFailureException
+from openagi.exception import ExecutionFailureException, OpenAGIException
 from openagi.llms.azure import LLMBaseModel
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
 from openagi.prompts.execution import TaskExecutor
@@ -132,11 +132,16 @@ class Admin(BaseModel):
         execute, content = self._can_task_execute(llm_resp=resp)
         print(f"{execute=}\t{content=}")
         if not execute and content:
-            raise ExecutionFailureException(f"Execution Failed - {content}")
-
+            raise ExecutionFailureException(
+                f"Execution Failed - {content}; for the task {task.name} [{str(task.id)}]."
+            )
         te_actions = get_last_json(resp)
         logging.debug(f"{te_actions}")
         print(f"{te_actions=}")
+        if not te_actions:
+            raise OpenAGIException(
+                f"No actions to execute for the task {task.name} [{str(task.id)}]."
+            )
         actions = get_classes_from_json(te_actions)
         print(f"{actions=}")
         # Pass previous action result of the current task to the next action as previous_obs
