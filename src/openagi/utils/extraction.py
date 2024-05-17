@@ -76,7 +76,6 @@ def extract_ques_and_task(ques_prompt):
     """
     Extracts question to be asked to the human and remove delimiters from orignal prompt
     """
-    print(ques_prompt, "<<<<")
     start = CLARIFIYING_VARS["start"]
     end = CLARIFIYING_VARS["end"]
     # pattern to find question to be asked to human

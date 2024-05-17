@@ -19,7 +19,7 @@ class TestMemory(unittest.TestCase):
         query = "Python programming"
         planned_tasks = ["Search for information", "Verify the answer"]
         final_res = "Python is a popular programming language."
-        self.memory.save(query, planned_tasks, final_res)
+        self.memory.save_task(query, planned_tasks, final_res)
         # Add assertions if needed to check the results of the save function
 
     def test_search(self):
