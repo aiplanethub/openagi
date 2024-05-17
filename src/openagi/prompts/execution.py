@@ -16,7 +16,7 @@ You are given current task details from the user. Current task Name: {current_ta
 Previous_Task: {previous_task}
 SUPPORTED_ACTIONS: {supported_actions} 
 
-Your major role now is to understand and Return a json with the actions to be executed along the values for the each parameter. In the array of json you return, the value from one action will be passed to another to acheive the current task.
+Your major role now is to understand and Return a json with the actions to be executed along the values for the each parameter. In the array of json you return, the value from one action will be passed to another to acheive the current task. Make sure to use only the Supported Actions.
 
 Task_Objective:
 {objective}
@@ -36,7 +36,7 @@ OUTPUT FORMAT:
 
 In case it fails:
 $start$
-Couldn't execute the {current_task_name} task
+Couldn't execute the {current_task_name} task. Reason: 
 $end$
 If in case the task fails input the failure between the delimiters starting with $start$ and ending with $end$ similar to above example along with the reason, otherwise ignore 
 
