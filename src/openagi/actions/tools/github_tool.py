@@ -73,16 +73,3 @@ class GithubTool(BaseAction):
             return {"error": f"GitHub API error: {e.data['message']}" if e.data else str(e)}
         except Exception as e:
             return {"error": str(e)}
-
-
-# if __name__ == "__main__":
-#     tool = GithubTool(
-#         query='get_all_code_files_and_contents',
-#         github_repository="tknishh/sonus-av"
-#     )
-    
-#     result = tool.execute()
-#     if "error" in result:
-#         print(f"Error: {result['error']}")
-#     else:
-#         print(result)
