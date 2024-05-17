@@ -16,6 +16,16 @@ Task_Objectives:
 Task_Descriptions:
 {task_descriptions}
 
+OUTPUT FORMAT:
+```json
+[
+    {
+        "task_name": "...",
+        "description": "...",
+    }
+]
+```
+
 While creating task if you require any human input you must add the delimiters starting with $start$ and end with $end$ to get human input, if not ignore 
 
 Return the tasks in a json with keys "task_name" and "description", without any other content in the response. Be precise and the JSON format should be suitable for utilization with JSON.parse() enclosed in "``json ```" delimeters;
