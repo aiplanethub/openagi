@@ -6,9 +6,8 @@ from pydantic import BaseModel, Field, field_validator
 from openagi.actions.base import BaseAction
 from openagi.exception import ExecutionFailureException, OpenAGIException
 from openagi.llms.azure import LLMBaseModel
+from openagi.memory.memory import Memory
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
-from openagi.tasks.lists import TaskLists
-from openagi.memory import Memory
 from openagi.prompts.execution import TaskExecutor
 from openagi.tasks.lists import TaskLists
 from openagi.tasks.task import Task
@@ -27,12 +26,13 @@ class Admin(BaseModel):
     llm: Optional[LLMBaseModel] = Field(
         description="LLM Model to be used.",
     )
-    memory: Optional[Memory] = Field(        # memory=Memory(recall=True, remember=True) recall helps recover previous actions, remember helps framework understand to memorize the act_obv
+    memory: Optional[Memory] = Field(
         default=Memory(),
         description="Memory to be used.",
-    )
-    actions: Optional[BaseAction] = Field(
-        default=None,
+        exclude=True,
+    )  # memory=Memory(recall=True, remember=True) recall helps recover previous actions, remember helps framework understand to memorize the act_obv
+
+    actions: Optional[List[Any]] = Field(
         description="Actions that the Agent supports",
         default_factory=list,
     )
@@ -83,7 +83,9 @@ class Admin(BaseModel):
             cur_task = task_lists.get_next_unprocessed_task()
             print(f"{cur_task=}")
             # Execute tasks using
-            res = self.execute(cur_task)
+            res = self.execute(query=query, task=cur_task, all_tasks=_tasks_lists)
+            # Add task and res to STMemory
+            self.st_memory.add(cur_task)
             cur_task.set_result(res)
             steps += 1
             # TODO:
@@ -91,16 +93,6 @@ class Admin(BaseModel):
             # Fail the whole processs & convey to the users
 
         # Final result
-        logging.info(f"Final Result: {res}")
-        self.memory.save(
-            query=query,
-            planned_tasks=list(task_lists),
-            final_res=res,
-        )
-        self.memory.memorize(
-            task=query,
-            information=f"Admin agent executed the query: {query}, with the following tasks: {task_lists}, and the final result: {res}"
-        )
         return res
 
     def run_action(self, action_cls: str, **kwargs):
@@ -132,7 +124,7 @@ class Admin(BaseModel):
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=self.memory.search(query=query),
+            previous_task=self.st_memory.get_previous_task(),
             supported_actions=actions_dict,
         )
         # TODO: Make TaskExecutor class customizable
@@ -161,6 +153,7 @@ class Admin(BaseModel):
         res = None
         for act_cls, params in actions:
             params["prev_obs"] = res
-            act = act_cls(**params)
-            res = act()
+            res = self.run_action(action_cls=act_cls, **params)
+
+        # TODO: Memory
         return res
