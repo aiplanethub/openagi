@@ -90,30 +90,27 @@ class Admin(BaseModel):
         while not task_lists.all_tasks_completed and steps <= self.max_steps:
             logging.info(f"Execuing Step {steps}")
             cur_task = task_lists.get_next_unprocessed_task()
-            print(f"{cur_task=}")
             # Execute tasks using
-            res = self.execute(
+            res, actions = self.execute(
                 query=query, task=cur_task, all_tasks=_tasks_lists, prev_task=prev_task
             )
-            # Add task and res to STMemory
             cur_task.set_result(res)
+            cur_task.actions = actions
             self.memory.save_task(cur_task)
             prev_task = cur_task
             steps += 1
-            # TODO:
             # If task as not completed and failed:
             # Fail the whole processs & convey to the users
 
         # Final result
+        print(f"\n ******** Final Response\n{res}")
         return res
 
-    def run_action(self, action_cls: str, **kwargs):
-        try:
-            logging.info(f"Running Action - {action_cls}")
-            action: BaseAction = action_cls(**kwargs)  # Create an instance with provided kwargs
-            return action.execute()
-        except Exception:
-            return None
+    def _run_action(self, action_cls: str, **kwargs):
+        logging.info(f"Running Action - {action_cls}")
+        action: BaseAction = action_cls(**kwargs)  # Create an instance with provided kwargs
+        res = action.execute()
+        return res
 
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
         content: str = find_last_r_failure_content(text=llm_resp)
@@ -139,7 +136,7 @@ class Admin(BaseModel):
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=f"Task: {prev_task.name}. Description: {task.description}. Result: {task.result}"
+            previous_task=f"Previous_Task: {prev_task.name}. Previous_Description: {task.description}. Previous_Actions: {task.actions}. Previous_Result: {task.result}"
             if prev_task
             else None,
             supported_actions=actions_dict,
@@ -147,32 +144,28 @@ class Admin(BaseModel):
         # TODO: Make TaskExecutor class customizable
         te = TaskExecutor.from_template(variables=te_vars)
         logging.info("TastExecutor Prompt initiated...")
-        print(">>>", f"{te=}")
+        logging.debug(f"{te=}")
+        print(f"{te=}")
         resp = self.llm.run(te)
-        print(f"{resp=}")
         logging.debug(f"{resp=}")
         execute, content = self._can_task_execute(llm_resp=resp)
-        print(f"{execute=}\t{content=}")
         if not execute and content:
             raise ExecutionFailureException(
                 f"Execution Failed - {content}; for the task {task.name} [{str(task.id)}]."
             )
         te_actions = get_last_json(resp)
         logging.debug(f"{te_actions}")
-        print(f"{te_actions=}")
         if not te_actions:
             raise OpenAGIException(
-                f"No actions to execute for the task {task.name} [{str(task.id)}]."
+                f"No actions to execute for the task `{task.name} [{str(task.id)}]`."
             )
         actions = get_classes_from_json(te_actions)
-        print(f"{actions=}")
         # Pass previous action result of the current task to the next action as previous_obs
         res = None
-        actions = []
         for act_cls, params in actions:
             params["prev_obs"] = res
-            res = self.run_action(action_cls=act_cls, **params)
-            actions.append({"action_cls": act_cls, "params": params})
+            res = self._run_action(action_cls=act_cls, **params)
 
         # TODO: Memory
+        print(f"\n\n{res=}\n\n")
         return res, actions

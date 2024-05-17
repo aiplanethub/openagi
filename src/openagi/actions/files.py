@@ -35,7 +35,8 @@ class CreateFileAction(BaseAction):
         if self.write_text_kargs:
             write_kwargs = {**write_kwargs}
 
-        return output_file.write_text(data=self.file_content, **write_kwargs)
+        output_file.write_text(data=self.file_content, **write_kwargs)
+        return self.file_content
 
 
 class WriteFileAction(BaseAction):
@@ -58,6 +59,8 @@ class WriteFileAction(BaseAction):
         # )
         # return output_file.write_text(data=self.file_content)
         output_file = Path(self.filename)
+        print(f"{self.file_content}\n\n\n")
         print(f"Writing file - {output_file.absolute()}")
         with open(output_file.absolute(), self.file_mode) as f:
             f.write(self.file_content)
+        return self.file_content
