@@ -89,7 +89,10 @@ def extract_ques_and_task(ques_prompt):
     if not matches:
         return None, None
 
-    return task, matches[-1]
+    question = matches[-1]
+    if question and question.strip():
+        f"OpenAGI: {question}\nYou: "
+    return task, question
 
 
 def find_last_r_failure_content(text):

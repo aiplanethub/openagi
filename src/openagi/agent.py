@@ -60,7 +60,10 @@ class Admin(BaseModel):
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
         logging.info("Thinking...")
-        return self.planner.plan(query=query, description=descripton)
+        actions_dict: List[BaseAction] = []
+        for act in self.actions:
+            actions_dict.append(act.cls_doc())
+        return self.planner.plan(query=query, description=descripton, supported_actions=actions_dict)
 
     def generate_tasks_list(self, planned_tasks):
         task_lists = TaskLists()
@@ -136,7 +139,7 @@ class Admin(BaseModel):
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=f"Previous_Task: {prev_task.name}. Previous_Description: {task.description}. Previous_Actions: {task.actions}. Previous_Result: {task.result}"
+            previous_task=f"Previous_Task: {prev_task.name}. Previous_Result: {task.result}"
             if prev_task
             else None,
             supported_actions=actions_dict,
