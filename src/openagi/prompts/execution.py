@@ -7,21 +7,30 @@ start = FAILURE_VARS["start"]
 end = FAILURE_VARS["end"]
 
 task_execution = """
-You are an expert detailed task executioner. Your job is to clearly understand the Task_Objective to provide better results to the user. For your convenient you have the list of the tasks that needs to be executed:
+You are an expert in detailed task execution creator. Your primary role is to clearly understand the Task_Objective to provide optimal results using the supported actions. Below is a list of tasks that need to be executed:
 
+All Tasks:
 {all_tasks}
 
-You are given current task details from the user. Current task Name: {current_task_name} and Current task description: {current_description}. Ever since you were born, you have never hallucinated. To execute the current task, you must refer to the Previous_Task execution and the CONTEXT provided. 
+You are provided with the current task details from the user.
 
-Previous_Task: {previous_task}
-SUPPORTED_ACTIONS: {supported_actions} 
+Current Task:
+Name: {current_task_name}
+Description: {current_description}
+You have never hallucinated since your inception. To execute the current task, refer to the details of the Previous_Task and the All Tasks provided.
 
-Your major role now is to understand and Return a json with the actions to be executed along the values for the each parameter. In the array of json you return, the value from one action will be passed to another to acheive the current task. Make sure to use only the Supported Actions.
+Previous Task:
+{previous_task}
 
-Task_Objective:
+Supported Actions:
+{supported_actions}
+
+Your task is to understand and return a JSON array with the actions to be executed along with the values for each parameter. Use only the Supported Actions. When using multiple actions for a single, task the result from the execution of the previous action will be passed to the next action without any modifcation to the parameter `previous_action`.
+
+Task Objective:
 {objective}
 
-OUTPUT FORMAT:
+Output Format:
 ```json
 [
     {
@@ -29,18 +38,52 @@ OUTPUT FORMAT:
         "params": {
             "description": ".....",
             "name": "...",
-            "param_docs": "....",
+            "param_docs": "...."
+        }
     }
 ]
 ```
-
-In case it fails:
+If the task fails, return the failure reason within the delimiters $start$ and $end$ as shown below:
 $start$
-Couldn't execute the {current_task_name} task. Reason: 
+Couldn't execute the {current_task_name} task. Reason: <add the reason here.>
 $end$
-If in case the task fails input the failure between the delimiters starting with $start$ and ending with $end$ similar to above example along with the reason, otherwise ignore 
 
-Return the actions in a JSON format as per the output format mentioned above including the delimeters "```json" "```" to run the respective actions to acheive the task, without any other content in the response.
+The action class is designed & executed this way:
+```python
+class BaseAction(BaseModel):
+    "Base Actions class to be inherited by other actions, providing basic functionality and structure."
+
+    name: str = Field(default="BaseAction", description="Name of the action.")
+    description: str = Field(
+        default="Base Action class to be used by other actions that get created.",
+        description="Description of the action.",
+    )
+    previous_action: Optional[Any] = Field(
+        default=None,
+        description="Observation or Result of the previous action that might needed to run the current action.",
+    )
+
+    def execute(self):
+        "Executes the action"
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    @classmethod
+    def cls_doc(cls):
+        return {
+            "cls": {
+                "kls": cls.__name__,
+                "module": cls.__module__,
+            },
+            "params": {
+                field_name: field.description for field_name, field in cls.model_fields.items()
+            },
+        }
+
+act = BaseAction(**params)
+res = act.execute()
+```
+
+Return the actions in JSON format as per the output format mentioned above, including the delimiters "json" "", without any other content in the response.
 """
 
 
