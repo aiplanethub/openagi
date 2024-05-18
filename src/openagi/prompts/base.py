@@ -20,8 +20,11 @@ class BasePrompt(BaseModel):
     @classmethod
     def from_template(cls, variables: Dict):
         x = cls(**variables)
+        print(f"{'*'*10}{'*'*10}")
         for k, v in variables.items():
+            print(f"{k=} --- {v}")
             placeholder = "{" + f"{k}" + "}"
             x.base_prompt = x.base_prompt.replace(placeholder, f"{v}")
+        print(f"{'*'*10}{'*'*10}")
         # return x.base_prompt.format(**variables)
         return x.base_prompt

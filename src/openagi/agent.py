@@ -27,7 +27,7 @@ class Admin(BaseModel):
         description="LLM Model to be used.",
     )
     memory: Optional[Memory] = Field(
-        default=None,
+        default_factory=list,
         description="Memory to be used.",
         exclude=True,
     )
@@ -41,11 +41,9 @@ class Admin(BaseModel):
         description="Maximum number of steps to achieve the objective.",
     )
 
-    def model_post_init(self, __context: Any) -> None:
-        x = super().model_post_init(__context)
+    def __post_init__(self, __context: Any) -> None:
         if not self.memory:
             self.memory = Memory()
-        return x
 
     @field_validator("actions")
     @classmethod
@@ -63,7 +61,9 @@ class Admin(BaseModel):
         actions_dict: List[BaseAction] = []
         for act in self.actions:
             actions_dict.append(act.cls_doc())
-        return self.planner.plan(query=query, description=descripton, supported_actions=actions_dict)
+        return self.planner.plan(
+            query=query, description=descripton, supported_actions=actions_dict
+        )
 
     def generate_tasks_list(self, planned_tasks):
         task_lists = TaskLists()
@@ -75,9 +75,9 @@ class Admin(BaseModel):
         logging.info("Running Admin Agent...")
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(query=query, descripton=description)
-        logging.info("Tasks Planned")
+        logging.info("Tasks Planned...")
         logging.debug(planned_tasks)
-        print(planned_tasks)
+        # print(f"{planned_tasks=}")
 
         # Tasks List
         task_lists: TaskLists = self.generate_tasks_list(planned_tasks=planned_tasks)
@@ -88,25 +88,27 @@ class Admin(BaseModel):
         cur_task = None
         prev_task = None
         steps = 0
-        res = None
         _tasks_lists = task_lists.get_tasks_lists()
         while not task_lists.all_tasks_completed and steps <= self.max_steps:
+            print(f"{'*'*100}{'*'*100}")
+
             logging.info(f"Execuing Step {steps}")
             cur_task = task_lists.get_next_unprocessed_task()
             # Execute tasks using
-            res, actions = self.execute(
+            if prev_task:
+                print(f"{prev_task.result=}")
+            res, actions = self.execute_task(
                 query=query, task=cur_task, all_tasks=_tasks_lists, prev_task=prev_task
             )
-            cur_task.set_result(res)
+            cur_task.result = res
             cur_task.actions = actions
-            self.memory.save_task(cur_task)
-            prev_task = cur_task
+            # self.memory.save_task(cur_task)
+            prev_task = cur_task.model_copy()
             steps += 1
-            # If task as not completed and failed:
-            # Fail the whole processs & convey to the users
-
+            print(f"Result from Step {steps} -- {res=}")
+            print(f"{'*'*100}{'*'*100}")
         # Final result
-        print(f"\n ******** Final Response\n{res}")
+        # print(f"\n ******** Final Response *******\n{res}\n\n")
         return res
 
     def _run_action(self, action_cls: str, **kwargs):
@@ -121,7 +123,7 @@ class Admin(BaseModel):
             return False, content
         return True, content
 
-    def execute(
+    def execute_task(
         self,
         query: str,
         task: Task,
@@ -135,11 +137,11 @@ class Admin(BaseModel):
             actions_dict.append(act.cls_doc())
 
         te_vars = dict(
-            objective=task.name,
+            objective=query,
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=f"Previous_Task: {prev_task.name}. Previous_Result: {task.result}"
+            previous_task=f"Previous_Task: {prev_task.name}. Previous_Result: {prev_task.result}"
             if prev_task
             else None,
             supported_actions=actions_dict,
@@ -148,7 +150,7 @@ class Admin(BaseModel):
         te = TaskExecutor.from_template(variables=te_vars)
         logging.info("TastExecutor Prompt initiated...")
         logging.debug(f"{te=}")
-        print(f"{te=}")
+        # print(f"{te=}")
         resp = self.llm.run(te)
         logging.debug(f"{resp=}")
         execute, content = self._can_task_execute(llm_resp=resp)
@@ -170,5 +172,5 @@ class Admin(BaseModel):
             res = self._run_action(action_cls=act_cls, **params)
 
         # TODO: Memory
-        print(f"\n\n{res=}\n\n")
+        # print(f"\n\n{res=}\n\n")
         return res, actions
