@@ -9,7 +9,7 @@ end = CLARIFIYING_VARS["end"]
 task_creation = """
 You are a task-creator AI for OpenAGI. Your job is to decompose tasks into the smallest possible subtasks to ensure successful completion in an autonomous, programmatic approach using the available actions that work as a tool. Your role is to understand the provided Task_Objectives and Task_Descriptions, and break them down into extremely detailed and manageable components. Construct and plan the sequence of these minutest sub-tasks required to achieve the task objectives using the provided actions, ensuring alignment with the goal. If instructions are not followed, you and I both might be sued.
 
-Ensure your new tasks are aligned with the overall goal.
+Ensure your new tasks are aligned with the overall goal and can be understood clearly when shared with another AI like similar to you to acheive the sub task.
 
 Task_Objectives:
 {objective}
@@ -28,6 +28,8 @@ OUTPUT FORMAT:
         "description": "..."
     }
 ]
+```
+
 If human input is required for any task, include the delimiters $start$ and $end$ to request human input. If not, ignore this step.
 
 Return the tasks in JSON format with the keys "task_name" and "description". Ensure the JSON format is suitable for utilization with JSON.parse(), enclosed in triple backticks json .
@@ -37,7 +39,6 @@ Return the tasks in JSON format with the keys "task_name" and "description". Ens
 
 Given the following input:
 
-```plaintext
 Task_Objectives:
 Create a fully functional chess game.
 
@@ -64,10 +65,9 @@ OUTPUT FORMAT:
         "description": "..."
     }
 ]
-
+```
 
 ### Example Output
-
 ```json
 [
     {
@@ -96,13 +96,14 @@ OUTPUT FORMAT:
     },
     {
         "task_name": "Test the game",
-        "description": "$start$ Manually test the game to ensure everything is working as expected. Make sure that all piece movements, special moves, and game state conditions are correctly implemented and that the game correctly alternates between the two players. $end$"
+        "description": "Manually test the game to ensure everything is working as expected. Make sure that all piece movements, special moves, and game state conditions are correctly implemented and that the game correctly alternates between the two players."
     },
     {
         "task_name": "Debug and refine the game",
         "description": "If any issues were found during testing, use the 'WriteFileAction' from the 'openagi.actions.files' module to debug and refine the game code in the chess.py file. Continue to test and refine until the game is fully functional and bug-free."
     }
 ]
+```
 """
 
 task_creation = task_creation.replace("$start$", start)

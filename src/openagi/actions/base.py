@@ -1,6 +1,5 @@
 from typing import Any, Optional
 from pydantic import BaseModel, Field
-from abc import abstractmethod
 
 
 class BaseAction(BaseModel):

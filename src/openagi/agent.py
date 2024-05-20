@@ -77,7 +77,7 @@ class Admin(BaseModel):
         planned_tasks = self.run_planner(query=query, descripton=description)
         logging.info("Tasks Planned...")
         logging.debug(planned_tasks)
-        # print(f"{planned_tasks=}")
+        print(f"{planned_tasks=}")
 
         # Tasks List
         task_lists: TaskLists = self.generate_tasks_list(planned_tasks=planned_tasks)
@@ -100,12 +100,12 @@ class Admin(BaseModel):
             res, actions = self.execute_task(
                 query=query, task=cur_task, all_tasks=_tasks_lists, prev_task=prev_task
             )
-            cur_task.result = res
-            cur_task.actions = actions
-            # self.memory.save_task(cur_task)
-            prev_task = cur_task.model_copy()
+            if res:
+                cur_task.result = res
+                cur_task.actions = actions
+                # self.memory.save_task(cur_task)
+                prev_task = cur_task.model_copy()
             steps += 1
-            print(f"Result from Step {steps} -- {res=}")
             print(f"{'*'*100}{'*'*100}")
         # Final result
         # print(f"\n ******** Final Response *******\n{res}\n\n")
@@ -159,18 +159,18 @@ class Admin(BaseModel):
                 f"Execution Failed - {content}; for the task {task.name} [{str(task.id)}]."
             )
         te_actions = get_last_json(resp)
+        res = None
+
         logging.debug(f"{te_actions}")
         if not te_actions:
-            raise OpenAGIException(
-                f"No actions to execute for the task `{task.name} [{str(task.id)}]`."
-            )
+            return res, None
+            # raise OpenAGIException(
+            # f"No actions to execute for the task `{task.name} [{str(task.id)}]`."
+            # )
         actions = get_classes_from_json(te_actions)
         # Pass previous action result of the current task to the next action as previous_obs
-        res = None
         for act_cls, params in actions:
             params["prev_obs"] = res
             res = self._run_action(action_cls=act_cls, **params)
 
-        # TODO: Memory
-        # print(f"\n\n{res=}\n\n")
         return res, actions
