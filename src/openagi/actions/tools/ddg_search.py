@@ -38,7 +38,7 @@ class DuckDuckGoSearch(BaseAction):
             self.query,
             region=self.region,
             safesearch=self.safesearch,
-            max_results=5,
+            max_results=self.max_results,
             backend=self.backend,
         )
         return result
