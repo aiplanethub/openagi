@@ -1,3 +1,5 @@
+import logging
+from typing import Any
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 
@@ -17,8 +19,7 @@ class OpenAIModel(LLMBaseModel):
     This class implements the specific logic required to work with OpenAI service.
     """
 
-    def __init__(self, config: OpenAIConfigModel):
-        super().__init__(config)
+    config: Any
 
     def load(self):
         """Initializes the OpenAI instance with configurations."""
@@ -34,6 +35,7 @@ class OpenAIModel(LLMBaseModel):
         Returns:
             The response from OpenAI service.
         """
+        logging.info(f"Running LLM - {self.__class__.__name__}")
         if not self.llm:
             self.load()
         if not self.llm:

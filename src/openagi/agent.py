@@ -1,11 +1,12 @@
 from enum import Enum
 import logging
+from pprint import pprint
 from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
-from openagi.actions.compressor import CompressorAction
+from openagi.actions.compressor import SummarizerAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
 from openagi.exception import ExecutionFailureException, OpenAGIException
@@ -57,7 +58,7 @@ class Admin(BaseModel):
         if not self.memory:
             self.memory = Memory()
         self.actions = self.actions or []
-        self.actions.extend([MemoryRagAction, FormatterAction, CompressorAction])
+        self.actions.extend([MemoryRagAction])
 
     @field_validator("actions")
     @classmethod
@@ -125,6 +126,7 @@ class Admin(BaseModel):
                 content=res,
                 format_type=OutputFormat.markdown,
                 llm=self.llm,
+                memory=self.memory,
             )
             res = output_formatter.execute()
         return res
@@ -133,6 +135,7 @@ class Admin(BaseModel):
         logging.info(f"Running Action - {action_cls}")
         kwargs["memory"] = self.memory
         kwargs["llm"] = self.llm
+        pprint(kwargs)
         action: BaseAction = action_cls(**kwargs)  # Create an instance with provided kwargs
         res = action.execute()
         return res

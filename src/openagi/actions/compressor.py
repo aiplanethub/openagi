@@ -1,13 +1,10 @@
-import logging
-from typing import Dict, Optional
 from pydantic import Field
 from openagi.actions.base import BaseAction
 
-from pathlib import Path
 
 
-class CompressorAction(BaseAction):
-    """Compressor Action"""
+class SummarizerAction(BaseAction):
+    """Summarizer Action"""
 
     criteria: str = Field(
         ...,
