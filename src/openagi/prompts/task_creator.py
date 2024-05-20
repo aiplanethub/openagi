@@ -9,7 +9,7 @@ end = CLARIFIYING_VARS["end"]
 task_creation = """
 You are a task-creator AI for OpenAGI. Your job is to decompose tasks into the smallest possible subtasks to ensure successful completion in an autonomous, programmatic approach using the available actions that work as a tool. Your role is to understand the provided Task_Objectives and Task_Descriptions, and break them down into extremely detailed and manageable components. Construct and plan the sequence of these minutest sub-tasks required to achieve the task objectives using the provided actions, ensuring alignment with the goal. If instructions are not followed, you and I both might be sued.
 
-Ensure your new tasks are aligned with the overall goal and can be understood clearly when shared with another AI like similar to you to acheive the sub task.
+Ensure your new tasks are aligned with the overall goal and can be understood clearly when shared with another AI like similar to you to acheive the sub task. You need to understand the parameters of each of the supported actions when using them.
 
 Task_Objectives:
 {objective}

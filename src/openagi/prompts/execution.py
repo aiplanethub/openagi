@@ -48,10 +48,8 @@ Output Format:
 ]
 ```
 
-If the task fails, return the failure reason within the delimiters $start$ and $end$ as shown below:
-$start$
-Couldn't execute the {current_task_name} task.
-$end$
+If the task cannot be executed using the available actions, return the failure reason within the delimiters $start$ and $end$ as shown below and provide some guidance on what type of generic actions would help in acheiving it.:
+$start$ Couldn't execute the `{current_task_name}` task. $end$
 ```
 
 Return the actions in JSON format as per the output format mentioned above, including the delimiters "json" "", without any other content in the response.
