@@ -36,14 +36,13 @@ def get_last_json(text):
     """
     # Pattern to find the last occurrence of content between ```json and ```
     pattern = r"```json(.*?)```"
-
     # Find all matches in the text
     matches = re.findall(pattern, text, flags=re.DOTALL)
-
     # Return the last match if any
     try:
         if matches:
-            return json.loads(matches[-1])
+            matches = matches[-1]
+            return json.loads(matches.strip())
     except json.JSONDecodeError:
         return None
     return None

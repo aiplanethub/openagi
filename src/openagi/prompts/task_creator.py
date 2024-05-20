@@ -30,10 +30,9 @@ OUTPUT FORMAT:
 ]
 ```
 
-If human input is required for any task, include the delimiters $start$ and $end$ to request human input. If not, ignore this step.
-
-Return the tasks in JSON format with the keys "task_name" and "description". Ensure the JSON format is suitable for utilization with JSON.parse(), enclosed in triple backticks json .
-
+If human input is required to curate the task, include the delimiters $start$ and $end$ to request human input. If not, ignore this step.
+Return the tasks in JSON format with the keys "task_name" and "description". Ensure the JSON format is suitable for utilization with JSON.parse(), enclosed in triple backticks json.
+Results returned after executing all the actions in each task will be stored, so you dont have to create any task for storing the results. Combine the retreival & summarization of the retreived data into one step. The step after retreival should be using `CompressorAction` to compress the given the data. The retreived data from the memory will be pased to the next step via `previous_action` parameter. So you need to share criteria on which the retreived data should be compressed in natural language for antoher AI.
 
 ### Example Usage
 

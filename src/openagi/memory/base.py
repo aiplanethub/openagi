@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -25,9 +25,15 @@ class BaseMemory(BaseModel):
         self.storage = ChromaStorage.from_kwargs()
         return x
 
-    def search(self, **kwargs) -> Dict[str, Any]:
+    def search(self, query: List[str], n_results: int = 10, **kwargs) -> Dict[str, Any]:
         """Search for similar tasks based on a query."""
-        return self.storage.query_documents(kwargs)
+        query_data = {
+            "query_texts": query,
+            "n_results": n_results,
+            "session_id": self.sessiond_id,
+            **kwargs,
+        }
+        return self.storage.query_documents(**query_data)
 
     def display_memory(self) -> Dict[str, Any]:
         """Retrieve and display the current memory state from the database."""
@@ -38,10 +44,12 @@ class BaseMemory(BaseModel):
 
     def save_task(self, task: Task) -> None:
         """Save execution details into Memory."""
-        document = f"Task: {task.name}, Description: {task.description}, Response: {task.result}"
+        document = task.result
         metadata = {
             "task_id": task.id,
             "session_id": self.sessiond_id,
+            "task_name": task.name,
+            "task_description": task.description,
         }
 
         return self.storage.save_document(
