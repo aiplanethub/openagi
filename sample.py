@@ -1,10 +1,15 @@
 from openagi.actions.console import ConsolePrint
 from openagi.actions.files import CreateFileAction, WriteFileAction
+from openagi.actions.formatter import FormatterAction
 from openagi.actions.tools.ddg_search import DuckDuckGoSearch
+from openagi.actions.tools.serp_search import GoogleSerpAPISearch
+from openagi.actions.obs_rag import MemoryRagAction
+
 from openagi.agent import Admin
 from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
+from openagi.agent import OutputFormat
 
 config = AzureChatOpenAIModel.load_from_env_config()
 llm = AzureChatOpenAIModel(config=config)
@@ -12,20 +17,19 @@ llm = AzureChatOpenAIModel(config=config)
 
 admin = Admin(
     llm=llm,
-    actions=[CreateFileAction, WriteFileAction, DuckDuckGoSearch, ConsolePrint],
+    actions=[DuckDuckGoSearch],
     planner=TaskPlanner(human_intervene=False),
     memory=Memory(),
+    output_type=OutputFormat.markdown,
 )
 
-description = """
-Create a list of detailed itineraries for a 3-day trip to Bangalore, India. Include the following:
 
-Popular tourist attractions to visit each day.
-Recommended restaurants and cafes for breakfast, lunch, and dinner.
-Options for local experiences or activities unique to Bangalore.
-Any travel tips or advice for getting around the city.
+res = admin.run(
+    query="3 days Itinaries in Bangalore",
+    description="You are an expert Itinary AI, who gives the best possible response.",
+)
 
-"""
+from rich.console import Console
+from rich.markdown import Markdown
 
-print("Admin init")
-print(admin.run(query="Create a list of itineries in bangalore.", description=description))
+Console().print(Markdown(res))

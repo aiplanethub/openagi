@@ -1,9 +1,13 @@
+from enum import Enum
 import logging
 from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
+from openagi.actions.compressor import CompressorAction
+from openagi.actions.formatter import FormatterAction
+from openagi.actions.obs_rag import MemoryRagAction
 from openagi.exception import ExecutionFailureException, OpenAGIException
 from openagi.llms.azure import LLMBaseModel
 from openagi.memory.memory import Memory
@@ -16,6 +20,11 @@ from openagi.utils.extraction import (
     get_classes_from_json,
     get_last_json,
 )
+
+
+class OutputFormat(str, Enum):
+    markdown = "markdown"
+    raw_text = "raw_text"
 
 
 class Admin(BaseModel):
@@ -31,7 +40,6 @@ class Admin(BaseModel):
         description="Memory to be used.",
         exclude=True,
     )
-
     actions: Optional[List[Any]] = Field(
         description="Actions that the Agent supports",
         default_factory=list,
@@ -40,10 +48,16 @@ class Admin(BaseModel):
         default=20,
         description="Maximum number of steps to achieve the objective.",
     )
+    output_format: OutputFormat = Field(
+        default=OutputFormat.markdown,
+        description="Format to be converted the result while returning.",
+    )
 
     def __post_init__(self, __context: Any) -> None:
         if not self.memory:
             self.memory = Memory()
+        self.actions = self.actions or []
+        self.actions.extend([MemoryRagAction, FormatterAction, CompressorAction])
 
     @field_validator("actions")
     @classmethod
@@ -76,7 +90,7 @@ class Admin(BaseModel):
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(query=query, descripton=description)
         logging.info("Tasks Planned...")
-        logging.debug(planned_tasks)
+        logging.debug(f"{planned_tasks=}")
         print(f"{planned_tasks=}")
 
         # Tasks List
@@ -95,8 +109,6 @@ class Admin(BaseModel):
             logging.info(f"Execuing Step {steps}")
             cur_task = task_lists.get_next_unprocessed_task()
             # Execute tasks using
-            if prev_task:
-                print(f"{prev_task.result=}")
             res, actions = self.execute_task(
                 query=query, task=cur_task, all_tasks=_tasks_lists, prev_task=prev_task
             )
@@ -106,13 +118,21 @@ class Admin(BaseModel):
                 # self.memory.save_task(cur_task)
                 prev_task = cur_task.model_copy()
             steps += 1
-            print(f"{'*'*100}{'*'*100}")
         # Final result
         # print(f"\n ******** Final Response *******\n{res}\n\n")
+        if self.output_format == OutputFormat.markdown:
+            output_formatter = FormatterAction(
+                content=res,
+                format_type=OutputFormat.markdown,
+                llm=self.llm,
+            )
+            res = output_formatter.execute()
         return res
 
     def _run_action(self, action_cls: str, **kwargs):
         logging.info(f"Running Action - {action_cls}")
+        kwargs["memory"] = self.memory
+        kwargs["llm"] = self.llm
         action: BaseAction = action_cls(**kwargs)  # Create an instance with provided kwargs
         res = action.execute()
         return res
@@ -130,27 +150,29 @@ class Admin(BaseModel):
         all_tasks: TaskLists,
         prev_task: Task,
     ):
-        logging.info(f"{'*'*10} Starting execution of {task.name} [{task.id}] {'*'*10}")
+        logging.info(f"{'>'*10} Starting execution of `{task.name} [{task.id}]` {'<'*10}")
         # Get supported actions and convert to array of dict(actions)
         actions_dict: List[BaseAction] = []
         for act in self.actions:
             actions_dict.append(act.cls_doc())
 
+        prev_task_str = (
+            f"{prev_task.name}\n{prev_task.description}. Previous_Action: {prev_task.actions} Previous_Result: {prev_task.result}"
+            if prev_task
+            else None
+        )
         te_vars = dict(
             objective=query,
             all_tasks=all_tasks,
             current_task_name=task.name,
             current_description=task.description,
-            previous_task=f"Previous_Task: {prev_task.name}. Previous_Result: {prev_task.result}"
-            if prev_task
-            else None,
+            previous_task=prev_task_str,
             supported_actions=actions_dict,
         )
         # TODO: Make TaskExecutor class customizable
         te = TaskExecutor.from_template(variables=te_vars)
         logging.info("TastExecutor Prompt initiated...")
         logging.debug(f"{te=}")
-        # print(f"{te=}")
         resp = self.llm.run(te)
         logging.debug(f"{resp=}")
         execute, content = self._can_task_execute(llm_resp=resp)
@@ -163,6 +185,7 @@ class Admin(BaseModel):
 
         logging.debug(f"{te_actions}")
         if not te_actions:
+            logging.warning("No Actions to execute...")
             return res, None
             # raise OpenAGIException(
             # f"No actions to execute for the task `{task.name} [{str(task.id)}]`."
