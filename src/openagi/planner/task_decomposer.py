@@ -26,7 +26,6 @@ class TaskPlanner(BasePlanner):
     llm: Optional[LLMBaseModel] = Field(default=None, description="LLM Model to be used")
 
     def _extract_task_from_response(self, llm_response: str) -> Union[str, None]:
-        logging.info(f"{llm_response=}")
         return get_last_json(llm_response)
 
     def _should_clarify(self, query: Optional[str]) -> bool:
