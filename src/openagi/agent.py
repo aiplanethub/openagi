@@ -1,6 +1,5 @@
 from enum import Enum
 import logging
-from pprint import pprint
 from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
@@ -33,7 +32,7 @@ class Admin(BaseModel):
         default=TaskPlanner(),
         description="Type of planner to use for task decomposition.",
     )
-    llm: Optional[LLMBaseModel] = Field(
+    llm: LLMBaseModel = Field(
         description="LLM Model to be used.",
     )
     memory: Optional[Memory] = Field(
@@ -61,23 +60,11 @@ class Admin(BaseModel):
             self.memory = Memory()
 
         # Actions
-        self.actions = self.actions or []
-        default_actions = [MemoryRagAction]
-        self.actions.extend(default_actions)
+        # self.actions = self.actions or []
+        # default_actions = [MemoryRagAction]
+        # self.actions.extend(default_actions)
+
         return resp
-
-    # def __post_init__(self, __context: Any) -> None:
-    #     print("Hello....")
-    #     if not self.memory:
-    #         self.memory = Memory()
-
-    #     # Actions
-    #     self.actions = self.actions or []
-    #     default_actions = [MemoryRagAction]
-    #     all_actions = self.actions + default_actions
-    #     self.actions = all_actions
-    #     print(self.actions)
-    #     raise OpenAGIException("Manual Stop....")
 
     @field_validator("actions")
     @classmethod
@@ -107,6 +94,8 @@ class Admin(BaseModel):
 
     def run(self, query: str, description: str):
         logging.info("Running Admin Agent...")
+        logging.info(f"SessionID - {self.memory.sessiond_id}")
+
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(query=query, descripton=description)
         if not planned_tasks:
@@ -124,20 +113,23 @@ class Admin(BaseModel):
         prev_task = None
         steps = 0
         _tasks_lists = task_lists.get_tasks_lists()
-        while not task_lists.all_tasks_completed and steps <= self.max_steps:
+        while not task_lists.all_tasks_completed:
             print(f"{'*'*100}{'*'*100}")
 
             logging.info(f"Execuing Step {steps}")
             cur_task = task_lists.get_next_unprocessed_task()
             # Execute tasks using
             res, actions = self.execute_task(
-                query=query, task=cur_task, all_tasks=_tasks_lists, prev_task=prev_task
+                query=query,
+                task=cur_task,
+                all_tasks=_tasks_lists,
+                prev_task=prev_task,
             )
             if res:
-                cur_task.result = res
-                cur_task.actions = actions
-                # self.memory.save_task(cur_task)
+                cur_task.result = str(res)
+                cur_task.actions = str(actions)
                 prev_task = cur_task.model_copy()
+                self.memory.save_task(prev_task)
             steps += 1
         # Final result
         logging.info("Finished Execution...")
@@ -151,6 +143,7 @@ class Admin(BaseModel):
                 memory=self.memory,
             )
             res = output_formatter.execute()
+        logging.debug(f"Execution Completed for Session ID - {self.memory.sessiond_id}")
         return res
 
     def _run_action(self, action_cls: str, **kwargs):
@@ -211,13 +204,11 @@ class Admin(BaseModel):
         if not te_actions:
             logging.warning("No Actions to execute...")
             return res, None
-            # raise OpenAGIException(
-            # f"No actions to execute for the task `{task.name} [{str(task.id)}]`."
-            # )
+
         actions = get_classes_from_json(te_actions)
         # Pass previous action result of the current task to the next action as previous_obs
         for act_cls, params in actions:
-            params["prev_obs"] = res
+            params["previous_action"] = res
             res = self._run_action(action_cls=act_cls, **params)
 
         return res, actions

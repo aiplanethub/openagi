@@ -16,10 +16,10 @@ class MemoryRagAction(BaseAction):
 
     query: str = Field(
         ...,
-        description="Query to run to retrieve the data from the results of previous tasks. Returns an Array of the results.",
+        description="Query, a string, to run to retrieve the data from the results of previous tasks. Returns an Array of the results.",
     )
     max_results: int = Field(
-        default=10, description="Max results to be used by querying the memory."
+        default=10, description="Max results to be used by querying the memory Defaults to integer 10."
     )
 
     def execute(self):
