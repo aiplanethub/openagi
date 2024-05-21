@@ -13,18 +13,19 @@ class GoogleSerpAPISearch(BaseAction):
     query: str = Field(..., description="User query to fetch web search results from Google")
     hl: str = Field(default="en", description="Google UI Language")
     gl: str = Field(default="us", description="Google Country")
-    num: int = Field(default=5, description="Total results to be executed from the search")
+    max_results: int = Field(
+        default=5, description="Total results to be executed from the search"
+    )
 
     def execute(self):
-        # serp_api_key = os.environ["GOOGLE_SERP_API_KEY"]
-        serp_api_key = "efac1e5eb066c940d6e3437abe66b435812bfc0cc843b79b850033255e7a6490"
+        serp_api_key = os.environ["GOOGLE_SERP_API_KEY"]
 
         search = GoogleSearch(
             {
                 "q": self.query,
                 "hl": self.hl,
                 "gl": self.gl,
-                "num": self.num,
+                "num": self.max_results,
                 "api_key": serp_api_key,
             }
         )
