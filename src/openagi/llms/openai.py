@@ -10,6 +10,7 @@ from openagi.utils.yamlParse import read_from_env
 class OpenAIConfigModel(LLMConfigModel):
     """Configuration model for OpenAI."""
 
+    model_name: str = "gpt-4-turbo"
     openai_api_key: str
 
 
@@ -23,7 +24,10 @@ class OpenAIModel(LLMBaseModel):
 
     def load(self):
         """Initializes the OpenAI instance with configurations."""
-        self.llm = ChatOpenAI(openai_api_key=self.config.openai_api_key)
+        self.llm = ChatOpenAI(
+            openai_api_key=self.config.openai_api_key,
+            model_name=self.config.model_name,
+        )
         return self.llm
 
     def run(self, input_text: str):
