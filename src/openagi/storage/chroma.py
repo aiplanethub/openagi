@@ -21,7 +21,6 @@ class ChromaStorage(BaseStorage):
 
     @classmethod
     def from_kwargs(cls, **kwargs):
-        print(f"{kwargs=}")
         if kwargs.get("host", None) and kwargs.get("port", None):
             _client = HttpClient(host=kwargs["host"], port=kwargs["port"])
         else:

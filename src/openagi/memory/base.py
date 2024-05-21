@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List
 from uuid import uuid4
 
@@ -19,10 +20,10 @@ class BaseMemory(BaseModel):
     )
 
     def model_post_init(self, __context: Any) -> None:
-        x = super().model_post_init(__context)
-        print(f"{self.sessiond_id=}")
+        inst = super().model_post_init(__context)
+        logging.info(f"{self.sessiond_id=}")
         self.storage = ChromaStorage.from_kwargs(collection_name=self.sessiond_id)
-        return x
+        return inst
 
     def search(self, query: str, n_results: int = 10, **kwargs) -> Dict[str, Any]:
         """Search for similar tasks based on a query."""

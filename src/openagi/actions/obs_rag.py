@@ -1,4 +1,4 @@
-from typing import List
+import logging
 
 from pydantic import Field
 
@@ -19,10 +19,11 @@ class MemoryRagAction(BaseAction):
         description="Query, a string, to run to retrieve the data from the results of previous tasks. Returns an Array of the results.",
     )
     max_results: int = Field(
-        default=10, description="Max results to be used by querying the memory Defaults to integer 10."
+        default=10,
+        description="Max results to be used by querying the memory Defaults to integer 10.",
     )
 
     def execute(self):
         resp = self.memory.search(query=self.query, n_results=self.max_results or 10)
-        print(f"MEMORY DATA  -  {resp}")
+        logging.debug(f"Retreived MEMORY DATA  -  {resp}")
         return resp
