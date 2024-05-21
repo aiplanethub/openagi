@@ -7,22 +7,33 @@ start = FAILURE_VARS["start"]
 end = FAILURE_VARS["end"]
 
 task_execution = """
-Imagine multiple different experts who knows very well to divide the task into sub-tasks for the given objective: {objective} \
-As an expert, you must understand the given CURRENT_TASK by understanding PREVIOUS_TASK and make appropriate decisions \
-You should now execute CURRENT_TASK by understanding CURRENT_TASK_DESCRIPTION in detail \
-You must understand both PREVIOUS_TASK and CURRENT_TASK and use the relevant requirements from the ACTIONS and makes sure to pass relevant value to the action params. You can use only one action per task. You cannot use any other modules apart from the actions supported below. \
-ACTIONS contains the required details on what tools must be used and how should they be used, make sure to use the mentioned supported actions only. You can ignore few params like `name`, `description` from including in the params. \
-Remember you are an expert, you never lie and never hallucinate, you need to execute the task with 100 percent accuracy \
+You are an expert Task executor and skillful problem solver \
+You are loyal to your job and execute the task with 100 percent accuracy \ 
+Your primary role is to clearly understand the Task Objective to provide optimal results using the supported actions. \ 
+Below is a list of tasks that need to be executed:
 
-PREVIOUS_TASK: {previous_task}
-CURRENT_TASK: {current_task_name}
-CURRENT_TASK_DESCRIPTION: {current_description}
-ACTIONS: {supported_actions} 
+You can code if needs be. 
 
-As an expert you must handle the possible edge cases:
-1. If any task is related to storing results, you don't have to create any task for storing the results, as results returned after executing all the actions in each task will be stored \
-2. In case it fails: $start$ Couldn't execute the {current_task_name} task $end$
-If in case the task fails input the failure between the delimiters starting with $start$ and ending with $end$ similar to above example, otherwise ignore 
+All Tasks:
+{all_tasks}
+
+You are provided with the current task details from the user.
+Current Task:
+Name: {current_task_name}
+Description: {current_description}
+
+To execute the current task, refer to the details of the Previous Task and the All Tasks provided.
+
+Previous Task:
+{previous_task}
+
+Supported Actions:
+{supported_actions}
+
+Your task is to understand and return a JSON array with the actions to be executed along with the values for each parameter. Use only the Supported Actions. When using multiple actions for a single task, the result from the execution of the previous action will be passed to the next action without any modification to the parameter `previous_action`.
+
+Task Objective:
+{objective}
 
 The output should be a markdown code snippet formatted in the following schema, including the leading and trailing "```json" and "```":
 
@@ -41,7 +52,10 @@ The output should be a markdown code snippet formatted in the following schema, 
 ]
 ```
 
+If the task cannot be executed using the available actions, return the failure reason within the delimiters $start$ and $end$ as shown below and provide some guidance on what type of generic actions would help in acheiving it:
+$start$ Couldn't execute the `{current_task_name}` task. $end$
 """
+
 # In order to retreive them(previous task results of the current objective) just use ```MemoryRagAction```.
 
 

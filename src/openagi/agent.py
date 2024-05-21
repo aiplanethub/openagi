@@ -208,7 +208,7 @@ class Admin(BaseModel):
         actions = get_classes_from_json(te_actions)
         # Pass previous action result of the current task to the next action as previous_obs
         for act_cls, params in actions:
-            params["previous_action"] = res
+            params["previous_action"] = prev_task.result if prev_task else None
             res = self._run_action(action_cls=act_cls, **params)
 
         return res, actions
