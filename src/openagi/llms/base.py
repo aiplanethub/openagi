@@ -25,10 +25,6 @@ class LLMBaseModel(BaseModel):
     """
 
     config: Any
-    # def __init__(self, config: LLMConfigModel):
-    #     self.config = config
-    #     self.llm = None
-    #     self.load()
     llm: Any = None
 
     @abstractmethod
