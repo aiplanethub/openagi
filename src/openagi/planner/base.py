@@ -11,7 +11,7 @@ class BasePlanner(BaseModel):
         default=True,
         description="If human internvention is required or not.",
     )
-    actions: Optional[BaseAction] = Field(
+    input_action: Optional[BaseAction] = Field(
         description="If `human_intervene` is enabled, which action to be performed.",
     )
     prompt: BasePrompt = Field(description="Prompt to be used")

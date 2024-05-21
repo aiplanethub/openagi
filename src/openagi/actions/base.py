@@ -46,6 +46,3 @@ class BaseAction(BaseModel):
                 if field_name not in cls.default_exclude_doc_fields()
             },
         }
-
-
-print([BaseAction.cls_doc()])
