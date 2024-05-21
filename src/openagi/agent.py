@@ -54,11 +54,30 @@ class Admin(BaseModel):
         description="Format to be converted the result while returning.",
     )
 
-    def __post_init__(self, __context: Any) -> None:
+    def model_post_init(self, __context: Any) -> None:
+        resp = super().model_post_init(__context)
+
         if not self.memory:
             self.memory = Memory()
+
+        # Actions
         self.actions = self.actions or []
-        self.actions.extend([MemoryRagAction])
+        default_actions = [MemoryRagAction]
+        self.actions.extend(default_actions)
+        return resp
+
+    # def __post_init__(self, __context: Any) -> None:
+    #     print("Hello....")
+    #     if not self.memory:
+    #         self.memory = Memory()
+
+    #     # Actions
+    #     self.actions = self.actions or []
+    #     default_actions = [MemoryRagAction]
+    #     all_actions = self.actions + default_actions
+    #     self.actions = all_actions
+    #     print(self.actions)
+    #     raise OpenAGIException("Manual Stop....")
 
     @field_validator("actions")
     @classmethod
@@ -90,9 +109,10 @@ class Admin(BaseModel):
         logging.info("Running Admin Agent...")
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(query=query, descripton=description)
+        if not planned_tasks:
+            raise OpenAGIException("Failed to Plan Tasks. Please Try Again...")
         logging.info("Tasks Planned...")
         logging.debug(f"{planned_tasks=}")
-        print(f"{planned_tasks=}")
 
         # Tasks List
         task_lists: TaskLists = self.generate_tasks_list(planned_tasks=planned_tasks)
@@ -120,8 +140,10 @@ class Admin(BaseModel):
                 prev_task = cur_task.model_copy()
             steps += 1
         # Final result
+        logging.info("Finished Execution...")
         # print(f"\n ******** Final Response *******\n{res}\n\n")
         if self.output_format == OutputFormat.markdown:
+            logging.info("Output Formatting...")
             output_formatter = FormatterAction(
                 content=res,
                 format_type=OutputFormat.markdown,
@@ -135,7 +157,6 @@ class Admin(BaseModel):
         logging.info(f"Running Action - {action_cls}")
         kwargs["memory"] = self.memory
         kwargs["llm"] = self.llm
-        pprint(kwargs)
         action: BaseAction = action_cls(**kwargs)  # Create an instance with provided kwargs
         res = action.execute()
         return res
