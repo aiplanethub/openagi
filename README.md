@@ -50,45 +50,84 @@ For more queries find documentation for OpenAGI at [openagi.aiplanet.com](https:
 
 ## Example
 
-Follow this example to create a Test Case Developer that reads code files from your github repo and creates test cases for the same.
-Make sure you complete the steup of Github Tool from [here](https://openagi.aiplanet.com/components/tools#id-4.-githubsearchtool).
+Follow this example to create a Test Case job search it help you to search available job posting for a given category
+Here in the example we are using AzureChatOpenAIModel along with GoogleSerpAPISearch to search the internet for various job posting on the particular role.
 
 **Note:** Follow setup guide to configure the environment. For quick access click [here](https://openagi.aiplanet.com/getting-started/installation).
 
 ```python
-from openagi.agent import Agent
-from openagi.init_agent import kickOffAgents
-from openagi.llms import OpenAIModel
-from openagi.tools.integrations import GithubSearchTool
+from openagi.agent import Admin
+from openagi.llms.azure import AzureChatOpenAIModel
+from openagi.memory import Memory
+from openagi.actions.tools.serp_search import GoogleSerpAPISearch
+from openagi.planner.task_decomposer import TaskPlanner
+from rich.console import Console
+from rich.markdown import Markdown
 
 if __name__ == "__main__":
-    agent_names = ["DEVELOPER", "TESTCASEDEVELOPER"]
 
-    agent_list = [
-        Agent(
-            agentName=agent_names[0],
-            role="DEVELOPER",
-            goal="Efficiently search and retrieve relevant information regarding repository and code snippets on GitHub.",
-            backstory="Developed to enhance productivity for developers, this tool integrates with the GitHub API to provide streamlined access to code resources.",
-            capability="search_executor",
-            task="Retrieve the code for all the files in the respository.",
-            output_consumer_agent=[agent_names[1]],
-            tools_list=[GithubSearchTool],
-        ),
-        Agent(
-            agentName=agent_names[1],
-            role="TESTCASEDEVELOPER",
-            goal="To meticulously examine the provided Python code and provide test cases with adherence to best practices.",
-            backstory="You are a seasoned software test case developer who developes unit, integration and functional test cases for the given program code",
-            capability="llm_task_executor",
-            task="Conduct a comprehensive test cases for the Python code, paying particular attention to functional and acceptance testing including edge cases. Also provide no of positive and edge test cases to enable the management to understand the quality of testing",
-            output_consumer_agent=["HGI"],
-        ),
-    ]
 
-    config = OpenAIModel.load_from_yaml_config()  # Setup a file named config.yaml and set OPENAI_API_KEY variable. Follow instructions from docs in Note above.
-    llm = OpenAIModel(config=config)
-    kickOffAgents(agent_list, [agent_list[0]], llm=llm)
+    config = AzureChatOpenAIModel.load_from_env_config()
+    llm = AzureChatOpenAIModel(config=config)
+
+    company_domain = input("What is the company domain?\n")
+    job_domain = input("What is the job domain?\n")
+    job_level = input("What level job are you looking for?\n")
+    job_location = input("In what location are you for the job?\n")
+
+    query = f'''
+Need help finding a job description based on the following criteria:
+
+Company Domain: {company_domain}
+Job Domain: {job_domain}
+Job Level: {job_level}
+Job Location: {job_location}
+
+Please provide a list of suitable job descriptions, including the key responsibilities, requirements, and any other relevant details.
+'''
+
+    admin = Admin(
+        llm = llm,
+        actions=[GoogleSerpAPISearch],
+        planner = TaskPlanner(human_intervene=False),
+        memory = Memory(),
+    )
+
+
+    res = admin.run(
+        query = query,
+        description= 'You are an expert Internet searching agent , who gives best possible response.',
+    )
+
+    # Print the results from the OpenAGI
+    print("-" * 100)  # Separator
+    Console().print(Markdown(res))
+
+
+# The Agent did some research using the given actions and job positions.
+"""
+## Job Opportunities and Descriptions in Finance Technology
+
+1. **Strategic Programs Finance Tech Manager** - The Finance technology team supervises a large portfolio of ongoing transformation programs that are each operated by individual teams from Finance, CIO and more. [More details](https://www.accenture.com/in-en/careers/jobdetails?id=R354135_en)
+
+2. **Finance Manager - FinTech** - A professional with 2+ years of experience is needed for end to end Business Finance like Strategic Planning, preparing & managing the finances. [More details](https://iimjobs.com/j/finance-manager-fintech-3-8-yrs-1194909)
+
+3. **Working in Fintech** - Fintech is a combination of finance and technology. This combination has set high standards in the field of employment. [More details](https://imarticus.org/blog/what-is-job-description-to-work-in-fintech-and-what-are-the-skills-required/)
+
+4. **Finance Technology Role** - Discover the typical qualifications and responsibilities for a role in Finance Technology. [More details](https://www.glassdoor.co.in/Career/technology-finance-career_KO0,18.htm)
+
+5. **Strategic Programs Finance Tech Manager - Accenture** - Job Description for Strategic Programs Finance Tech Manager in Accenture in Gurgaon for 7 to 11 years of experience. [More details](https://www.naukri.com/job-listings-strategic-programs-finance-tech-manager-accenture-solutions-pvt-ltd-gurugram-7-to-11-years-020524909932)
+
+6. **Financier Job** - The core responsibilities of finance professionals involve analyzing data, reconciling, providing financial advice, optimizing cash flow, and preparing. [More details](https://emeritus.org/in/learn/financier-job-roles-and-responsibilities/)
+
+7. **12 Finance Tech Jobs** - Lucrative finance tech jobs including Compliance specialist, Cybersecurity specialist, App developer, Automation engineer, UX designer. [More details](https://www.indeed.com/career-advice/finding-a-job/finance-tech-jobs)
+
+8. **FIN-Global Middle Office** - Ability to understand the booking structure for complex trades and raise relevant issues to Product Control management. Good Logical reasoning skills, ability. [More details](https://careers.nomura.com/Nomura/job/Mumbai-FIN-Global-Middle-Office/1128931300/)
+
+9. **Financial Technology jobs in India** - Experience level. Internship (48). Entry level (1,708). Associate (588). Mid-Senior level (5,269). Director (402). [More details](https://in.linkedin.com/jobs/financial-technology-jobs)
+
+10. **Senior Executive/Middle level executive - Mumbai** - The ideal candidate will be responsible for identifying, analyzing, and strategizing the resolution of non-performing assets (NPAs) acquired. [More details](https://www.naukri.com/job-listings-senior-executive-middle-level-executive-acaipl-investment-financial-services-mumbai-3-to-8-years-080524005387)
+"""
 ```
 
 ## Prominent Features:
