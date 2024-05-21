@@ -8,8 +8,6 @@ from openagi.storage.chroma import ChromaStorage
 from openagi.tasks.lists import TaskLists
 from openagi.tasks.task import Task
 
-# TODO: Fix error handling
-
 
 class BaseMemory(BaseModel):
     # model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -22,7 +20,8 @@ class BaseMemory(BaseModel):
 
     def model_post_init(self, __context: Any) -> None:
         x = super().model_post_init(__context)
-        self.storage = ChromaStorage.from_kwargs()
+        print(f"{self.sessiond_id=}")
+        self.storage = ChromaStorage.from_kwargs(collection_name=self.sessiond_id)
         return x
 
     def search(self, query: str, n_results: int = 10, **kwargs) -> Dict[str, Any]:
@@ -30,7 +29,7 @@ class BaseMemory(BaseModel):
         query_data = {
             "query_texts": query,
             "n_results": n_results,
-            "where": {"$or": [{"$contains": self.sessiond_id}, {"$contains": query}]},
+            "where": {"$contains": self.sessiond_id},
             **kwargs,
         }
         return self.storage.query_documents(**query_data)
@@ -50,6 +49,8 @@ class BaseMemory(BaseModel):
             "session_id": self.sessiond_id,
             "task_name": task.name,
             "task_description": task.description,
+            "task_result": task.result,
+            "task_actions": task.actions,
         }
 
         return self.storage.save_document(

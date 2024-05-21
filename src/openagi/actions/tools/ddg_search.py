@@ -17,7 +17,8 @@ class DuckDuckGoSearch(BaseAction):
     )
 
     query: Any = Field(
-        default_factory=str, description="User query to fetch web search results from DuckDuckGo"
+        default_factory=str,
+        description="User query, a string, to fetch web search results from DuckDuckGo",
     )
 
     region: str = Field(
@@ -26,7 +27,8 @@ class DuckDuckGoSearch(BaseAction):
     )
     safesearch: str = Field("off", description="on, moderate, off. Defaults to moderate")
     max_results: int = Field(
-        default=10, description="Total results to be executed from the search"
+        default=10,
+        description="Total results, in int, to be executed from the search. Defaults to 10.",
     )
     backend: str = Field(
         default="api",

@@ -1,13 +1,11 @@
 import logging
 import tempfile
 from pathlib import Path
-from uuid import uuid4
 
 import chromadb
 from chromadb import HttpClient, PersistentClient
 from pydantic import Field
 
-from openagi.exception import OpenAGIException
 from openagi.storage.base import BaseStorage
 
 
@@ -23,6 +21,7 @@ class ChromaStorage(BaseStorage):
 
     @classmethod
     def from_kwargs(cls, **kwargs):
+        print(f"{kwargs=}")
         if kwargs.get("host", None) and kwargs.get("port", None):
             _client = HttpClient(host=kwargs["host"], port=kwargs["port"])
         else:
@@ -30,9 +29,8 @@ class ChromaStorage(BaseStorage):
                 path=kwargs.get("persist_path", cls.get_default_persistent_path())
             )
 
-        _collection = _client.get_or_create_collection(
-            kwargs.get("collection_name", f"openagi-chroma-{uuid4()}")
-        )
+        _collection = _client.get_or_create_collection(kwargs.get("collection_name"))
+        logging.debug(f"Collection: Name - {_collection.name}, ID - {_collection.id}")
         return cls(client=_client, collection=_collection)
 
     def save_document(self, id, document, metadata):
@@ -42,7 +40,8 @@ class ChromaStorage(BaseStorage):
         if not isinstance(metadata, list):
             metadata = [metadata]
 
-        self.collection.add(ids=id, documents=document, metadatas=metadata)
+        resp = self.collection.add(ids=id, documents=document, metadatas=metadata)
+        return resp
 
     def update_document(self, doc_id, document, metadata):
         """Update an existing document in the ChromaDB collection."""
