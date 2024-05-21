@@ -37,43 +37,29 @@ class ChromaStorage(BaseStorage):
 
     def save_document(self, id, document, metadata):
         """Create a new document in the ChromaDB collection."""
-        try:
-            if not isinstance(document, list):
-                document = [document]
-            if not isinstance(metadata, list):
-                metadata = [metadata]
+        if not isinstance(document, list):
+            document = [document]
+        if not isinstance(metadata, list):
+            metadata = [metadata]
 
-            self.collection.add(ids=id, documents=document, metadatas=metadata)
-        except Exception as e:
-            logging.error(f"Error creating document: {e}")
-            raise OpenAGIException("Unable to save document") from e
+        self.collection.add(ids=id, documents=document, metadatas=metadata)
 
     def update_document(self, doc_id, document, metadata):
         """Update an existing document in the ChromaDB collection."""
-        try:
-            if not isinstance(document, list):
-                document = [document]
-            if not isinstance(metadata, list):
-                metadata = [metadata]
-            self._collection.update(ids=[doc_id], documents=document, metadatas=metadata)
-            logging.info("Document updated successfully.")
-        except Exception as e:
-            logging.error(f"Error updating document: {e}")
+        if not isinstance(document, list):
+            document = [document]
+        if not isinstance(metadata, list):
+            metadata = [metadata]
+        self._collection.update(ids=[doc_id], documents=document, metadatas=metadata)
+        logging.info("Document updated successfully.")
 
     def delete_document(self, doc_id):
         """Delete a document from the ChromaDB collection."""
-        try:
-            self._collection.delete(ids=[doc_id])
-            logging.debug("Document deleted successfully.")
-        except Exception as e:
-            logging.error(f"Error deleting document: {e}")
+        self._collection.delete(ids=[doc_id])
+        logging.debug("Document deleted successfully.")
 
     def query_documents(self, **kwargs):
         """Query the ChromaDB collection for relevant documents based on the query."""
-        try:
-            results = self.collection.get(**kwargs)
-            logging.debug(f"Queried results: {results}")
-            return results
-        except Exception as e:
-            logging.error(f"Error querying documents: {e}")
-            return []
+        results = self.collection.query(**kwargs)
+        logging.debug(f"Queried results: {results}")
+        return results

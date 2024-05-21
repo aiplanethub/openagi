@@ -25,12 +25,12 @@ class BaseMemory(BaseModel):
         self.storage = ChromaStorage.from_kwargs()
         return x
 
-    def search(self, query: List[str], n_results: int = 10, **kwargs) -> Dict[str, Any]:
+    def search(self, query: str, n_results: int = 10, **kwargs) -> Dict[str, Any]:
         """Search for similar tasks based on a query."""
         query_data = {
             "query_texts": query,
             "n_results": n_results,
-            "session_id": self.sessiond_id,
+            "where": {"$or": [{"$contains": self.sessiond_id}, {"$contains": query}]},
             **kwargs,
         }
         return self.storage.query_documents(**query_data)

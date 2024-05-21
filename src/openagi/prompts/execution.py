@@ -27,7 +27,7 @@ Previous Task:
 Supported Actions:
 {supported_actions}
 
-Your task is to understand and return a JSON array with the actions to be executed along with the values for each parameter. Use only the Supported Actions. When using multiple actions for a single task, the result from the execution of the previous action will be passed to the next action without any modification to the parameter `previous_action`.
+Your task is to understand and return a JSON array with the actions to be executed along with the relevant values for each parameter. Use only the Supported Actions. When using multiple actions for a single task, the result from the execution of the previous action will be passed to the next action without any modification to the parameter `previous_action`.
 
 Task Objective:
 {objective}
