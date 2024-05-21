@@ -1,17 +1,12 @@
+from openagi.actions.tools.serp_search import GoogleSerpAPISearch
 from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
 from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.memory import Memory
-from openagi.actions.tools.ddg_search import DuckDuckGoSearch
-from openagi.actions.tools.serp_search import GoogleSerpAPISearch
-import os
 from openagi.planner.task_decomposer import TaskPlanner
 from rich.console import Console
 from rich.markdown import Markdown
 
 if __name__ == "__main__":
-
-
     config = AzureChatOpenAIModel.load_from_env_config()
     llm = AzureChatOpenAIModel(config=config)
 
@@ -20,7 +15,7 @@ if __name__ == "__main__":
     job_level = input("What level job are you looking for?\n")
     job_location = input("In what location are you for the job?\n")
 
-    query = f'''
+    query = f"""
 Need help finding a job description based on the following criteria:
 
 Company Domain: {company_domain}
@@ -29,19 +24,18 @@ Job Level: {job_level}
 Job Location: {job_location}
 
 Please provide a list of suitable job descriptions, including the key responsibilities, requirements, and any other relevant details.
-'''
+"""
 
     admin = Admin(
-        llm = llm,
+        llm=llm,
         actions=[GoogleSerpAPISearch],
-        planner = TaskPlanner(human_intervene=False),
-        memory = Memory(),
+        planner=TaskPlanner(human_intervene=False),
+        memory=Memory(),
     )
 
-
     res = admin.run(
-        query = query,
-        description= 'You are an expert Internet searching agent , who gives best possible response.',
+        query=query,
+        description="You are an expert Internet searching agent , who gives best possible response.",
     )
 
     # Print the results from the OpenAGI
