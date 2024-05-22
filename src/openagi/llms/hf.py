@@ -2,6 +2,7 @@ from transformers import pipeline
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
 
+
 class HuggingFaceConfigModel(LLMConfigModel):
     """Configuration model for Hugging Face."""
 
@@ -36,7 +37,7 @@ class HuggingFaceModel(LLMBaseModel):
         if not self.llm:
             raise ValueError("`llm` attribute not set.")
         resp = self.llm(input_text)
-        return resp[0]['generated_text']
+        return resp[0]["generated_text"]
 
     @staticmethod
     def load_from_env_config() -> HuggingFaceConfigModel:

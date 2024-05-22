@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 from uuid import uuid4
 
@@ -7,8 +8,6 @@ from openagi.storage.base import BaseStorage
 from openagi.storage.chroma import ChromaStorage
 from openagi.tasks.lists import TaskLists
 from openagi.tasks.task import Task
-
-# TODO: Fix error handling
 
 
 class BaseMemory(BaseModel):
@@ -21,13 +20,20 @@ class BaseMemory(BaseModel):
     )
 
     def model_post_init(self, __context: Any) -> None:
-        x = super().model_post_init(__context)
-        self.storage = ChromaStorage.from_kwargs()
-        return x
+        inst = super().model_post_init(__context)
+        logging.info(f"{self.sessiond_id=}")
+        self.storage = ChromaStorage.from_kwargs(collection_name=self.sessiond_id)
+        return inst
 
-    def search(self, **kwargs) -> Dict[str, Any]:
+    def search(self, query: str, n_results: int = 10, **kwargs) -> Dict[str, Any]:
         """Search for similar tasks based on a query."""
-        return self.storage.query_documents(kwargs)
+        query_data = {
+            "query_texts": query,
+            "n_results": n_results,
+            "where": {"$contains": self.sessiond_id},
+            **kwargs,
+        }
+        return self.storage.query_documents(**query_data)
 
     def display_memory(self) -> Dict[str, Any]:
         """Retrieve and display the current memory state from the database."""
@@ -38,10 +44,14 @@ class BaseMemory(BaseModel):
 
     def save_task(self, task: Task) -> None:
         """Save execution details into Memory."""
-        document = f"Task: {task.name}, Description: {task.description}, Response: {task.result}"
+        document = task.result
         metadata = {
             "task_id": task.id,
             "session_id": self.sessiond_id,
+            "task_name": task.name,
+            "task_description": task.description,
+            "task_result": task.result,
+            "task_actions": task.actions,
         }
 
         return self.storage.save_document(

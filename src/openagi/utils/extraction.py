@@ -36,14 +36,13 @@ def get_last_json(text):
     """
     # Pattern to find the last occurrence of content between ```json and ```
     pattern = r"```json(.*?)```"
-
     # Find all matches in the text
     matches = re.findall(pattern, text, flags=re.DOTALL)
-
     # Return the last match if any
     try:
         if matches:
-            return json.loads(matches[-1])
+            matches = matches[-1]
+            return json.loads(matches.strip())
     except json.JSONDecodeError:
         return None
     return None
@@ -89,7 +88,10 @@ def extract_ques_and_task(ques_prompt):
     if not matches:
         return None, None
 
-    return task, matches[-1]
+    question = matches[-1]
+    if question and question.strip():
+        f"OpenAGI: {question}\nYou: "
+    return task, question
 
 
 def find_last_r_failure_content(text):
