@@ -27,8 +27,6 @@ res = admin.run(
 
 # Print the results from the OpenAGI
 print("-" * 100)  # Separator
-print(res)
-print("-" * 100)  # Separator
 Console().print(Markdown(res))
 
 
