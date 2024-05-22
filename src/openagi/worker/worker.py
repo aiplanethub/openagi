@@ -1,19 +1,18 @@
-from typing import Optional
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 from openagi.llms.base import LLMBaseModel
-from openagi.actions.base import BaseAction
+from openagi.tools.base import BaseTool
 
 
 class Worker(BaseModel):
-    description: str = Field(..., description="Capabilities of the Worker")
-    
-    actions: Optional[BaseAction] = Field(
+    role: str = Field(..., description="Role of the worker")
+    backstory: Optional[str] = Field(
+        default=None, description="Backstory for the worker"
+    )
+    tools: Optional[BaseTool] = Field(
         default_factory=[], description="Tools available for Worker"
     )
     llm: Optional[LLMBaseModel] = Field(
         description="LLM Model to be used.",
     )
-
-    def __init__(self):
-        super().__init__()
-        
+    st_memory: Optional[Any] = None
