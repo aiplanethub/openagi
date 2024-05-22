@@ -1,4 +1,4 @@
-from openagi.actions.tools.ddg_search import DuckDuckGoSearch
+from openagi.actions.tools.ddg_search import DuckDuckGoNewsSearch
 from openagi.agent import Admin
 from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
@@ -13,50 +13,140 @@ llm = AzureChatOpenAIModel(config=config)
 # Setup an Admin Agent
 admin = Admin(
     llm=llm,
-    actions=[DuckDuckGoSearch],  # Actions that the Agent can use to acheive the given objective
+    actions=[
+        DuckDuckGoNewsSearch
+    ],  # Actions that the Agent can use to acheive the given objective
     planner=TaskPlanner(human_intervene=False),
 )
 
 # Run the Agent with a query and description of the query.
 res = admin.run(
-    query="Recent AI News Microsoft",
+    query="Recent AI News from Microsoft",
     description="",
 )
 
 # Print the results from the OpenAGI
+print("-" * 100)  # Separator
+print(res)
 print("-" * 100)  # Separator
 Console().print(Markdown(res))
 
 
 # The Agent did some research using the given actions and share the itinerary.
 """
-## Microsoft AI Blogs | Artificial Intelligence News and Updates
-Realize business value with AI. Optimize your organization at every level and uncover valuable new opportunities with Microsoft AI solutions. Microsoft AI Blog keeps you up-to-date about the latest advancements in artificial intelligence and their integration into our products and platforms. [Read more](https://www.microsoft.com/en-us/ai/blog/)
+## Microsoft's Week of AI Starts With News About PCs
 
-## Microsoft wants to make Windows an AI operating system, launches ...
-The latest Surface Laptop — available with a 13.8- or 15-inch display — has been redesigned with "modern lines" and thinner screen bezels. [Read more](https://techcrunch.com/2024/05/20/microsoft-build-2024-windows-ai-operating-system-copilot-plus-pcs/)
+![Image](https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1mJB6C.img?w=1280&h=826&m=4&q=67)
 
-## Accelerating innovation: A new era of AI at work begins
-At Microsoft, we continue to innovate across platforms to unlock everyone's full potential, with AI giving time back in the day to be more creative, more strategic and more innovative. Yusuf Mehdi, Executive Vice President, at Microsoft, announced today how we are revolutionizing the PC for the AI era with Copilot+ PCs. [Read more](https://blogs.windows.com/windowsexperience/2024/05/20/accelerating-innovation-a-new-era-of-ai-at-work-begins/)
+*Date: 2024-05-21T17:46:00+00:00*
 
-## Introducing GPT-4o: OpenAI's new flagship ... - azure.microsoft.com
-Exciting future developments: GPT-4o at Microsoft Build 2024 . We are eager to share more about GPT-4o and other Azure AI updates at Microsoft Build 2024, to help developers further unlock the power of generative AI. [Read more](https://azure.microsoft.com/en-us/blog/introducing-gpt-4o-openais-new-flagship-multimodal-model-now-in-preview-on-azure/)
+Microsoft's stock idled last week, trading in line with the market, while Google lifted shares of its parent, Alphabet, with demos of its artificial intelligence might. Expect a fusillade of news showing that Microsoft has as much AI as Google.
 
-## Microsoft debuts 'Copilot+' PCs with AI features | Reuters
-Microsoft on Monday debuted a new category of personal computers with AI features as it rushes to build the emerging technology into products across its business and compete with Alphabet and Apple. [Read more](https://www.reuters.com/technology/microsoft-unveil-ai-devices-features-ahead-developer-conference-2024-05-20/)
+**Source:** [Barron's on MSN.com](https://www.msn.com/en-us/news/technology/microsoft-s-week-of-ai-starts-with-news-about-pcs/ar-BB1mJDev)
 
-## Microsoft Unveils Advanced AI-Powered Innovations
-Microsoft's new Surface devices provide the perfect platform to showcase the amazing AI capabilities of the latest Windows update. [Read more](https://news.microsoft.com/en-cee/2023/09/21/microsoft-unveils-advanced-ai-powered-innovations/)
+---
 
-## Microsoft Unveils New AI Software, Devices as It Battles Apple, Google
-Microsoft Corp. introduced new software and computers infused with artificial intelligence features — stepping up its efforts to out-compete Alphabet Inc.'s Google and Apple Inc. [Read more](https://www.bloomberg.com/news/articles/2024-05-20/microsoft-unveils-new-ai-software-devices-as-it-battles-apple-google)
+## Microsoft Unveils AI Strategy Updates, Touts 'Fit-To-Purpose' Models, Plans To Expand Azure Footprint
 
-## Microsoft will build AI into new laptops, firing shot at Apple
-Microsoft said OpenAI's latest AI models — GPT4o — will also be included on its new computers. Microsoft signed a multibillion-dollar deal with OpenAI in early 2023, gaining access to its ... [Read more](https://www.washingtonpost.com/technology/2024/05/20/microsoft-build-surface-ai-event-copilot/)
+![Image](https://cdn.benzinga.com/files/imagecache/1024x768xUP/images/story/2024/05/21/Microsoft-Azure.jpeg)
 
-## Announcing Microsoft's AI Customer Commitments
-That's why today we are announcing three AI Customer Commitments to assist our customers on their responsible AI journey. [Read more](https://blogs.microsoft.com/blog/2023/06/08/announcing-microsofts-ai-customer-commitments/)
+*Date: 2024-05-21T21:28:00+00:00*
 
-## Microsoft and LinkedIn release the 2024 Work Trend Index on the state ...
-For employees, AI raises the bar and breaks the career ceiling. We also see AI beginning to impact the job market. While AI and job loss are top of mind for some, our data shows more people are eyeing a career change, there are jobs available, and employees with AI skills will get first pick. [Read more](https://blogs.microsoft.com/blog/2024/05/08/microsoft-and-linkedin-release-the-2024-work-trend-index-on-the-state-of-ai-at-work/)
+Microsoft embedded AI at every level of the Microsoft Cloud and first-party assets like GitHub, Power Platform, and Security Services.
+
+**Source:** [Business Insider](https://markets.businessinsider.com/news/stocks/microsoft-unveils-ai-strategy-updates-touts-fit-to-purpose-models-plans-to-expand-azure-footprint-1033409032)
+
+---
+
+## Microsoft Build 2024: The Biggest News In AI, Copilots, Data, Security
+
+![Image](https://www.crn.com/news/ai/2024/media_14070b9c216e3fcae8fdeb440d6e4d7b8fd66d593.jpeg?width=1200&format=pjpg&optimize=medium)
+
+*Date: 2024-05-21T13:14:00+00:00*
+
+News around Microsoft Copilot in Azure, Team Copilot and Defender for Cloud are some of the most exciting updates to come out of Build 2024.
+
+**Source:** [CRN](https://www.crn.com/news/ai/2024/microsoft-build-2024-the-biggest-news-in-ai-copilots-data-security)
+
+---
+
+## Watch the Microsoft Build 2024 keynote live here: More on Copilot+ and AI-enhanced PCs
+
+![Image](https://s.yimg.com/ny/api/res/1.2/pz8afy8PRMVhmHAtZS03jw--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyMDA7aD02NzA-/https://s.yimg.com/os/creatr-uploaded-images/2024-05/c1f32200-16d0-11ef-bff7-037a785b4e97)
+
+*Date: 2024-05-21T14:41:00+00:00*
+
+Microsoft is streaming its Build 2024 keynote on Tuesday. Here's how to watch -- and what to know about the lower-profile event the day before.
+
+**Source:** [Yahoo](https://www.yahoo.com/news/watch-microsoft-build-2024-keynote-live-here-more-on-copilot-and-ai-enhanced-pcs-003204775.html)
+
+---
+
+## Microsoft introduces Phi-Silica, a 3.3B parameter model made for Copilot+ PC NPUs
+
+![Image](https://venturebeat.com/wp-content/uploads/2024/05/DSC06049.jpg?w=1200&strip=all)
+
+*Date: 2024-05-22T00:14:00+00:00*
+
+Phi-Silica is the fifth variation of Microsoft's Phi-3 model, joining Phi-3-mini with 3.8 billion parameters, Phi-3-small with 7 billion parameters, Phi-3-medium with 14 billion parameters, and Phi-3-vision with 4.2 billion parameters.
+
+**Source:** [VentureBeat](https://venturebeat.com/ai/microsoft-introduces-phi-silica-a-3-3b-parameter-model-made-for-copilot-pc-npus/)
+
+---
+
+## Microsoft Build 2024: news and announcements from the developer conference
+
+*Date: 2024-05-22T00:45:00+00:00*
+
+Microsoft is kicking off its three-day Build developer conference on Tuesday, May 21st, with a livestream starting at 11:30AM ET / 8:30AM PT. It'll lead into an in-person keynote led by CEO Satya Nadella, which commences at 12PM ET / 9AM PT, followed by developer sessions that will come available to check out online.
+
+**Source:** [The Verge](https://www.theverge.com/2024/5/21/24161221/microsoft-build-2024-news-ai-copilot-plus/archives/2)
+
+---
+
+## Microsoft's Copilot+ PCs, New Surface Laptops and More Pre-Build 2024 Announcements
+
+![Image](https://assets.techrepublic.com/uploads/2024/05/tr_20240522-microsoft-copilot-pcs-surface-laptops.jpg)
+
+*Date: 2024-05-22T01:14:00+00:00*
+
+During a keynote event before its Build 2024 conference, Microsoft announced Copilot+ PCs, Surface Pro 11, Surface Laptop 7 and more.
+
+**Source:** [TechRepublic](https://www.techrepublic.com/article/microsoft-copilot-pcs-surface-laptops/)
+
+---
+
+## Microsoft's Team Copilot is a virtual team member that can run meetings and projects
+
+![Image](https://venturebeat.com/wp-content/uploads/2024/05/adobe-firefly-robot-helping-human-in-office.jpg?w=1200&strip=all)
+
+*Date: 2024-05-21T22:29:00+00:00*
+
+Microsoft introduces Team Copilot, a virtual team member to run meetings, take notes, and handle project management, coming later in 2024.
+
+**Source:** [VentureBeat](https://venturebeat.com/ai/microsoft-introduces-team-copilot-to-run-meetings-and-projects/)
+
+---
+
+## Microsoft's AI will be inside Minecraft, and other Xbox, PC games: new Copilot features will search your inventories, offer tips and guides
+
+![Image](https://cdn.mos.cms.futurecdn.net/QK8cAuTq6XEmrbeQyQJjvB-1200-80.jpg)
+
+*Date: 2024-05-20T21:46:00+00:00*
+
+Microsoft Copilot is a suite of tools based on OpenAI's ChatGPT and Dalle-3 language models to help users with every day queries. Microsoft demonstrated Copilot AI gaming features at today's Surface and AI event, detailing how Copilot will help gamers find information more easily.
+
+**Source:** [Windows Central on MSN.com](https://www.msn.com/en-us/news/technology/microsofts-ai-will-be-inside-minecraft-and-other-xbox-pc-games-new-copilot-features-will-search-your-inventories-offer-tips-and-guides/ar-BB1mJyzz)
+
+---
+
+## Microsoft's Build Conference This Week To Showcase AI Push, New Products And More: Here's What Investors Should Know
+
+![Image](https://cdn.benzinga.com/files/imagecache/1024x768xUP/images/story/2024/05/20/Microsoft-Copilot.jpeg)
+
+*Date: 2024-05-20T15:25:00+00:00*
+
+Microsoft is set to kick off its annual Build developer conference, where the company will highlight its AI initiatives and new product launches.
+
+**Source:** [Business Insider](https://markets.businessinsider.com/news/stocks/microsoft-s-build-conference-this-week-to-showcase-ai-push-new-products-and-more-here-s-what-investors-should-know-1033403395)
 """
