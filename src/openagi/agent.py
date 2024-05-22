@@ -8,6 +8,8 @@ from openagi.exception import ExecutionFailureException, OpenAGIException
 from openagi.llms.azure import LLMBaseModel
 from openagi.memory.memory import Memory
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
+from openagi.tasks.lists import TaskLists
+from openagi.memory import Memory
 from openagi.prompts.execution import TaskExecutor
 from openagi.tasks.lists import TaskLists
 from openagi.tasks.task import Task
