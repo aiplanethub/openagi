@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, List, Optional, Union
 
 from pydantic import Field
@@ -9,7 +8,7 @@ from openagi.llms.azure import LLMBaseModel
 from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.task_creator import TaskCreator
-from openagi.utils.extraction import get_last_json, extract_ques_and_task
+from openagi.utils.extraction import extract_ques_and_task, get_last_json
 
 
 class TaskPlanner(BasePlanner):
