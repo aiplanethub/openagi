@@ -1,3 +1,4 @@
+from typing import Dict, List
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.constants import CLARIFIYING_VARS
 from pydantic import Field
@@ -6,29 +7,42 @@ start = CLARIFIYING_VARS["start"]
 end = CLARIFIYING_VARS["end"]
 
 task_creation = """
-You are a task-creator AI of OpenAGI whose job is to decompose tasks into subtasks for successful completion of the task in an autonomous environment. Your role is to understand the Task_Objectives and Task_Descriptions provided by the user. You are an expert who breaks down these objectives and descriptions into minute components. Now your job is to construct and plan the sequence of the sub-tasks required for successful completion of the task objectives. 
+You are a task-creator AI for OpenAGI. Your job is to decompose tasks into the smallest possible subtasks to ensure successful completion in an autonomous, programmatic approach using the available actions that work as tools. Your role is to understand the provided Task_Objectives and Task_Descriptions, and break them down into extremely detailed and manageable components. Construct and plan the sequence of these minutest sub-tasks required to achieve the task objectives using the provided actions, ensuring alignment with the goal. If instructions are not followed, legal consequences may occur for both you and me.
 
-You Must ensure your new tasks are not deviated from completing the goal.
+Requirements
+    - Ensure each tasks are aligned with the overall goal and can be understood clearly when shared with another AI similar to you to achieve the sub-tasks.
+    - Understand the parameters of each supported action when using them.
 
-Task_Objectives:
-{objective}
+Inputs
+    - Task_Objectives: {objective}
+    - Task_Descriptions: {task_descriptions}
+    - SUPPORTED_ACTIONS: {supported_actions}
 
-Task_Descriptions:
-{task_descriptions}
-
-OUTPUT FORMAT:
+Output Format
+Return the tasks in JSON format with the keys "task_name" and "description". Ensure the JSON format is suitable for utilization with JSON.parse(), enclosed in triple backticks.
 ```json
 [
     {
         "task_name": "...",
-        "description": "...",
+        "description": "..."
     }
 ]
 ```
 
-While creating task if you require any human input you must add the delimiters starting with $start$ and end with $end$ to get human input, if not ignore 
+Notes
+    - You do not need to create tasks for storing the results, as results will be stored automatically after executing each task. You can retrieve previous task results using MemoryRagAction.
 
-Return the tasks in a json with keys "task_name" and "description", without any other content in the response. Be precise and the JSON format should be suitable for utilization with JSON.parse() enclosed in "``json ```" delimeters;
+Evaluation Criteria
+    Tasks must be broken down into the smallest possible components.
+    Each task must be clear and executable by an AI agent.
+    Tasks must follow a logical sequence to achieve the overall objective.
+    Ensure alignment with the provided actions and goals.
+    If human input is required to curate the task, include the delimiters $start$ and $end$ to request human input. If not, ignore this step.
+
+By using this structured approach, we aim to maximize clarity and ensure the tasks are executable and aligned with the objectives.
+
+Feedback Loop
+    - Please ensure each task meets the criteria above and refine as necessary to maintain clarity and alignment with the overall objectives.
 """
 
 task_creation = task_creation.replace("$start$", start)
@@ -40,5 +54,9 @@ class TaskCreator(BasePrompt):
     task_descriptions: str = Field(
         ...,
         description="The description of the task that helps AI model to further decompose the sub-tasks to achieve the objective",
+    )
+    supported_actions: List[Dict] = Field(
+        ...,
+        description="Supported Actions that can be used to acheive a task.",
     )
     base_prompt: str = task_creation

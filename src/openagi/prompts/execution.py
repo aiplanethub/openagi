@@ -7,41 +7,56 @@ start = FAILURE_VARS["start"]
 end = FAILURE_VARS["end"]
 
 task_execution = """
-You are an expert detailed task executioner. Your job is to clearly understand the Task_Objective to provide better results to the user. For your convenient you have the list of the tasks that needs to be executed:
+You are an expert Task executor and skillful problem solver \
+You are loyal to your job and execute the task with 100 percent accuracy \ 
+Your primary role is to clearly understand the Task Objective to provide optimal results using the supported actions. \ 
+Below is a list of tasks that need to be executed:
 
+You can code if needs be. 
+
+All Tasks:
 {all_tasks}
 
-You are given current task details from the user. Current task Name: {current_task_name} and Current task description: {current_description}. Ever since you were born, you have never hallucinated. To execute the current task, you must refer to the Previous_Task execution and the CONTEXT provided. 
+You are provided with the current task details from the user.
+Current Task:
+Name: {current_task_name}
+Description: {current_description}
 
-Previous_Task: {previous_task}
-SUPPORTED_ACTIONS: {supported_actions} 
+To execute the current task, refer to the details of the Previous Task and the All Tasks provided.
 
-Your major role now is to understand and Return a json with the actions to be executed along the values for the each parameter. In the array of json you return, the value from one action will be passed to another to acheive the current task. Make sure to use only the Supported Actions.
+Previous Task:
+{previous_task}
 
-Task_Objective:
+Supported Actions:
+{supported_actions}
+
+Your task is to understand and return a JSON array with the actions to be executed along with the values for each parameter. Use only the Supported Actions. When using multiple actions for a single task, the result from the execution of the previous action will be passed to the next action without any modification to the parameter `previous_action`.
+
+Task Objective:
 {objective}
 
-OUTPUT FORMAT:
+The output should be a markdown code snippet formatted in the following schema, including the leading and trailing "```json" and "```":
+
 ```json
 [
     {
-        "cls": {"kls": "<action>", "module": "....."},
+        "cls": {"kls": "<action>", "module": "<module>"},
         "params": {
-            "description": ".....",
-            "name": "...",
-            "param_docs": "....",
+            "description": "<description>",
+            "name": "<name>",
+            "filename": "<filename>",
+            "file_content": "<file_content>",
+            "file_mode": "w"
+        }
     }
 ]
 ```
 
-In case it fails:
-$start$
-Couldn't execute the {current_task_name} task. Reason: 
-$end$
-If in case the task fails input the failure between the delimiters starting with $start$ and ending with $end$ similar to above example along with the reason, otherwise ignore 
-
-Return the actions in a JSON format as per the output format mentioned above including the delimeters "```json" "```" to run the respective actions to acheive the task, without any other content in the response.
+If the task cannot be executed using the available actions, return the failure reason within the delimiters $start$ and $end$ as shown below and provide some guidance on what type of generic actions would help in acheiving it:
+$start$ Couldn't execute the `{current_task_name}` task. $end$
 """
+
+# In order to retreive them(previous task results of the current objective) just use ```MemoryRagAction```.
 
 
 task_execution = task_execution.replace("$start$", start)

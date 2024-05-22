@@ -1,16 +1,16 @@
 import logging
-from typing import Dict, Optional
-from pydantic import Field
-from openagi.actions.base import BaseAction
-
 from pathlib import Path
+from typing import Dict, Optional
+
+from pydantic import Field
+
+from openagi.actions.base import BaseAction
 
 
 class CreateFileAction(BaseAction):
     """Create file Action"""
 
     filename: str = Field(..., description="Name of the file along with the directory.")
-    dir_mode: int = Field(default=0o777, description="Mode of the folder.")
     parent_mkdir: bool = Field(
         default=True, description="Create parent directories of the file if not exist."
     )
@@ -28,7 +28,6 @@ class CreateFileAction(BaseAction):
         output_file.parent.mkdir(
             parents=self.parent_mkdir,
             exist_ok=self.exist_ok,
-            mode=self.dir_mode,
         )
 
         write_kwargs = {}
@@ -46,21 +45,13 @@ class WriteFileAction(BaseAction):
     file_content: str = Field(default="", description="String content of the file to insert")
     file_mode: str = Field(
         default="w",
-        description="File mode to open the file with while using python's open() func.",
+        description="File mode to open the file with while using python's open() func. Defaults to 'w'",
     )
 
     def execute(self):
         logging.debug(f"Running Action {self.__class__.__name__}")
-        # output_file = Path(self.filename)
-        # output_file.parent.mkdir(
-        #     parents=self.parent_mkdir,
-        #     exist_ok=self.exist_ok,
-        #     mode=self.dir_mode,
-        # )
-        # return output_file.write_text(data=self.file_content)
         output_file = Path(self.filename)
-        print(f"{self.file_content}\n\n\n")
-        print(f"Writing file - {output_file.absolute()}")
+        logging.info(f"Writing file - {output_file.absolute()}")
         with open(output_file.absolute(), self.file_mode) as f:
             f.write(self.file_content)
         return self.file_content

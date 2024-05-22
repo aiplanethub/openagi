@@ -24,9 +24,6 @@ class AzureChatOpenAIModel(LLMBaseModel):
 
     config: Any
 
-    # def __init__(self, config: AzureChatConfigModel):
-    #     super().__init__(config)
-
     def load(self):
         """Initializes the AzureChatOpenAI instance with configurations."""
         self.llm = AzureChatOpenAI(
