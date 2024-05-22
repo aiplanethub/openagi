@@ -6,13 +6,9 @@ from openagi.actions.base import BaseAction
 
 
 class MemoryRagAction(BaseAction):
-    """RAG on Previous Observation"""
-
-    name: str = Field(default="MemoryRagAction", description="Name of the action.")
-    description: str = Field(
-        default="Action class to get all the results from the previous tasks for the current objetive",
-        description="Action class to get all the results from the previous tasks for the current objetive. This action is responsible to reading and not writing. Writing is done by default for every task.",
-    )
+    """Action class to get all the results from the previous tasks for the current objetive.
+    This action is responsible to reading and not writing. Writing is done by default for every task.
+    """
 
     query: str = Field(
         ...,

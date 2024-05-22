@@ -27,8 +27,11 @@ class DuckDuckGoSearch(BaseAction):
         description="Total results, in int, to be executed from the search. Defaults to 10.",
     )
 
+    def _get_ddgs(self):
+        return DDGS()
+
     def execute(self):
-        result = DDGS().text(
+        result = self._get_ddgs().text(
             self.query,
             max_results=self.max_results,
         )
@@ -39,7 +42,7 @@ class DuckDuckGoNewsSearch(DuckDuckGoSearch):
     """Use this Action to get the latest news from DuckDuckGo."""
 
     def execute(self):
-        ddgs = DDGS()
+        ddgs = self._get_ddgs()
         return json.dumps(
             ddgs.news(keywords=self.query, max_results=(self.max_results)), indent=2
         )
