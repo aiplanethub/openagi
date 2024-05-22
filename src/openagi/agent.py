@@ -60,9 +60,9 @@ class Admin(BaseModel):
             self.memory = Memory()
 
         # Actions
-        # self.actions = self.actions or []
-        # default_actions = [MemoryRagAction]
-        # self.actions.extend(default_actions)
+        self.actions = self.actions or []
+        default_actions = [MemoryRagAction]
+        self.actions.extend(default_actions)
 
         return resp
 
@@ -94,7 +94,7 @@ class Admin(BaseModel):
 
     def run(self, query: str, description: str):
         logging.info("Running Admin Agent...")
-        logging.info(f"SessionID - {self.memory.sessiond_id}")
+        logging.info(f"SessionID - {self.memory.session_id}")
 
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(query=query, descripton=description)
@@ -129,8 +129,9 @@ class Admin(BaseModel):
                 cur_task.result = str(res)
                 cur_task.actions = str(actions)
                 prev_task = cur_task.model_copy()
-                self.memory.save_task(prev_task)
+                self.memory.update_task(prev_task)
             steps += 1
+
         # Final result
         logging.info("Finished Execution...")
         # print(f"\n ******** Final Response *******\n{res}\n\n")
@@ -143,7 +144,7 @@ class Admin(BaseModel):
                 memory=self.memory,
             )
             res = output_formatter.execute()
-        logging.debug(f"Execution Completed for Session ID - {self.memory.sessiond_id}")
+        logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return res
 
     def _run_action(self, action_cls: str, **kwargs):
@@ -168,6 +169,7 @@ class Admin(BaseModel):
         prev_task: Task,
     ):
         logging.info(f"{'>'*10} Starting execution of `{task.name} [{task.id}]` {'<'*10}")
+        logging.info(f"Description - {task.description}")
         # Get supported actions and convert to array of dict(actions)
         actions_dict: List[BaseAction] = []
         for act in self.actions:

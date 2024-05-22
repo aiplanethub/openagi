@@ -34,26 +34,22 @@ class ChromaStorage(BaseStorage):
 
     def save_document(self, id, document, metadata):
         """Create a new document in the ChromaDB collection."""
-        if not isinstance(document, list):
-            document = [document]
-        if not isinstance(metadata, list):
-            metadata = [metadata]
 
         resp = self.collection.add(ids=id, documents=document, metadatas=metadata)
         return resp
 
-    def update_document(self, doc_id, document, metadata):
+    def update_document(self, id, document, metadata):
         """Update an existing document in the ChromaDB collection."""
-        if not isinstance(document, list):
-            document = [document]
-        if not isinstance(metadata, list):
-            metadata = [metadata]
-        self._collection.update(ids=[doc_id], documents=document, metadatas=metadata)
+        # if not isinstance(document, list):
+        #     document = [document]
+        # if not isinstance(metadata, list):
+        #     metadata = [metadata]
+        self.collection.update(ids=[id], documents=document, metadatas=metadata)
         logging.info("Document updated successfully.")
 
-    def delete_document(self, doc_id):
+    def delete_document(self, id):
         """Delete a document from the ChromaDB collection."""
-        self._collection.delete(ids=[doc_id])
+        self.collection.delete(ids=[id])
         logging.debug("Document deleted successfully.")
 
     def query_documents(self, **kwargs):
