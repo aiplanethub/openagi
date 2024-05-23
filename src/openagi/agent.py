@@ -1,11 +1,10 @@
-from enum import Enum
 import logging
+from enum import Enum
 from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
-from openagi.actions.compressor import SummarizerAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
 from openagi.exception import ExecutionFailureException, OpenAGIException
@@ -20,6 +19,7 @@ from openagi.utils.extraction import (
     get_classes_from_json,
     get_last_json,
 )
+from openagi.utils.helper import get_default_llm
 
 
 class OutputFormat(str, Enum):
@@ -32,7 +32,7 @@ class Admin(BaseModel):
         default=TaskPlanner(),
         description="Type of planner to use for task decomposition.",
     )
-    llm: LLMBaseModel = Field(
+    llm: Optional[LLMBaseModel] = Field(
         description="LLM Model to be used.",
     )
     memory: Optional[Memory] = Field(
@@ -59,7 +59,9 @@ class Admin(BaseModel):
         if not self.memory:
             self.memory = Memory()
 
-        # Actions
+        if not self.llm:
+            self.llm = get_default_llm()
+
         self.actions = self.actions or []
         default_actions = [MemoryRagAction]
         self.actions.extend(default_actions)
