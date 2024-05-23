@@ -10,23 +10,22 @@
 <i><a href="https://discord.gg/4aWV7He2QU">👉 Join our Discord community!</a></i>
 </div>
 
-
 ## Installation
 
 1. Setup a virtual environment.
 
-    ```bash
-    # For Mac users
-    python3 -m venv venv
-    source venv/bin/activate
+   ```bash
+   # For Mac users
+   python3 -m venv venv
+   source venv/bin/activate
 
-    # For Windows users
-    python -m venv venv
-    venv/scripts/activate
+   # For Windows users
+   python -m venv venv
+   venv/scripts/activate
 
-    # to create virtual env using particular python version (in Windows)
-    py -3.11 -m venv venv
-    ```
+   # to create virtual env using particular python version (in Windows)
+   py -3.11 -m venv venv
+   ```
 
 2. Install the openagi
 
@@ -48,8 +47,8 @@ For more queries find documentation for OpenAGI at [openagi.aiplanet.com](https:
 
 ## Example
 
-Follow this example to create a Test Case job search it help you to search available job posting for a given category
-Here in the example we are using AzureChatOpenAIModel along with GoogleSerpAPISearch to search the internet for various job posting on the particular role.
+Follow this example to create a **Job Search Agent** that helps you to search available job posting for a given category.
+Here in the example we are using `AzureChatOpenAIModel` along with `GoogleSerpAPISearch` to search the internet for various job posting on the particular role.
 
 **Note:** Follow setup guide to configure the environment. For quick access click [here](https://openagi.aiplanet.com/getting-started/installation).
 
@@ -97,10 +96,11 @@ Please provide a list of suitable job descriptions, including the key responsibi
     # Print the results from the OpenAGI
     print("-" * 100)  # Separator
     Console().print(Markdown(res))
+```
 
+Below is the output from the agent:
 
-# The Agent did some research using the given actions and job positions.
-"""
+```
 ## Job Opportunities and Descriptions in Finance Technology
 
 1. **Strategic Programs Finance Tech Manager** - The Finance technology team supervises a large portfolio of ongoing transformation programs that are each operated by individual teams from Finance, CIO and more. [More details](https://www.accenture.com/in-en/careers/jobdetails?id=R354135_en)
@@ -122,7 +122,6 @@ Please provide a list of suitable job descriptions, including the key responsibi
 9. **Financial Technology jobs in India** - Experience level. Internship (48). Entry level (1,708). Associate (588). Mid-Senior level (5,269). Director (402). [More details](https://in.linkedin.com/jobs/financial-technology-jobs)
 
 10. **Senior Executive/Middle level executive - Mumbai** - The ideal candidate will be responsible for identifying, analyzing, and strategizing the resolution of non-performing assets (NPAs) acquired. [More details](https://www.naukri.com/job-listings-senior-executive-middle-level-executive-acaipl-investment-financial-services-mumbai-3-to-8-years-080524005387)
-"""
 ```
 
 ## Prominent Features:
