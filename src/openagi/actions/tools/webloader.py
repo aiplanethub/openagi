@@ -8,7 +8,6 @@ from sumy.summarizers.lsa import LsaSummarizer
 from sumy.utils import get_stop_words
 
 from openagi.actions.base import BaseAction
-from langchain.tools.playwright import NavigateTool, ExtractTextTool
 
 nltk.download("punkt")
 
