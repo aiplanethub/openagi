@@ -8,27 +8,24 @@
 
 ## Components
 
-* [Data Source & VectorDB (Coming soon)](components/data-source-and-vectordb-coming-soon.md)
-* [Agent](components/agent.md)
-* [Agent Attributes](components/agent-attributes.md)
-* [Tools](components/tools.md)
+* [Admin](components/admin.md)
+* [Planner](components/planner.md)
 * [LLM](components/llm.md)
-* [Agent Architectures](components/workflow.md)
-* [Integrations APIs to third parties (Coming soon)](components/integrations-apis-to-third-parties-coming-soon.md)
-* [Kick-Off](components/kick-off.md)
+* [Action](components/action.md)
+* [Tools](components/tools.md)
+* [Memory](components/memory.md)
+* [VectorStore](components/vectorstore/README.md)
+  * [ChromaStorage](components/vectorstore/chromastorage.md)
 
 ## Use Cases
 
-* [ExaSeach/GmailAgent](use-cases/exaseach-gmailagent.md)
 * [JobSearch Agent](use-cases/jobsearch-agent.md)
-* [Github Agent](use-cases/github-agent.md)
-* [Market Agent](use-cases/market-agent.md)
+* [News Agent](use-cases/github-agent.md)
+* [Itinerary Planner](use-cases/market-agent.md)
 
-## Planner LLM UI
+## Acknowledgment
 
-* [Automated Agent Configuration](planner-llm-ui/automated-agent-configuration.md)
-* [ACKNOWLEDGEMENTS](planner-llm-ui/acknowledgements/README.md)
-  * [Special Mentions](planner-llm-ui/acknowledgements/special-mentions.md)
+* [Special Mentions](acknowledgment/special-mentions.md)
 
 ***
 

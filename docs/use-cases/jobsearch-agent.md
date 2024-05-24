@@ -1,50 +1,64 @@
 # JobSearch Agent
 
-This code presents a Python script that sets up an AI agent, named "RESEARCHER," to find relevant job opportunities based on given specifications and a provided resume.
+It utilize various tools for internet search and document comparison to fulfill its task. Upon finding the relevant job opportunities, The script configures the agent's role, goal, backstory, capabilities, and specific task to accomplish. Additionally, it initializes logging for debugging purposes and triggers the execution of the agent.
 
-&#x20;It utilizes various tools for internet search and document comparison to fulfill its task. Upon finding the relevant job opportunities, The script configures the agent's role, goal, backstory, capabilities, and specific task to accomplish. Additionally, it initializes logging for debugging purposes and triggers the execution of the agent.
-
-The example and result can be observed by executing “python usecase/ProfAgentJobSearch.py”.
-
-#### Example Code:
-
-In the code below: the agent is configured as a Researcher to find the related jobs as per the specification. The agent's goal, backstory, capability, task and the tools needed are included for the same.
+### Import the required document
 
 ```python
-from openagi.agent import Agent
-from openagi.init_agent import kickOffAgents
+from openagi.actions.tools.serp_search import GoogleSerpAPISearch
+from openagi.agent import Admin
 from openagi.llms.azure import AzureChatOpenAIModel
-from openagi.tools.integrations import (
-    DocumentCompareSearchTool,
-    DuckDuckGoSearchTool,
-    ExaSearchTool,
+from openagi.memory import Memory
+from openagi.planner.task_decomposer import TaskPlanner
+from rich.console import Console
+from rich.markdown import Markdown
+import os
+```
+
+### Setup LLM
+
+```python
+os.environ["AZURE_BASE_URL"]="https://<replace-with-your-endpoint>.openai.azure.com/"
+os.environ["AZURE_DEPLOYMENT_NAME"] = "<replace-with-your-deployment-name>"
+os.environ["AZURE_MODEL_NAME"]="gpt4-32k"
+os.environ["AZURE_OPENAI_API_VERSION"]="2023-05-15"
+os.environ["AZURE_OPENAI_API_KEY"]=  "<replace-with-your-key>"
+
+config = AzureChatOpenAIModel.load_from_env_config()
+llm = AzureChatOpenAIModel(config=config)
+
+company_domain = input("What is the company domain?\n")
+job_domain = input("What is the job domain?\n")
+job_level = input("What level job are you looking for?\n")
+job_location = input("In what location are you for the job?\n")
+
+query = f"""
+Need help finding a job description based on the following criteria:
+
+Company Domain: {company_domain}
+Job Domain: {job_domain}
+Job Level: {job_level}
+Job Location: {job_location}
+
+Please provide a list of suitable job descriptions, including the key responsibilities, requirements, and any other relevant details.
+"""
+```
+
+### Execute Agent LLM
+
+```python
+admin = Admin(
+    llm=llm,
+    actions=[GoogleSerpAPISearch],
+    planner=TaskPlanner(human_intervene=False),
+    memory=Memory(),
 )
 
-if __name__ == "__main__":
-    agent_list = [
-        Agent(
-            agentName="RESEARCHER",  # name
-            role="RESEARCHER",  # role
-            goal="Find the most recent and relatable jobs based on the specifications given with the help of internet search and context from given Resume within context length.",
-            backstory="A Job finder that can easily search for most relevant opportunities based on the given resume and job specifications.",
-            capability="search_executor",
-            task="Give me 5 most recent job based on my resume in resume.pdf file related to my expertise and make sure the opportunity is remote and has a salary of 8LPA or more.",
-            output_consumer_agent="HGI",  # the consumer agent after executing task
-            tools_list=[ExaSearchTool, DuckDuckGoSearchTool, DocumentCompareSearchTool],
-        )
-    ]
+res = admin.run(
+    query=query,
+    description="You are an expert Internet searching agent , who gives best possible response.",
+)
+
+# Print the results from the OpenAGI
+Console().print(Markdown(res))
 ```
-
-The Agents defines an AzureChatOpenAI configuration and then the framework executes its kick off using the code segment below:
-
-```python
-    config = AzureChatOpenAIModel.load_from_yml_config()
-    azure_chat_model = AzureChatOpenAIModel(config=config)
-    kickOffAgents(agent_list, [agent_list[0]], llm=azure_chat_model)
-```
-
-#### Output:
-
-<figure><img src="../.gitbook/assets/image (21).png" alt=""><figcaption></figcaption></figure>
-
-Code Example:[ ](https://github.com/aiplanethub/agents/blob/tool/usecases/ProfAgentJobSearch.py) usecases/ProfAgentJobSearch.py

@@ -1,45 +1,38 @@
 # LLM
 
-Large Language Models serve as the backbone for executing Agent tasks. The tools within the agents fetch the data, which is then passed as context to the LLM. This context triggers the KickOffAgent to execute the required tasks accordingly. Currently, OpenAGI supports two LLMs: OpenAI and Azure ChatOpenAI model.
+Large Language Models (LLMs) serve as the backbone for executing Agentic workflows. LLMs excel at generating responses and, when combined with human-like planning, reasoning, and task decomposition, give rise to the concept of Agents. In OpenAGI, LLMs plan and reason to decompose task objectives into sub-tasks. They then execute these sub-tasks and return meaningful responses to the user.&#x20;
 
-> LLM is passed into kickOffGenAIAgents to execute the agents response.&#x20;
+LLMs can be implemented within the Admin and utilize a Planner to execute tasks. Currently, OpenAGI supports two LLMs: OpenAI and Azure ChatOpenAI models.
 
-### OpenAIModel
+### OpenAI Model
 
-OpenAGI supports the GPT-3.5 model by default, represented as OpenAGI. To initialize this model, you need to insert the OpenAI API key inside the `agentConfig.yaml` file and pass the configuration details as parameters to execute the LLM.
+OpenAGI supports the GPT-3.5 model by default, represented as OpenAGI. To initialise this model, you need to insert the OpenAI API key inside the environment file and pass the configuration details as parameters to execute the LLM.
 
-```
-from openagi.llms.openai import OpenAIModel 
+```python
+import os
+from openagi.llms.openai import OpenAIModel
 
-config = OpenAIModel.load_from_yml_config()
+os.environ['OPENAI_API_KEY'] = "sk-<replace-with-your-key>"
+
+config = OpenAIModel.load_from_env_config()
 llm = OpenAIModel(config=config)
-```
-
-#### Params Configuration
-
-```
-OPENAI_API_KEY: sk-abcd #replace with your key
 ```
 
 ### Azure ChatOpenAI Model
 
-For a Large Language Model, context length is crucial. To utilize a large context, such as 32K from GPT-4, we employ the AzureOpenAI chat model. To initialize this model, you need to insert the parameter configuration inside the `agentsConfig.yaml` file and pass the configuration details as parameters to execute the LLM.
+For a Large Language Model, context length is crucial. To utilize a large context, such as 32K from GPT-4, we employ the AzureOpenAI chat model. To initialise this model, you need to insert the parameter configuration inside the environment file and pass the configuration details as parameters to execute the LLM.
 
-```
-from openagi.llms.azure import AzureChatOpenAIModel 
+```python
+import os
+from openagi.llms.azure import AzureChatOpenAIModel
 
-config = AzureChatOpenAIModel.load_from_yml_config() 
-azure_chat_model = AzureChatOpenAIModel(config=config)
-```
+os.environ["AZURE_BASE_URL"]="https://<replace-with-your-endpoint>.openai.azure.com/"
+os.environ["AZURE_DEPLOYMENT_NAME"] = "<replace-with-your-deployment-name>"
+os.environ["AZURE_MODEL_NAME"]="gpt4-32k"
+os.environ["AZURE_OPENAI_API_VERSION"]="2023-05-15"
+os.environ["AZURE_OPENAI_API_KEY"]=  "<replace-with-your-key>"
 
-#### Params Configuration
-
-```
-BASE_URL: "https://<abcd>.openai.azure.com/" #replace with your endpoint
-DEPLOYMENT_NAME: "abcd" #replace with your API key
-MODEL_NAME: "gpt4-32k" 
-OPENAI_API_VERSION: "2023-05-15"
-AZURE_OPENAI_API_KEY: abcdefg #replace with your Azure API key
+config = AzureChatOpenAIModel.load_from_env_config()
+llm = AzureChatOpenAIModel(config=config)
 ```
 
-Note, AZURE\_OPENAI\_API\_KEY and OPENAI\_API\_KEY are not enclosed within the quotes. Whereas the secrets configuration such as base url, deployment name are enclosed within the quotes.&#x20;
