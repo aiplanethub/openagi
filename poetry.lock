@@ -345,6 +345,21 @@ files = [
 numpy = {version = ">=1.19.0", markers = "python_version >= \"3.9\""}
 
 [[package]]
+name = "breadability"
+version = "0.1.20"
+description = "Port of Readability HTML parser in Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "breadability-0.1.20.tar.gz", hash = "sha256:f1a7fdad1e58e295df80954879143824c706bbfb1826cdf4b1d15de1a86afe99"},
+]
+
+[package.dependencies]
+chardet = "*"
+docopt = ">=0.6.1,<0.7"
+lxml = ">=2.0"
+
+[[package]]
 name = "build"
 version = "1.2.1"
 description = "A simple, correct Python build frontend"
@@ -465,6 +480,17 @@ files = [
 
 [package.dependencies]
 pycparser = "*"
+
+[[package]]
+name = "chardet"
+version = "5.2.0"
+description = "Universal encoding detector for Python 3"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970"},
+    {file = "chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7"},
+]
 
 [[package]]
 name = "charset-normalizer"
@@ -878,6 +904,16 @@ python-versions = ">=3.6"
 files = [
     {file = "distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"},
     {file = "distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed"},
+]
+
+[[package]]
+name = "docopt"
+version = "0.6.2"
+description = "Pythonic argument parser, that will make you smile"
+optional = false
+python-versions = "*"
+files = [
+    {file = "docopt-0.6.2.tar.gz", hash = "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"},
 ]
 
 [[package]]
@@ -3392,6 +3428,17 @@ files = [
 pyasn1 = ">=0.4.6,<0.7.0"
 
 [[package]]
+name = "pycountry"
+version = "23.12.11"
+description = "ISO country, subdivision, language, currency and script definitions and their translations"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pycountry-23.12.11-py3-none-any.whl", hash = "sha256:2ff91cff4f40ff61086e773d61e72005fe95de4a57bfc765509db05695dc50ab"},
+    {file = "pycountry-23.12.11.tar.gz", hash = "sha256:00569d82eaefbc6a490a311bfa84a9c571cff9ddbf8b0a4f4e7b4f868b4ad925"},
+]
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 description = "C parser in Python"
@@ -4613,6 +4660,34 @@ typing-extensions = {version = ">=3.10.0", markers = "python_version < \"3.10\""
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.7)", "pyyaml"]
 
 [[package]]
+name = "sumy"
+version = "0.11.0"
+description = "Module for automatic summarization of text documents and HTML pages."
+optional = false
+python-versions = "*"
+files = [
+    {file = "sumy-0.11.0-py2.py3-none-any.whl", hash = "sha256:e74323ef95f42be8c76464a758a003597729b60cceb918f4806fdadad3eeb1a8"},
+    {file = "sumy-0.11.0.tar.gz", hash = "sha256:1c52dcfda3072d87c7ae85a100c53a93f5b1f758466a1a1369f86aff1bb0129d"},
+]
+
+[package.dependencies]
+breadability = ">=0.1.20"
+docopt = ">=0.6.1,<0.7"
+nltk = ">=3.0.2"
+pycountry = ">=18.2.23"
+requests = ">=2.7.0"
+
+[package.extras]
+arabic = ["pyarabic"]
+chinese = ["jieba"]
+greek = ["greek-stemmer-pos"]
+hebrew = ["hebrew-tokenizer"]
+japanese = ["tinysegmenter"]
+korean = ["konlpy"]
+lexrank = ["numpy"]
+lsa = ["numpy"]
+
+[[package]]
 name = "sympy"
 version = "1.12"
 description = "Computer algebra system (CAS) in Python"
@@ -5805,4 +5880,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9, <3.12"
-content-hash = "a05a1c92fa090bee14b24062d1412fc737ea03d4f00272425c05612a7f692e5e"
+content-hash = "145b21e48f182f23eda5ce9327393d937b657c9b982e8e5b52fa107856f12d25"
