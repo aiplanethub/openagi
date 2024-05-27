@@ -1,18 +1,24 @@
-from typing import Any, Optional
+from typing import Any, List, Optional
+
 from pydantic import BaseModel, Field
+
 from openagi.llms.base import LLMBaseModel
-from openagi.tools.base import BaseTool
+from openagi.memory.memory import Memory
 
 
 class Worker(BaseModel):
-    role: str = Field(..., description="Role of the worker")
-    backstory: Optional[str] = Field(
-        default=None, description="Backstory for the worker"
+    role: str
+    backstory: Optional[str]
+    llm: Optional[LLMBaseModel] = Field(description="LLM Model to be used.")
+    memory: Optional[Memory] = Field(
+        default_factory=list, description="Memory to be used.", exclude=True
     )
-    tools: Optional[BaseTool] = Field(
-        default_factory=[], description="Tools available for Worker"
+    actions: Optional[List[Any]] = Field(
+        description="Actions that the Worker supports", default_factory=list
     )
-    llm: Optional[LLMBaseModel] = Field(
-        description="LLM Model to be used.",
+    max_steps: int = Field(
+        default=20, description="Maximum number of steps to achieve the objective."
     )
-    st_memory: Optional[Any] = None
+
+    class Config:
+        arbitrary_types_allowed = True

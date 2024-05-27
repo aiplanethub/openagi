@@ -20,6 +20,7 @@ from openagi.utils.extraction import (
     get_last_json,
 )
 from openagi.utils.helper import get_default_llm
+from openagi.worker.worker import Worker
 
 
 class OutputFormat(str, Enum):
@@ -29,28 +30,25 @@ class OutputFormat(str, Enum):
 
 class Admin(BaseModel):
     planner: BasePlanner = Field(
-        default=TaskPlanner(),
-        description="Type of planner to use for task decomposition.",
+        default=TaskPlanner(), description="Type of planner to use for task decomposition."
     )
-    llm: Optional[LLMBaseModel] = Field(
-        description="LLM Model to be used.",
-    )
+    llm: Optional[LLMBaseModel] = Field(description="LLM Model to be used.")
     memory: Optional[Memory] = Field(
-        default_factory=list,
-        description="Memory to be used.",
-        exclude=True,
+        default_factory=list, description="Memory to be used.", exclude=True
     )
     actions: Optional[List[Any]] = Field(
-        description="Actions that the Agent supports",
-        default_factory=list,
+        description="Actions that the Agent supports", default_factory=list
     )
     max_steps: int = Field(
-        default=20,
-        description="Maximum number of steps to achieve the objective.",
+        default=20, description="Maximum number of steps to achieve the objective."
     )
     output_format: OutputFormat = Field(
         default=OutputFormat.markdown,
         description="Format to be converted the result while returning.",
+    )
+    workers: List[Worker] = Field(
+        default_factory=list,
+        description="List of workers managed by the Admin agent.",
     )
 
     def model_post_init(self, __context: Any) -> None:
@@ -75,6 +73,9 @@ class Admin(BaseModel):
             if not issubclass(act_cls, BaseAction):
                 raise ValueError(f"{act_cls} is not a subclass of BaseAction")
         return act_clss
+
+    def assign_worker(self, worker: Worker):
+        self.workers.append(worker)
 
     def run_planner(self, query: str, descripton: str):
         if self.planner:
@@ -215,4 +216,4 @@ class Admin(BaseModel):
             params["previous_action"] = prev_task.result if prev_task else None
             res = self._run_action(action_cls=act_cls, **params)
 
-        return res, actions
+        return res
