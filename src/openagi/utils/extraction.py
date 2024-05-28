@@ -1,27 +1,9 @@
 import importlib
-import inspect
 import json
 import re
-from typing import Callable, Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple
+
 from openagi.prompts.constants import CLARIFIYING_VARS
-
-
-def extract_func_params(func: Callable):
-    funcs_signature = inspect.signature(func)
-    funcs_params = funcs_signature.parameters
-    return {
-        name: param.default != inspect.Parameter.empty
-        for name, param in funcs_params.items()
-        if name != "self"  # noqa: E501
-    }  # {"<attr_name>":"<default_is_empty>"}
-
-
-def extract_class_init_attrs(clss: Type):
-    return extract_func_params(clss.__init__)
-
-
-def extract_cls_method_params(clss: Type, method: Callable):
-    return extract_func_params(getattr(clss, method))
 
 
 def get_last_json(text, max_retry=2):
@@ -57,8 +39,17 @@ def get_last_json(text, max_retry=2):
     return None
 
 
-def get_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
-    instances = []
+def get_act_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
+    """
+    Extracts the Action class names and parameters from a JSON block.
+
+    Args:
+        json_data (List[Dict]): A list of dictionaries containing the class and parameter information.
+
+    Returns:
+        List[Tuple[type, Optional[Dict]]]: A list of tuples containing the Action class and its initialization parameters.
+    """
+    actions = []
 
     for item in json_data:
         # Extracting module and class name
@@ -75,14 +66,20 @@ def get_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
         params = item["params"]
 
         # Storing the instance in the list
-        instances.append((cls, params))
+        actions.append((cls, params))
 
-    return instances
+    return actions
 
 
 def extract_ques_and_task(ques_prompt):
     """
-    Extracts question to be asked to the human and remove delimiters from orignal prompt
+    Extracts the question and task from a given prompt.
+
+    Args:
+        ques_prompt (str): The prompt containing the question and task.
+
+    Returns:
+        Tuple[str, str]: The task and question extracted from the prompt.
     """
     start = CLARIFIYING_VARS["start"]
     end = CLARIFIYING_VARS["end"]
@@ -104,6 +101,15 @@ def extract_ques_and_task(ques_prompt):
 
 
 def find_last_r_failure_content(text):
+    """
+    Finds the content of the last <r_failure> tag in the given text.
+
+    Args:
+        text (str): The text to search for the <r_failure> tag.
+
+    Returns:
+        str or None: The content of the last <r_failure> tag, or None if no matches are found.
+    """
     pattern = r"<r_failure>(.*?)</r_failure>"
     matches = list(re.finditer(pattern, text, re.DOTALL))
     if matches:
@@ -111,3 +117,21 @@ def find_last_r_failure_content(text):
         return last_match.group(1)
     else:
         return None
+
+
+def extract_str_variables(template):
+    """
+    Extracts all variable names from a given template string.
+
+    The function uses a regular expression to find all placeholders within curly braces in the template string, and returns a list of the extracted variable names.
+
+    Args:
+        template (str): The template string to extract variables from.
+
+    Returns:
+        list[str]: A list of variable names extracted from the template.
+    """
+    # This regular expression will find all placeholders within curly braces
+    pattern = r"\{(\w+)\}"
+    matches = re.findall(pattern, template)
+    return matches
