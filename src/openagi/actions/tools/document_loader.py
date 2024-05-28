@@ -29,6 +29,7 @@ class DocumentLoader(BaseAction):
             row_content = data[i].page_content
             row_no = data[i].metadata['row']
             content+= 'row_no' + ' ' + str(row_no) + ': ' + str(row_content)
+        return content
     
     def execute(self):
         if self.file_path.endswith('.txt'):
