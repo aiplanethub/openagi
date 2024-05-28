@@ -24,27 +24,36 @@ def extract_cls_method_params(clss: Type, method: Callable):
     return extract_func_params(getattr(clss, method))
 
 
-def get_last_json(text):
+def get_last_json(text, max_retry=2):
     """
-    Extracts the last block of text between ```json and ``` markers from a given string.
+    Extracts the last block of text between ```json and ``` markers from a given string,
+    with retries if extraction or parsing fails.
 
     Args:
         text (str): The string from which to extract the JSON block.
+        max_retry (int): The maximum number of retries if extraction or parsing fails.
 
     Returns:
-        str or None: The last JSON block including the delimiters if found, otherwise None.
+        dict or None: The last JSON block as a dictionary if found and parsed, otherwise None.
     """
-    # Pattern to find the last occurrence of content between ```json and ```
     pattern = r"```json(.*?)```"
-    # Find all matches in the text
-    matches = re.findall(pattern, text, flags=re.DOTALL)
-    # Return the last match if any
-    try:
+
+    for _ in range(max_retry + 1):
+        # Find all matches in the text
+        matches = re.findall(pattern, text, flags=re.DOTALL)
+
         if matches:
-            matches = matches[-1]
-            return json.loads(matches.strip())
-    except json.JSONDecodeError:
-        return None
+            try:
+                # Attempt to load the last match as JSON
+                json_resp = json.loads(matches[-1].strip())
+                if not json_resp:
+                    continue
+                else:
+                    return json_resp
+            except json.JSONDecodeError:
+                # If JSON decoding fails, continue to the next attempt
+                continue
+
     return None
 
 

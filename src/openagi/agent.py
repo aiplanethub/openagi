@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 from openagi.actions.base import BaseAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
-from openagi.exception import ExecutionFailureException, OpenAGIException
+from openagi.exception import ExecutionFailureException, LLMResponseError, OpenAGIException
 from openagi.llms.azure import LLMBaseModel
 from openagi.memory.memory import Memory
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
@@ -74,8 +74,8 @@ class Admin(BaseModel):
                 raise ValueError(f"{act_cls} is not a subclass of BaseAction")
         return act_clss
 
-    def assign_worker(self, worker: Worker):
-        self.workers.append(worker)
+    def assign_workers(self, workers: List[Worker]):
+        self.workers = workers
 
     def run_planner(self, query: str, descripton: str):
         if self.planner:
@@ -101,8 +101,7 @@ class Admin(BaseModel):
 
         # Planning stage to create list of tasks
         planned_tasks = self.run_planner(query=query, descripton=description)
-        if not planned_tasks:
-            raise OpenAGIException("Failed to Plan Tasks. Please Try Again...")
+
         logging.info("Tasks Planned...")
         logging.debug(f"{planned_tasks=}")
 
@@ -203,6 +202,10 @@ class Admin(BaseModel):
                 f"Execution Failed - {content}; for the task {task.name} [{str(task.id)}]."
             )
         te_actions = get_last_json(resp)
+
+        if not te_actions:
+            raise LLMResponseError("No Actions found in the model response.")
+
         res = None
 
         logging.debug(f"{te_actions}")

@@ -1,11 +1,8 @@
 from typing import Optional
-from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-
-def get_default_id():
-    return uuid4().hex
+from openagi.utils.helper import get_default_id
 
 
 class Task(BaseModel):

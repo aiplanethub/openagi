@@ -4,6 +4,7 @@ from pydantic import Field
 
 from openagi.actions.base import BaseAction
 from openagi.actions.human_input import HumanCLIInput
+from openagi.exception import LLMResponseError
 from openagi.llms.azure import LLMBaseModel
 from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
@@ -53,4 +54,7 @@ class TaskPlanner(BasePlanner):
             prompt, ques_to_human = extract_ques_and_task(resp)
 
         tasks = self._extract_task_from_response(llm_response=resp)
+        if not tasks:
+            raise LLMResponseError("No tasks found in the Planner response.")
+
         return tasks
