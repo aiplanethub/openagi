@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 from openagi.actions.base import BaseAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
+from openagi.actions.utils import run_action
 from openagi.exception import ExecutionFailureException, LLMResponseError
 from openagi.llms.azure import LLMBaseModel
 from openagi.memory.memory import Memory
@@ -254,24 +255,6 @@ class Admin(BaseModel):
             task_lists=task_lists,
         )
 
-    def _run_action(self, action_cls: str, **kwargs):
-        """
-        Runs the specified action with the provided keyword arguments.
-
-        Args:
-            action_cls (str): The class name of the action to be executed.
-            **kwargs: Keyword arguments to be passed to the action class constructor.
-
-        Returns:
-            The result of executing the action.
-        """
-        logging.info(f"Running Action - {action_cls}")
-        kwargs["memory"] = self.memory
-        kwargs["llm"] = self.llm
-        action: BaseAction = action_cls(**kwargs)  # Create an instance with provided kwargs
-        res = action.execute()
-        return res
-
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
         """
         Checks if a given LLM response can be executed as a task.
@@ -352,14 +335,11 @@ class Admin(BaseModel):
         res = None
 
         logging.debug(f"{te_actions}")
-        if not te_actions:
-            logging.warning("No Actions to execute...")
-            return res, None
 
         actions = get_act_classes_from_json(te_actions)
         # Pass previous action result of the current task to the next action as previous_obs
         for act_cls, params in actions:
             params["previous_action"] = prev_task.result if prev_task else None
-            res = self._run_action(action_cls=act_cls, **params)
+            res = run_action(action_cls=act_cls, **params)
 
         return res

@@ -128,7 +128,6 @@ class TaskPlanner(BasePlanner):
         prompt_template = self.get_prompt()
         prompt: str = prompt_template.from_template(variables=planner_vars)
 
-        print(f"\n\nOpenAGI: {prompt}\n\n")
         resp = self.llm.run(prompt)
         prompt, ques_to_human = self.extract_ques_and_task(resp)
 

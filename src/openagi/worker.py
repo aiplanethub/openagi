@@ -1,11 +1,16 @@
 import logging
-from typing import Any, List, Optional
+import re
+from textwrap import dedent
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from openagi.actions.utils import run_action
 from openagi.llms.base import LLMBaseModel
 from openagi.memory.memory import Memory
+from openagi.prompts.worker_task_execution import WorkerAgentTaskExecution
 from openagi.tasks.task import Task
+from openagi.utils.extraction import get_act_classes_from_json, get_last_json
 from openagi.utils.helper import get_default_id
 
 
@@ -51,8 +56,105 @@ class Worker(BaseModel):
             "supported_actions": [action.cls_doc() for action in self.actions],
         }
 
+    @staticmethod
+    def get_last_final_output(text):
+        """
+        Finds the content of the last <r_failure> tag in the given text.
+
+        Args:
+            text (str): The text to search for the <r_failure> tag.
+
+        Returns:
+            str or None: The content of the last <r_failure> tag, or None if no matches are found.
+        """
+        pattern = r"<r_failure>(.*?)</r_failure>"
+        matches = list(re.finditer(pattern, text, re.DOTALL))
+        if matches:
+            last_match = matches[-1]
+            return last_match.group(1)
+        else:
+            return None
+
+    def provoke_thought_obs(
+        self,
+        task_to_execute,
+        workers_description,
+        supported_actions,
+        observation,
+    ):
+        thoughts = dedent(
+            f"""
+        Question: {task_to_execute}
+        Thought: {workers_description}
+        supported_actions: {supported_actions}
+        Observation: {observation}
+        """.strip()
+        )
+        return thoughts
+
+    def should_continue(self, llm_resp: str) -> Union[bool, Optional[str]]:
+        output: Dict = get_last_json(llm_resp)
+        output_key_exists = True if output.get(self.output_key) else False
+        return (not output_key_exists, output)
+
     def execute_task(self, task: Task) -> Any:
         """
         Executes the specified task.
         """
-        logging.info(f"Executing Task - {task.id} with worker - {self.role}[{self.id}]")
+        logging.info(f"Executing Task - {task.name} with worker - {self.role}[{self.id}]")
+        iteration = 1
+        task_to_excute = f"{task.description}"
+        worker_description = f"{self.role} - {self.description}"
+        supported_actions = [action.cls_doc() for action in self.actions]
+        observations = None
+
+        te_vars = dict(
+            thought_provokes=self.provoke_thought_obs(
+                task_to_excute,
+                worker_description,
+                supported_actions,
+                observations,
+            ),
+            output_key=self.output_key,
+            observations=observations,
+        )
+
+        prompt = WorkerAgentTaskExecution()
+        prompt = prompt.from_template(te_vars)
+        observations = self.llm.run(prompt)
+
+        prev_action_result = None
+
+        continue_flag, output = self.should_continue(observations)
+
+        while iteration < self.max_iterations and continue_flag:
+            logging.info(f"Iteration - {iteration}")
+            logging.info(f"Observations -- {observations}")
+            thought_prompt = self.provoke_thought_obs(
+                task_to_excute,
+                worker_description,
+                supported_actions,
+                observations,
+            )
+            logging.info(f"PROMPT -- {prompt}\n{thought_prompt}")
+            observations = self.llm.run(prompt)
+            logging.info(f"Observations -- {observations}")
+            continue_flag, output = self.should_continue(observations)
+            if not continue_flag:
+                logging.info(f"Output -- {output}")
+                break
+            # Assume that if continue_flag is false, action will be passed.
+            action = output.get("action")
+            logging.info(f"Action -- {action}")
+            if action is None:
+                logging.info("Action is None. Terminating the execution.")
+                break
+            actions = get_act_classes_from_json([action])
+            for act_cls, params in actions:
+                params["previous_action"] = prev_action_result if prev_action_result else None
+                res = run_action(action_cls=act_cls, **params)
+                observations = f"{observations}\nResult: {res}"
+
+            iteration += 1
+
+        return output
