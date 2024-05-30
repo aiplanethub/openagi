@@ -1,9 +1,11 @@
+import logging
 from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
 from openagi.llms.base import LLMBaseModel
 from openagi.memory.memory import Memory
+from openagi.tasks.task import Task
 from openagi.utils.helper import get_default_id
 
 
@@ -11,14 +13,14 @@ class Worker(BaseModel):
     id: str = Field(default_factory=get_default_id)
     role: str
     description: Optional[str]
-    llm: Optional[LLMBaseModel] = Field(description="LLM Model to be used.")
+    llm: Optional[LLMBaseModel] = Field(description="LLM Model to be used.", default=None)
     memory: Optional[Memory] = Field(
         default_factory=list, description="Memory to be used.", exclude=True
     )
     actions: Optional[List[Any]] = Field(
         description="Actions that the Worker supports", default_factory=list
     )
-    max_steps: int = Field(
+    max_iterations: int = Field(
         default=20, description="Maximum number of steps to achieve the objective."
     )
 
@@ -35,3 +37,9 @@ class Worker(BaseModel):
             "description": self.description,
             "supported_actions": [action.cls_doc() for action in self.actions],
         }
+
+    def execute_task(self, task: Task) -> Any:
+        """
+        Executes the specified task.
+        """
+        logging.info(f"Executing Task - {task.id} with worker - {self.role}[{self.id}]")
