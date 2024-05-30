@@ -23,6 +23,19 @@ class Worker(BaseModel):
     max_iterations: int = Field(
         default=20, description="Maximum number of steps to achieve the objective."
     )
+    output_key: str = Field(
+        default="final_output", description="Key to be used to store the output."
+    )
+
+    # Validate output_key. Should contain only alphabets and only underscore are allowed. Not alphanumeric
+    @field_validator("output_key")
+    @classmethod
+    def validate_output_key(cls, v, values, **kwargs):
+        if not re.match("^[a-zA-Z_]+$", v):
+            raise ValueError(
+                f"Output key should contain only alphabets and only underscore are allowed. Got {v}"
+            )
+        return v
 
     class Config:
         arbitrary_types_allowed = True
