@@ -15,12 +15,8 @@ class TaskLists:
 
     def add_tasks(self, tasks: List[Dict[str, str]]):
         for task in tasks:
-            self.add_task(
-                Task(
-                    name=task["task_name"],
-                    description=task["description"],
-                )
-            )
+            task["name"] = task["task_name"]
+            self.add_task(Task(**task))
 
     def get_tasks_queue(self) -> List:
         return self.tasks
