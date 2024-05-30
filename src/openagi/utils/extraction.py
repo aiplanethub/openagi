@@ -3,40 +3,22 @@ import json
 import re
 from typing import Dict, List, Optional, Tuple
 
-from openagi.prompts.constants import CLARIFIYING_VARS
 
-
-def get_last_json(text, max_retry=2):
+def get_last_json(text):
     """
     Extracts the last block of text between ```json and ``` markers from a given string,
-    with retries if extraction or parsing fails.
 
     Args:
         text (str): The string from which to extract the JSON block.
-        max_retry (int): The maximum number of retries if extraction or parsing fails.
 
     Returns:
-        dict or None: The last JSON block as a dictionary if found and parsed, otherwise None.
+        List[dict] or dict or None: The last JSON block as a dictionary if found and parsed, otherwise None.
     """
     pattern = r"```json(.*?)```"
 
-    for _ in range(max_retry + 1):
-        # Find all matches in the text
-        matches = re.findall(pattern, text, flags=re.DOTALL)
+    matches = re.findall(pattern, text, flags=re.DOTALL)
 
-        if matches:
-            try:
-                # Attempt to load the last match as JSON
-                json_resp = json.loads(matches[-1].strip())
-                if not json_resp:
-                    continue
-                else:
-                    return json_resp
-            except json.JSONDecodeError:
-                # If JSON decoding fails, continue to the next attempt
-                continue
-
-    return None
+    return json.loads(matches[-1].strip())
 
 
 def get_act_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
@@ -69,35 +51,6 @@ def get_act_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
         actions.append((cls, params))
 
     return actions
-
-
-def extract_ques_and_task(ques_prompt):
-    """
-    Extracts the question and task from a given prompt.
-
-    Args:
-        ques_prompt (str): The prompt containing the question and task.
-
-    Returns:
-        Tuple[str, str]: The task and question extracted from the prompt.
-    """
-    start = CLARIFIYING_VARS["start"]
-    end = CLARIFIYING_VARS["end"]
-    # pattern to find question to be asked to human
-    regex = rf"{start}(.*?){end}"
-
-    # Find all matches in the text
-    matches = re.findall(regex, ques_prompt)
-
-    # remove <clarify from human>...</clarify from human> part from the prompt
-    task = re.sub(regex, "", ques_prompt)
-    if not matches:
-        return None, None
-
-    question = matches[-1]
-    if question and question.strip():
-        f"OpenAGI: {question}\nYou: "
-    return task, question
 
 
 def find_last_r_failure_content(text):
