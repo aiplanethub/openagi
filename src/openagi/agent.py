@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 from openagi.actions.base import BaseAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
-from openagi.exception import ExecutionFailureException, LLMResponseError, OpenAGIException
+from openagi.exception import ExecutionFailureException, LLMResponseError
 from openagi.llms.azure import LLMBaseModel
 from openagi.memory.memory import Memory
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
@@ -77,7 +77,9 @@ class Admin(BaseModel):
             self.llm = get_default_llm()
 
         self.actions = self.actions or []
+
         default_actions = [MemoryRagAction]
+
         self.actions.extend(default_actions)
 
         return model
@@ -91,6 +93,11 @@ class Admin(BaseModel):
         return act_clss
 
     def assign_workers(self, workers: List[Worker]):
+        if workers:
+            for worker in workers:
+                if not getattr(worker, "llm", False):
+                    setattr(worker, "llm", self.llm)
+
         if not self.workers:
             self.workers = workers
         else:
@@ -124,10 +131,10 @@ class Admin(BaseModel):
             query=query,
             description=descripton,
             supported_actions=actions_dict,
-            workers=self.workers,
+            supported_workers=workers_dict,
         )
 
-    def generate_tasks_list(self, planned_tasks):
+    def _generate_tasks_list(self, planned_tasks):
         """
         Generates a list of tasks to be executed by the agent.
 
@@ -139,11 +146,24 @@ class Admin(BaseModel):
         """
         task_lists = TaskLists()
         task_lists.add_tasks(tasks=planned_tasks)
-        logging.debug(f"Created total {task_lists.get_tasks_queue().qsize()} Tasks.")
+        logging.debug(f"Created {task_lists.get_tasks_queue().qsize()} Tasks.")
         return task_lists
 
+    def _get_worker_by_id(self, worker_id: str):
+        """
+        Returns the worker object with the given worker id.
+        """
+        for worker in self.workers:
+            if worker.id == worker_id:
+                return worker
+
     def worker_task_execution(self, query: str, description: str, task_lists: TaskLists):
-        ...
+        _tasks_lists = task_lists.get_tasks_lists()
+
+        while not task_lists.all_tasks_completed:
+            cur_task = task_lists.get_next_unprocessed_task()
+            worker = self._get_worker_by_id(cur_task.worker_id)
+            worker.execute_task(cur_task)
 
     def single_agent_execution(self, query: str, description: str, task_lists: TaskLists):
         """
@@ -217,7 +237,7 @@ class Admin(BaseModel):
         logging.debug(f"{planned_tasks=}")
 
         # Tasks List
-        task_lists: TaskLists = self.generate_tasks_list(planned_tasks=planned_tasks)
+        task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
 
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
 
