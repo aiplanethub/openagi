@@ -15,8 +15,9 @@ class Task(BaseModel):
         default_factory=str,
         description="Actions undertaken to acheieve the task. Usually set after the current task is executed.",
     )
-    worker: str = Field(
-        description="Worker associated to accomplish the given task using supported actions.",
+    worker_id: Optional[str] = Field(
+        description="WorkerId associated to accomplish the given task using supported actions.",
+        default_factory=str,
     )
 
     @property
