@@ -98,6 +98,8 @@ class Admin(BaseModel):
             for worker in workers:
                 if not getattr(worker, "llm", False):
                     setattr(worker, "llm", self.llm)
+                if not getattr(worker, "memory", False):
+                    setattr(worker, "memory", self.memory)
 
         if not self.workers:
             self.workers = workers
@@ -159,12 +161,27 @@ class Admin(BaseModel):
                 return worker
 
     def worker_task_execution(self, query: str, description: str, task_lists: TaskLists):
-        _tasks_lists = task_lists.get_tasks_lists()
-
+        res = None
         while not task_lists.all_tasks_completed:
             cur_task = task_lists.get_next_unprocessed_task()
             worker = self._get_worker_by_id(cur_task.worker_id)
-            worker.execute_task(cur_task)
+            res = worker.execute_task(cur_task)
+
+        # Final result
+        logging.info("Finished Execution...")
+
+        # print(f"\n ******** Final Response *******\n{res}\n\n")
+        if self.output_format == OutputFormat.markdown:
+            logging.info("Output Formatting...")
+            output_formatter = FormatterAction(
+                content=res,
+                format_type=OutputFormat.markdown,
+                llm=self.llm,
+                memory=self.memory,
+            )
+            res = output_formatter.execute()
+        logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
+        return res
 
     def single_agent_execution(self, query: str, description: str, task_lists: TaskLists):
         """
