@@ -78,14 +78,12 @@ class Worker(BaseModel):
     def provoke_thought_obs(
         self,
         task_to_execute,
-        workers_description,
         supported_actions,
         observation,
     ):
         thoughts = dedent(
             f"""
         Question: {task_to_execute}
-        Thought: {workers_description}
         supported_actions: {supported_actions}
         Observation: {observation}
         """.strip()
@@ -103,18 +101,21 @@ class Worker(BaseModel):
         """
         logging.info(f"Executing Task - {task.name} with worker - {self.role}[{self.id}]")
         iteration = 1
-        task_to_excute = f"{task.description}"
+        task_to_execute = f"{task.description}"
         worker_description = f"{self.role} - {self.description}"
         supported_actions = [action.cls_doc() for action in self.actions]
         observations = None
+        all_thoughts_and_obs = []
 
+        # Initial setup for the first LLM run
+        initial_thought_provokes = self.provoke_thought_obs(
+            task_to_execute,
+            supported_actions,
+            observations,
+        )
         te_vars = dict(
-            thought_provokes=self.provoke_thought_obs(
-                task_to_excute,
-                worker_description,
-                supported_actions,
-                observations,
-            ),
+            worker_description=worker_description,
+            thought_provokes=initial_thought_provokes,
             output_key=self.output_key,
             observations=observations,
         )
@@ -125,36 +126,55 @@ class Worker(BaseModel):
 
         prev_action_result = None
 
-        continue_flag, output = self.should_continue(observations)
-
-        while iteration < self.max_iterations and continue_flag:
-            logging.info(f"Iteration - {iteration}")
-            logging.info(f"Observations -- {observations}")
-            thought_prompt = self.provoke_thought_obs(
-                task_to_excute,
-                worker_description,
-                supported_actions,
-                observations,
-            )
-            logging.info(f"PROMPT -- {prompt}\n{thought_prompt}")
-            observations = self.llm.run(prompt)
-            logging.info(f"Observations -- {observations}")
+        while iteration < self.max_iterations:
             continue_flag, output = self.should_continue(observations)
             if not continue_flag:
                 logging.info(f"Output -- {output}")
                 break
-            # Assume that if continue_flag is false, action will be passed.
+            logging.info(f"Output -- {output}")
             action = output.get("action")
             logging.info(f"Action -- {action}")
-            if action is None:
+
+            if action:
+                actions = get_act_classes_from_json([action])
+                for act_cls, params in actions:
+                    params["previous_action"] = prev_action_result if prev_action_result else None
+                    # Include memory and llm in the params for the action
+                    params["memory"] = self.memory
+                    params["llm"] = self.llm
+                    res = run_action(action_cls=act_cls, **params)
+                    logging.info(f"Action Result -- {res}")
+                    observations = res
+                    prev_action_result = res  # Update prev_action_result for the next iteration
+
+                # Append current thoughts and observations to all_thoughts_and_obs
+                all_thoughts_and_obs.append(te_vars["thought_provokes"])
+                all_thoughts_and_obs.append(f"Action taken: {action}")
+                all_thoughts_and_obs.append(f"Observation: {observations}")
+
+                # Generate thought prompt for the next iteration
+                thought_prompt = self.provoke_thought_obs(
+                    task_to_execute,
+                    supported_actions,
+                    observations,
+                )
+                all_thoughts_and_obs.append(thought_prompt)
+
+                # Update te_vars with the new thought provokes including history
+                te_vars["thought_provokes"] = "\n".join(all_thoughts_and_obs)
+                prompt = WorkerAgentTaskExecution()
+                prompt = prompt.from_template(te_vars)
+                logging.info(f"\n{'*' * 100}\n{prompt}\n{'*' * 100}")
+                observations = self.llm.run(prompt)
+
+            else:
                 logging.info("Action is None. Terminating the execution.")
                 break
-            actions = get_act_classes_from_json([action])
-            for act_cls, params in actions:
-                params["previous_action"] = prev_action_result if prev_action_result else None
-                res = run_action(action_cls=act_cls, **params)
-                observations = f"{observations}\nResult: {res}"
 
             iteration += 1
+
+        logging.info(
+            f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
+        )
 
         return output
