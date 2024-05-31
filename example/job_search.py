@@ -1,41 +1,52 @@
 from openagi.actions.tools.serp_search import GoogleSerpAPISearch
+from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 from openagi.agent import Admin
 from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
+from openagi.worker import Worker
+
 from rich.console import Console
 from rich.markdown import Markdown
+
 
 if __name__ == "__main__":
     config = AzureChatOpenAIModel.load_from_env_config()
     llm = AzureChatOpenAIModel(config=config)
 
-    company_domain = input("What is the company domain?\n")
-    job_domain = input("What is the job domain?\n")
-    job_level = input("What level job are you looking for?\n")
-    job_location = input("In what location are you for the job?\n")
+    # company_domain = input("What is the company domain?\n")
+    # job_domain = input("What is the job domain?\n")
+    # job_level = input("What level job are you looking for?\n")
+    # job_location = input("In what location are you for the job?\n")
 
-    query = f"""
-Need help finding a job description based on the following criteria:
+    # query = dedent(
+    #     f"""Need help finding a job description based on the following criteria:
 
-Company Domain: {company_domain}
-Job Domain: {job_domain}
-Job Level: {job_level}
-Job Location: {job_location}
+    #         Company Domain: {company_domain}
+    #         Job Domain: {job_domain}
+    #         Job Level: {job_level}
+    #         Job Location: {job_location}
 
-Please provide a list of suitable job descriptions, including the key responsibilities, requirements, and any other relevant details.
-"""
+    #         Please provide a list of suitable job descriptions, including the key responsibilities, requirements, and any other relevant details."""
+    # )
 
-    admin = Admin(
-        llm=llm,
-        actions=[GoogleSerpAPISearch],
-        planner=TaskPlanner(human_intervene=False),
-        memory=Memory(),
+    websearcher = Worker(
+        role="SW",
+        description="You are a Expert Python SW Developer.",
+        actions=[DuckDuckGoSearch],
     )
 
+    admin = Admin(
+        actions=[DuckDuckGoSearch],
+        planner=TaskPlanner(human_intervene=False),
+        memory=Memory(),
+        llm=llm,
+    )
+    admin.assign_workers([websearcher])
+
     res = admin.run(
-        query=query,
-        description="You are an expert Internet searching agent , who gives best possible response.",
+        query="Give list of SDE2 Jobs that are relevant for people with 2+ years of experience in Python. Need atleast 10 job opportunities.",
+        description="You are an expert Internet Job Searching agent, who gives you the best job opportunities that can be applied to.",
     )
 
     # Print the results from the OpenAGI
