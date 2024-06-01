@@ -9,15 +9,16 @@ class DocumentLoader(BaseAction):
 
     file_path: str = Field(
         default_factory=str,
-        description='Extract content from the File'
+        description='File from which content is extracted'
     )
 
     def text_loader(self):
-        loader = TextLoader.load(self.file_path)
-        data = loader.data()
+        loader = TextLoader(file_path=self.file_path)
+        data = loader.load()
         page_content = data[0].page_content
         meta_data = data[0].metadata['source']
-        context = meta_data + page_content
+        context = meta_data + " " +page_content
+        print(context)
         return context
 
     def csv_loader(self):
