@@ -32,7 +32,7 @@ class Worker(BaseModel):
     output_key: str = Field(
         default="final_output", description="Key to be used to store the output."
     )
-    _force_output: bool = Field(
+    force_output: bool = Field(
         default=True,
         description="If set to True, the output will be overwritten even if it exists.",
     )
@@ -82,23 +82,19 @@ class Worker(BaseModel):
 
     def provoke_thought_obs(
         self,
-        task_to_execute,
-        supported_actions,
         observation,
     ):
         thoughts = dedent(
             f"""
-        Question: {task_to_execute}
-        supported_actions: {supported_actions}
         Observation: {observation}
         """.strip()
         )
         return thoughts
 
-    def should_continue(self, llm_resp: str) -> Union[bool, Optional[str]]:
+    def should_continue(self, llm_resp: str) -> Union[bool, Optional[Dict]]:
         print(f"LLM Response: {llm_resp}")
         output: Dict = get_last_json(llm_resp)
-        output_key_exists = False if output and output.get(self.output_key, False) else True
+        output_key_exists = bool(output and output.get(self.output_key))
         return (not output_key_exists, output)
 
     def _force_output(
@@ -134,42 +130,40 @@ class Worker(BaseModel):
         """
         Executes the specified task.
         """
-        logging.info(f"Executing Task - {task.name} with worker - {self.role}[{self.id}]")
+        logging.info(
+            f"{'>'*50} Executing Task - {task.name} with worker - {self.role}[{self.id}] {'<'*50}"
+        )
         iteration = 1
         task_to_execute = f"{task.description}"
         worker_description = f"{self.role} - {self.description}"
-        supported_actions = [action.cls_doc() for action in self.actions]
-        observations = None
         all_thoughts_and_obs = []
 
         # Initial setup for the first LLM run
-        initial_thought_provokes = self.provoke_thought_obs(
-            task_to_execute,
-            supported_actions,
-            observations,
-        )
+        initial_thought_provokes = self.provoke_thought_obs(None)
         te_vars = dict(
+            task_to_execute=task_to_execute,
             worker_description=worker_description,
+            supported_actions=[action.cls_doc() for action in self.actions],
             thought_provokes=initial_thought_provokes,
             output_key=self.output_key,
-            observations=observations,
             context=context,
         )
 
-        prompt = WorkerAgentTaskExecution()
-        prompt = prompt.from_template(te_vars)
-        observations = self.llm.run(prompt)
+        base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
+        prompt = f"{base_prompt}\nThought:\nActions:\n"
 
-        while iteration < self.max_iterations:
+        observations = self.llm.run(prompt)
+        all_thoughts_and_obs.append(prompt)
+
+        max_iters = self.max_iterations + 1
+        while iteration < max_iters:
             logging.info(f"---- Iteration {iteration} ----")
             continue_flag, output = self.should_continue(observations)
             if not continue_flag:
-                logging.info(f"Output -- {output}")
+                logging.info(f"Output: {output}")
                 break
-            logging.info(f"Output -- {output}")
-            action = output.get("action") if output else None
-            logging.info(f"Action -- {action}")
 
+            action = output.get("action") if output else None
             if action:
                 actions = get_act_classes_from_json([action])
                 for act_cls, params in actions:
@@ -178,34 +172,37 @@ class Worker(BaseModel):
                     params["llm"] = self.llm
                     res = run_action(action_cls=act_cls, **params)
                     logging.info(f"Action Result -- {res}")
+
+                    # Append the action and observation to the prompt
+                    action_json = f"```json\n{action}\n```\n"
+                    observation_prompt = f"Observation: {res}\n"
+                    all_thoughts_and_obs.append(action_json)
+                    all_thoughts_and_obs.append(observation_prompt)
                     observations = res
 
-                # Append current thoughts and observations to all_thoughts_and_obs
-                all_thoughts_and_obs.append(te_vars["thought_provokes"])
-                all_thoughts_and_obs.append(f"Action taken: {action}")
+                # Create a new thought prompt based on the latest observation
+                thought_prompt = self.provoke_thought_obs(observations)
+                all_thoughts_and_obs.append(f"\n{thought_prompt}\nActions:\n")
 
-                # Generate thought prompt for the next iteration
-                thought_prompt = self.provoke_thought_obs(
-                    task_to_execute,
-                    supported_actions,
-                    observations,
-                )
-                all_thoughts_and_obs.append(thought_prompt)
-
-                # Update te_vars with the new thought provokes including history
-                te_vars["thought_provokes"] = "\n".join(all_thoughts_and_obs)
-                prompt = WorkerAgentTaskExecution()
-                prompt = prompt.from_template(te_vars)
-                logging.info(f"\n{'*' * 100}\n{prompt}\n{'*' * 100}")
+                # Update the prompt with all previous thoughts and observations
+                prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
+                logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
                 observations = self.llm.run(prompt)
-
             iteration += 1
-        # else:
-        #     if iteration >= self.max_iterations:
-        #         logging.info(
-        #             f"Max iterations reached - {task.name} with worker - {self.role}[{self.id}]"
-        #         )
-        #         return self._force_output(observations, all_thoughts_and_obs)
+        else:
+            if iteration == self.max_iterations:
+                logging.info("---- Forcing Output ----")
+                if self.force_output:
+                    cont, final_output = self._force_output(observations, all_thoughts_and_obs)
+                    if cont:
+                        raise OpenAGIException(
+                            f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
+                        )
+                    output = final_output
+                else:
+                    raise OpenAGIException(
+                        f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
+                    )
 
         logging.info(
             f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
