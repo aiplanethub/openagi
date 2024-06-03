@@ -65,10 +65,8 @@ class Worker(BaseModel):
     def get_last_final_output(text):
         """
         Finds the content of the last <r_failure> tag in the given text.
-
         Args:
             text (str): The text to search for the <r_failure> tag.
-
         Returns:
             str or None: The content of the last <r_failure> tag, or None if no matches are found.
         """
