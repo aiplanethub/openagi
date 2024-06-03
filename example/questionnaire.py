@@ -12,21 +12,10 @@ if __name__ == "__main__":
     llm = AzureChatOpenAIModel(config=config)
 
     file_path = input("Select file to make a questionnaire:\n")
-    no_of_ques = input("Number of question's you want in questionnaire:\n")
     
     query = f"""
-Help me create a questionnaire based on the information provided in the attached file.
-
-File Path: {file_path}
-
-Number of Questions Needed: {no_of_ques}
-
-Requirements:
-
-- Do not provide any hints in the questions.
-- Ensure all questions are distinct from each other.
+Load the following file {file_path} and create a questionnaire with the information.
 """
-
     admin = Admin(
         llm=llm,
         actions=[DocumentLoader],
@@ -36,7 +25,7 @@ Requirements:
 
     res = admin.run(
         query=query,
-        description="You are an expert AI agent , who is able to understand the information in the file",
+        description="",
     )
 
     # Print the results from the OpenAGI
