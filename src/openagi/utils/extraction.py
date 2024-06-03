@@ -6,19 +6,25 @@ from typing import Dict, List, Optional, Tuple
 
 def get_last_json(text):
     """
-    Extracts the last block of text between ```json and ``` markers from a given string,
+    Extracts the last block of text between ```json and ``` markers from a given string.
 
     Args:
         text (str): The string from which to extract the JSON block.
 
     Returns:
-        List[dict] or dict or None: The last JSON block as a dictionary if found and parsed, otherwise None.
+        dict or None: The last JSON block as a dictionary if found and parsed, otherwise None.
     """
     pattern = r"```json(.*?)```"
-
     matches = re.findall(pattern, text, flags=re.DOTALL)
 
-    return json.loads(matches[-1].strip())
+    if matches:
+        last_json = matches[-1].strip().replace("\n", "")
+        try:
+            return json.loads(last_json)
+        except json.JSONDecodeError as e:
+            print(f"JSON decoding error: {e}")
+            return None
+    return None
 
 
 def get_act_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:

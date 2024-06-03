@@ -16,8 +16,8 @@ Once you feel the observations are correct and aligned with the goal to the best
     {output_key}: "The answer to the question",
 }
 ```
-
-Always look things up on Web if you have the opportunity to do so.
+Context: {context}
+Take the context into account when you are answering the question. It will be the results or data from the past executions. If no context is provided, then you can assume that the context is empty and you can start from scratch.
 
 Example session:
 
@@ -47,10 +47,10 @@ You then output:
 
 Note
   - You can use any one of supported_actions i.e., One Action at a time.
-  - On each observation, try to improve the thought.
+  - On each observation, try to understand the drawbacks and mistakes and learn from them to improve the thought.
 
 Output format:
-When you want to run an action, return the below json alone without anything else:
+When you want to run an action, return the below json alone without anything else. Ensure the JSON format is suitable for utilization with `JSON.parse()`, enclosed in triple backticks.:
 ```json
 {
     "action": {
@@ -66,12 +66,13 @@ When you want to run an action, return the below json alone without anything els
 }
 ```
 
-if you have the answer, return the below json alone without anything else:
+if you have the answer, return the below json alone without anything else. Ensure the JSON format is suitable for utilization with `JSON.parse()`, enclosed in triple backticks.:
 ```json
 {
         {output_key}: "<answer>"
 }
 ```
+
 
 Begin!
 

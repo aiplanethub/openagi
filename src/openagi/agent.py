@@ -165,7 +165,7 @@ class Admin(BaseModel):
         while not task_lists.all_tasks_completed:
             cur_task = task_lists.get_next_unprocessed_task()
             worker = self._get_worker_by_id(cur_task.worker_id)
-            res = worker.execute_task(cur_task)
+            res = worker.execute_task(cur_task, context=res)
 
         # Final result
         logging.info("Finished Execution...")

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.utils import run_action
+from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel
 from openagi.memory.memory import Memory
 from openagi.prompts.worker_task_execution import WorkerAgentTaskExecution
@@ -30,6 +31,10 @@ class Worker(BaseModel):
     )
     output_key: str = Field(
         default="final_output", description="Key to be used to store the output."
+    )
+    _force_output: bool = Field(
+        default=True,
+        description="If set to True, the output will be overwritten even if it exists.",
     )
 
     # Validate output_key. Should contain only alphabets and only underscore are allowed. Not alphanumeric
@@ -91,11 +96,41 @@ class Worker(BaseModel):
         return thoughts
 
     def should_continue(self, llm_resp: str) -> Union[bool, Optional[str]]:
+        print(f"LLM Response: {llm_resp}")
         output: Dict = get_last_json(llm_resp)
-        output_key_exists = True if output.get(self.output_key) else False
+        output_key_exists = False if output and output.get(self.output_key, False) else True
         return (not output_key_exists, output)
 
-    def execute_task(self, task: Task) -> Any:
+    def _force_output(
+        self, llm_resp: str, all_thoughts_and_obs: List[str]
+    ) -> Union[bool, Optional[str]]:
+        """Force the output once the max iterations are reached.
+        Make an llm call with a prompt suffixed, that will force the output.
+        """
+        prompt = (
+            "\n".join(all_thoughts_and_obs)
+            + "Based on the previous action and observation, give me the output."
+        )
+        output = self.llm.run(prompt)
+
+        # Extract the output
+        cont, final_output = self.get_last_final_output(output)
+
+        # If cont is True, rerun the llm call with the prompt suffixed with the output.
+        if cont:
+            prompt = (
+                "\n".join(all_thoughts_and_obs)
+                + f"Based on the previous action and observation, give me the output. {final_output}"
+            )
+            output = self.llm.run(prompt)
+            cont, final_output = self.get_last_final_output(output)
+        if cont:
+            raise OpenAGIException(
+                f"LLM did not produce the expected output after {self.max_iterations} iterations."
+            )
+        return (cont, final_output)
+
+    def execute_task(self, task: Task, context: Any) -> Any:
         """
         Executes the specified task.
         """
@@ -118,39 +153,36 @@ class Worker(BaseModel):
             thought_provokes=initial_thought_provokes,
             output_key=self.output_key,
             observations=observations,
+            context=context,
         )
 
         prompt = WorkerAgentTaskExecution()
         prompt = prompt.from_template(te_vars)
         observations = self.llm.run(prompt)
 
-        prev_action_result = None
-
         while iteration < self.max_iterations:
+            logging.info(f"---- Iteration {iteration} ----")
             continue_flag, output = self.should_continue(observations)
             if not continue_flag:
                 logging.info(f"Output -- {output}")
                 break
             logging.info(f"Output -- {output}")
-            action = output.get("action")
+            action = output.get("action") if output else None
             logging.info(f"Action -- {action}")
 
             if action:
                 actions = get_act_classes_from_json([action])
                 for act_cls, params in actions:
-                    params["previous_action"] = prev_action_result if prev_action_result else None
                     # Include memory and llm in the params for the action
                     params["memory"] = self.memory
                     params["llm"] = self.llm
                     res = run_action(action_cls=act_cls, **params)
                     logging.info(f"Action Result -- {res}")
                     observations = res
-                    prev_action_result = res  # Update prev_action_result for the next iteration
 
                 # Append current thoughts and observations to all_thoughts_and_obs
                 all_thoughts_and_obs.append(te_vars["thought_provokes"])
                 all_thoughts_and_obs.append(f"Action taken: {action}")
-                all_thoughts_and_obs.append(f"Observation: {observations}")
 
                 # Generate thought prompt for the next iteration
                 thought_prompt = self.provoke_thought_obs(
@@ -167,11 +199,13 @@ class Worker(BaseModel):
                 logging.info(f"\n{'*' * 100}\n{prompt}\n{'*' * 100}")
                 observations = self.llm.run(prompt)
 
-            else:
-                logging.info("Action is None. Terminating the execution.")
-                break
-
             iteration += 1
+        # else:
+        #     if iteration >= self.max_iterations:
+        #         logging.info(
+        #             f"Max iterations reached - {task.name} with worker - {self.role}[{self.id}]"
+        #         )
+        #         return self._force_output(observations, all_thoughts_and_obs)
 
         logging.info(
             f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
