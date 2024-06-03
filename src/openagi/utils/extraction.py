@@ -19,11 +19,7 @@ def get_last_json(text):
 
     if matches:
         last_json = matches[-1].strip().replace("\n", "")
-        try:
-            return json.loads(last_json)
-        except json.JSONDecodeError as e:
-            print(f"JSON decoding error: {e}")
-            return None
+        return json.loads(last_json)
     return None
 
 
