@@ -56,6 +56,11 @@ class GoogleSerpAPISearch(BaseAction):
             raise OpenAGIException(f"Unable to generate result for the query {self.query}")
 
         logging.debug(result)
+        logging.info(f"NOTE: REMOVE THIS BEFORE RELEASE:\n{result}\n")
+        if error := result.get("error", NotImplemented):
+            raise OpenAGIException(
+                f"Error while running action {self.__class__.__name__}: {error}"
+            )
 
         meta_data = ""
         for info in result.get("organic_results"):

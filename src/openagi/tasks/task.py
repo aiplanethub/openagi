@@ -1,11 +1,8 @@
 from typing import Optional
-from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-
-def get_default_id():
-    return uuid4().hex
+from openagi.utils.helper import get_default_id
 
 
 class Task(BaseModel):
@@ -17,6 +14,10 @@ class Task(BaseModel):
         ...,
         default_factory=str,
         description="Actions undertaken to acheieve the task. Usually set after the current task is executed.",
+    )
+    worker_id: Optional[str] = Field(
+        description="WorkerId associated to accomplish the given task using supported actions.",
+        default_factory=str,
     )
 
     @property

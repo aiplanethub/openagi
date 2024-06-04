@@ -13,7 +13,9 @@ nltk.download("punkt")
 
 
 class WebBaseContextTool(BaseAction):
-    """Use this Action to extract actual context from Web Search Tool"""
+    """
+    Use this Action to extract actual context from a Webpage. The WebBaseContextTool class provides a way to load and optionally summarize the content of a webpage, returning the metadata and page content as a context string.
+    """
 
     link: str = Field(
         default_factory=str,
@@ -21,7 +23,7 @@ class WebBaseContextTool(BaseAction):
     )
     can_summarize: bool = Field(
         default=True,
-        description="Indicates whether the action can summarize the content before returning. Defaults to True.",
+        description="Indicates whether the action can summarize the content before returning. Defaults to true.",
     )
 
     def _get_summary(self, data):
@@ -38,6 +40,8 @@ class WebBaseContextTool(BaseAction):
         data = loader.load()
         metadata = data[0].metadata["title"]
         page_content = data[0].page_content
+        if page_content:
+            page_content = page_content.strip()
         if self.can_summarize:
             page_content = self._get_summary(page_content)
         context = metadata + page_content

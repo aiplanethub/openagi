@@ -1,27 +1,7 @@
 import importlib
-import inspect
 import json
 import re
-from typing import Callable, Dict, List, Optional, Tuple, Type
-from openagi.prompts.constants import CLARIFIYING_VARS
-
-
-def extract_func_params(func: Callable):
-    funcs_signature = inspect.signature(func)
-    funcs_params = funcs_signature.parameters
-    return {
-        name: param.default != inspect.Parameter.empty
-        for name, param in funcs_params.items()
-        if name != "self"  # noqa: E501
-    }  # {"<attr_name>":"<default_is_empty>"}
-
-
-def extract_class_init_attrs(clss: Type):
-    return extract_func_params(clss.__init__)
-
-
-def extract_cls_method_params(clss: Type, method: Callable):
-    return extract_func_params(getattr(clss, method))
+from typing import Dict, List, Optional, Tuple
 
 
 def get_last_json(text):
@@ -32,24 +12,28 @@ def get_last_json(text):
         text (str): The string from which to extract the JSON block.
 
     Returns:
-        str or None: The last JSON block including the delimiters if found, otherwise None.
+        dict or None: The last JSON block as a dictionary if found and parsed, otherwise None.
     """
-    # Pattern to find the last occurrence of content between ```json and ```
     pattern = r"```json(.*?)```"
-    # Find all matches in the text
     matches = re.findall(pattern, text, flags=re.DOTALL)
-    # Return the last match if any
-    try:
-        if matches:
-            matches = matches[-1]
-            return json.loads(matches.strip())
-    except json.JSONDecodeError:
-        return None
+
+    if matches:
+        last_json = matches[-1].strip().replace("\n", "")
+        return json.loads(last_json)
     return None
 
 
-def get_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
-    instances = []
+def get_act_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
+    """
+    Extracts the Action class names and parameters from a JSON block.
+
+    Args:
+        json_data (List[Dict]): A list of dictionaries containing the class and parameter information.
+
+    Returns:
+        List[Tuple[type, Optional[Dict]]]: A list of tuples containing the Action class and its initialization parameters.
+    """
+    actions = []
 
     for item in json_data:
         # Extracting module and class name
@@ -66,35 +50,21 @@ def get_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
         params = item["params"]
 
         # Storing the instance in the list
-        instances.append((cls, params))
+        actions.append((cls, params))
 
-    return instances
-
-
-def extract_ques_and_task(ques_prompt):
-    """
-    Extracts question to be asked to the human and remove delimiters from orignal prompt
-    """
-    start = CLARIFIYING_VARS["start"]
-    end = CLARIFIYING_VARS["end"]
-    # pattern to find question to be asked to human
-    regex = rf"{start}(.*?){end}"
-
-    # Find all matches in the text
-    matches = re.findall(regex, ques_prompt)
-
-    # remove <clarify from human>...</clarify from human> part from the prompt
-    task = re.sub(regex, "", ques_prompt)
-    if not matches:
-        return None, None
-
-    question = matches[-1]
-    if question and question.strip():
-        f"OpenAGI: {question}\nYou: "
-    return task, question
+    return actions
 
 
 def find_last_r_failure_content(text):
+    """
+    Finds the content of the last <r_failure> tag in the given text.
+
+    Args:
+        text (str): The text to search for the <r_failure> tag.
+
+    Returns:
+        str or None: The content of the last <r_failure> tag, or None if no matches are found.
+    """
     pattern = r"<r_failure>(.*?)</r_failure>"
     matches = list(re.finditer(pattern, text, re.DOTALL))
     if matches:
@@ -102,3 +72,21 @@ def find_last_r_failure_content(text):
         return last_match.group(1)
     else:
         return None
+
+
+def extract_str_variables(template):
+    """
+    Extracts all variable names from a given template string.
+
+    The function uses a regular expression to find all placeholders within curly braces in the template string, and returns a list of the extracted variable names.
+
+    Args:
+        template (str): The template string to extract variables from.
+
+    Returns:
+        list[str]: A list of variable names extracted from the template.
+    """
+    # This regular expression will find all placeholders within curly braces
+    pattern = r"\{(\w+)\}"
+    matches = re.findall(pattern, template)
+    return matches

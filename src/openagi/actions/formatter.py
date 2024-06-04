@@ -1,6 +1,6 @@
-from typing import Any, Optional
+from typing import Any
 
-from pydantic import Field, field_validator
+from pydantic import Field
 
 from openagi.actions.base import BaseAction
 

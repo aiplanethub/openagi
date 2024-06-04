@@ -15,7 +15,10 @@ class BasePrompt(BaseModel):
 
     @classmethod
     def prompt_variables(cls):
-        return {field_name: field.description for field_name, field in cls.model_fields.items()}
+        return {
+            field_name: field.field_info.description
+            for field_name, field in cls.model_fields.items()
+        }
 
     @classmethod
     def from_template(cls, variables: Dict):
@@ -23,5 +26,4 @@ class BasePrompt(BaseModel):
         for k, v in variables.items():
             placeholder = "{" + f"{k}" + "}"
             x.base_prompt = x.base_prompt.replace(placeholder, f"{v}")
-        # return x.base_prompt.format(**variables)
         return x.base_prompt
