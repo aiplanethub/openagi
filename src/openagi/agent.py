@@ -68,14 +68,14 @@ class Admin(BaseModel):
     def model_post_init(self, __context: Any) -> None:
         model = super().model_post_init(__context)
 
+        if not self.llm:
+            self.llm = get_default_llm()
+
         if not self.planner:
             self.planner = TaskPlanner(workers=self.workers)
 
         if not self.memory:
             self.memory = Memory()
-
-        if not self.llm:
-            self.llm = get_default_llm()
 
         self.actions = self.actions or []
 

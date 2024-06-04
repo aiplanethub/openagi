@@ -11,9 +11,7 @@ Use Thought to describe your detailed thoughts about the question you have been 
 Use Action to run one of the actions available to you. Be explicit in describing the action you are taking and why you chose it.
 Observation will be the result of running those actions. Make sure to thoroughly analyze the observation to see if it aligns with your expectations.
 Use the Observation provided to answer your question. Fully utilize the Observation in your responses.
-
 Note:
-
 Output the answer when you feel the observations are correct and aligned with the goal. They do not have to be very accurate, but ensure they are reasonably reliable.
 The output should be in the following format:
 ```json
@@ -21,12 +19,9 @@ The output should be in the following format:
     {output_key}: "The answer to the question"
 }
 ```
-
 Context: {context}
 Take the context into account when you are answering the question. It will be the results or data from the past executions. If no context is provided, then you can assume that the context is empty and you can start from scratch. Use context to ensure consistency and accuracy in your responses.
-
 Example session:
-
 Question: What is the capital of France?
 Thought: I should look up France on DuckDuckGo to find reliable information about its capital city.
 Action:
@@ -42,7 +37,6 @@ Action:
         }
 }
 ```
-
 You will be called again with this:
 Observation: France is a country. The capital is Paris.
 Thought: The observation indicates that the capital of France is Paris. This aligns with general knowledge.
@@ -52,13 +46,11 @@ Action: No further action needed. If no action needed You then output:
         "{output_key}": "The capital of France is Paris."
 }
 ```
-
 Note:
 - You can use any one of the supported_actions i.e., One Action at a time. Clearly specify which action you are taking and why. Action need not be same from one thought to another thought.
 - You can use the same action multiple times if needed. Each time, explain the reason for repeating the action.
 - If you think that the observation is correct and aligned with the goal, you can output the answer.
 - On each observation, try to understand the drawbacks and mistakes and learn from them to improve the thought.
-
 Output format:
 When you want to run an action, return the below JSON alone without anything else. Ensure the JSON format is suitable for utilization with json.loads(), enclosed in triple backticks:
 ```json
@@ -75,15 +67,12 @@ When you want to run an action, return the below JSON alone without anything els
     }
 }
 ```
-
 If you have the answer, return the below JSON alone without anything else. Ensure the JSON format is suitable for utilization with json.loads(), enclosed in triple backticks:
-
 ```json
 {
     "{output_key}": "<answer>"
 }
 ```
-
 # Goal/Objective to acheive
 {task_to_execute}
 
@@ -91,7 +80,6 @@ If you have the answer, return the below JSON alone without anything else. Ensur
 {supported_actions}
 
 Begin!
-
 {thought_provokes}
 
 """.strip()

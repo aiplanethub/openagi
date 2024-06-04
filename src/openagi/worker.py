@@ -19,7 +19,9 @@ class Worker(BaseModel):
     id: str = Field(default_factory=get_default_id)
     role: str
     description: Optional[str]
-    llm: Optional[LLMBaseModel] = Field(description="LLM Model to be used.", default=None)
+    llm: Optional[LLMBaseModel] = Field(
+        description="LLM Model to be used.", default=None, exclude=True
+    )
     memory: Optional[Memory] = Field(
         default_factory=list, description="Memory to be used.", exclude=True
     )
@@ -51,9 +53,7 @@ class Worker(BaseModel):
         arbitrary_types_allowed = True
 
     def worker_doc(self):
-        """
-        Returns a dictionary containing information about the worker, including its ID, role, description, and the supported actions.
-        """
+        """Returns a dictionary containing information about the worker, including its ID, role, description, and the supported actions."""
         return {
             "worker_id": self.id,
             "role": self.role,
@@ -63,15 +63,7 @@ class Worker(BaseModel):
 
     @staticmethod
     def get_last_final_output(text):
-        """
-        Finds the content of the last <r_failure> tag in the given text.
-
-        Args:
-            text (str): The text to search for the <r_failure> tag.
-
-        Returns:
-            str or None: The content of the last <r_failure> tag, or None if no matches are found.
-        """
+        """Finds the content of the last <r_failure> tag in the given text."""
         pattern = r"<r_failure>(.*?)</r_failure>"
         matches = list(re.finditer(pattern, text, re.DOTALL))
         if matches:
@@ -80,15 +72,8 @@ class Worker(BaseModel):
         else:
             return None
 
-    def provoke_thought_obs(
-        self,
-        observation,
-    ):
-        thoughts = dedent(
-            f"""
-        Observation: {observation}
-        """.strip()
-        )
+    def provoke_thought_obs(self, observation):
+        thoughts = dedent(f"""Observation: {observation}""".strip())
         return thoughts
 
     def should_continue(self, llm_resp: str) -> Union[bool, Optional[Dict]]:
@@ -100,19 +85,13 @@ class Worker(BaseModel):
     def _force_output(
         self, llm_resp: str, all_thoughts_and_obs: List[str]
     ) -> Union[bool, Optional[str]]:
-        """Force the output once the max iterations are reached.
-        Make an llm call with a prompt suffixed, that will force the output.
-        """
+        """Force the output once the max iterations are reached."""
         prompt = (
             "\n".join(all_thoughts_and_obs)
             + "Based on the previous action and observation, give me the output."
         )
         output = self.llm.run(prompt)
-
-        # Extract the output
         cont, final_output = self.get_last_final_output(output)
-
-        # If cont is True, rerun the llm call with the prompt suffixed with the output.
         if cont:
             prompt = (
                 "\n".join(all_thoughts_and_obs)
@@ -127,9 +106,7 @@ class Worker(BaseModel):
         return (cont, final_output)
 
     def execute_task(self, task: Task, context: Any) -> Any:
-        """
-        Executes the specified task.
-        """
+        """Executes the specified task."""
         logging.info(
             f"{'>'*50} Executing Task - {task.name} with worker - {self.role}[{self.id}] {'<'*50}"
         )
@@ -138,7 +115,6 @@ class Worker(BaseModel):
         worker_description = f"{self.role} - {self.description}"
         all_thoughts_and_obs = []
 
-        # Initial setup for the first LLM run
         initial_thought_provokes = self.provoke_thought_obs(None)
         te_vars = dict(
             task_to_execute=task_to_execute,
@@ -150,7 +126,7 @@ class Worker(BaseModel):
         )
 
         base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
-        prompt = f"{base_prompt}\nThought:\nActions:\n"
+        prompt = f"{base_prompt}\nThought:\nIteration: {iteration}\nActions:\n"
 
         observations = self.llm.run(prompt)
         all_thoughts_and_obs.append(prompt)
@@ -165,28 +141,26 @@ class Worker(BaseModel):
 
             action = output.get("action") if output else None
             if action:
+                action_json = f"```json\n{output}\n```\n"
                 actions = get_act_classes_from_json([action])
                 for act_cls, params in actions:
-                    # Include memory and llm in the params for the action
                     params["memory"] = self.memory
                     params["llm"] = self.llm
                     res = run_action(action_cls=act_cls, **params)
                     logging.info(f"Action Result -- {res}")
 
-                    # Append the action and observation to the prompt
-                    action_json = f"```json\n{action}\n```\n"
                     observation_prompt = f"Observation: {res}\n"
                     all_thoughts_and_obs.append(action_json)
                     all_thoughts_and_obs.append(observation_prompt)
                     observations = res
 
-                # Create a new thought prompt based on the latest observation
                 thought_prompt = self.provoke_thought_obs(observations)
                 all_thoughts_and_obs.append(f"\n{thought_prompt}\nActions:\n")
 
-                # Update the prompt with all previous thoughts and observations
                 prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
                 logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
+                with open(f"logs/{task.name}-{iteration}.log", "w") as f:
+                    f.write(f"{prompt}\n")
                 observations = self.llm.run(prompt)
             iteration += 1
         else:
@@ -207,5 +181,4 @@ class Worker(BaseModel):
         logging.info(
             f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
         )
-
         return output
