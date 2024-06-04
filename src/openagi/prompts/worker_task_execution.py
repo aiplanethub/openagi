@@ -20,6 +20,7 @@ The output should be in the following format:
 }
 ```
 Context: {context}
+
 Take the context into account when you are answering the question. It will be the results or data from the past executions. If no context is provided, then you can assume that the context is empty and you can start from scratch. Use context to ensure consistency and accuracy in your responses.
 Example session:
 Question: What is the capital of France?
@@ -27,14 +28,8 @@ Thought: I should look up France on DuckDuckGo to find reliable information abou
 Action:
 ```json
 {
-        "cls": {"kls": "<action>", "module": "<module>"},
-        "params": {
-            "description": "<description>",
-            "name": "<name>",
-            "filename": "<filename>",
-            "file_content": "<file_content>",
-            "file_mode": "w"
-        }
+    "cls": {"kls": "DuckDuckGoSearch", "module": "openagi.actions.tools.ddg_search"},
+    "params": {"query": "Capital of France", "max_results": 10, "can_summarize": "true"}
 }
 ```
 You will be called again with this:
@@ -56,7 +51,7 @@ When you want to run an action, return the below JSON alone without anything els
 ```json
 {
     "action": {
-        "cls": {"kls": "<action>", "module": "<module>"},
+        "cls": {"kls": "<classname>", "module": "<module>"},
         "params": {
             "description": "<description>",
             "name": "<name>",
