@@ -1,10 +1,41 @@
 import importlib
 import json
+import logging
 import re
+from textwrap import dedent
 from typing import Dict, List, Optional, Tuple
 
+from openagi.exception import OpenAGIException
+from openagi.llms.base import LLMBaseModel
 
-def get_last_json(text):
+
+def force_json_output(resp_txt: str, llm: LLMBaseModel):
+    """
+    Forces the output once the max iterations are reached.
+    """
+    prompt: str = dedent(
+        f"""
+                        Below is a JSON block. Please try to provide the output in the format shown below.
+                        ```json
+                            {"key": "value"}
+                        ```
+                        the contents between ```json and ``` will be extracted and passed to json.loads() in python to convert it to a dictionary. Make sure that it works when passed else you will be fined.
+
+                        Input:
+                        {resp_txt}
+
+                        Output:
+
+    """.strip()
+    )
+    return llm.run(prompt)
+
+
+def get_last_json(
+    text,
+    llm: Optional[LLMBaseModel] = None,
+    max_iterations: int = 5,
+) -> Optional[Dict]:
     """
     Extracts the last block of text between ```json and ``` markers from a given string.
 
@@ -14,12 +45,32 @@ def get_last_json(text):
     Returns:
         dict or None: The last JSON block as a dictionary if found and parsed, otherwise None.
     """
-    pattern = r"```json(.*?)```"
-    matches = re.findall(pattern, text, flags=re.DOTALL)
-
-    if matches:
-        last_json = matches[-1].strip().replace("\n", "")
-        return json.loads(last_json)
+    parsing_failed = False
+    if not llm:
+        pattern = r"```json(.*?)```"
+        matches = re.findall(pattern, text, flags=re.DOTALL)
+        try:
+            if matches:
+                last_json = matches[-1].strip().replace("\n", "")
+                return json.loads(last_json)
+            else:
+                raise OpenAGIException(
+                    "The last output is not a valid JSON. Please check the output of the last action."
+                )
+        except json.JSONDecodeError:
+            parsing_failed = True
+    if parsing_failed and llm:
+        iters = 1
+        while iters <= max_iterations:
+            logging.info(f"Iteration {iters} to extract JSON from LLM output.")
+            try:
+                return get_last_json(force_json_output(text, llm), llm, max_iterations)
+            except json.JSONDecodeError:
+                if iters == max_iterations:
+                    raise OpenAGIException(
+                        "The last output is not a valid JSON. Please check the output of the last action."
+                    )
+            iters += 1
     return None
 
 

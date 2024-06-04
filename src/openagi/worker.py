@@ -78,7 +78,7 @@ class Worker(BaseModel):
 
     def should_continue(self, llm_resp: str) -> Union[bool, Optional[Dict]]:
         print(f"LLM Response: {llm_resp}")
-        output: Dict = get_last_json(llm_resp)
+        output: Dict = get_last_json(llm_resp, llm=self.llm, max_iterations=self.max_iterations)
         output_key_exists = bool(output and output.get(self.output_key))
         return (not output_key_exists, output)
 
