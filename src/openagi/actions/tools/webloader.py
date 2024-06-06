@@ -23,7 +23,7 @@ class WebBaseContextTool(BaseAction):
     )
     can_summarize: bool = Field(
         default=True,
-        description="Indicates whether the action can summarize the content before returning. Defaults to true.",
+        description="Indicates whether the action can summarize the content before returning. Uses ntlk & sumy.summarizers.lsa.LsaSummarizer. Defaults to true.",
     )
 
     def _get_summary(self, data):
