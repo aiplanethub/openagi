@@ -18,17 +18,17 @@ if __name__ == "__main__":
     # Team Members
     researcher = Worker(
         role="Research Analyst",
-        description="Analyze the company website and provided description to extract insights on culture, values, and specific needs. Expert in analyzing company cultures and identifying key values and needs from various sources, including websites and brief descriptions.",
+        instructions="Analyze the company website and provided description to extract insights on culture, values, and specific needs. Expert in analyzing company cultures and identifying key values and needs from various sources, including websites and brief descriptions.",
         actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
     writer = Worker(
         role="Job Description Writer",
-        description="Use insights from the Research Analyst to create a detailed, engaging, and enticing job posting. Skilled in crafting compelling job descriptions that resonate with the company's values and attract the right candidates.",
+        instructions="Use insights from the Research Analyst to create a detailed, engaging, and enticing job posting. Skilled in crafting compelling job descriptions that resonate with the company's values and attract the right candidates.",
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
     reviewer = Worker(
         role="Review and Editing Specialist",
-        description="Review the job posting for clarity, engagement, grammatical accuracy, and alignment with company values and refine it to ensure perfection. A meticulous editor with an eye for detail, ensuring every piece of content is clear, engaging, and grammatically perfect.",
+        instructions="Review the job posting for clarity, engagement, grammatical accuracy, and alignment with company values and refine it to ensure perfection. A meticulous editor with an eye for detail, ensuring every piece of content is clear, engaging, and grammatically perfect.",
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
