@@ -182,10 +182,12 @@ class Admin(BaseModel):
                 memory = run_action(action_cls=SummarizerAction, **params)
                 if not memory:
                     raise Exception("No memory returned after summarization.")
-            task_summaries.append(f"\n{indx}. {task.name} - {task.description}\n{memory}")
+            task_summaries.append(f"\n{indx+1}. {task.name} - {task.description}\n{memory}")
         else:
             logging.warning("No Tasks to summarize.")
-        return "\n".join(task_summaries)
+        if task_summaries:
+            return "\n".join(task_summaries).strip()
+        return "None"
 
     def _get_worker_by_id(self, worker_id: str):
         """

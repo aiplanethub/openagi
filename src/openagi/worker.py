@@ -150,6 +150,12 @@ class Worker(BaseModel):
                 logging.info(f"Output: {output}")
                 break
 
+            if not action:
+                logging.info(f"No action found in the output: {output}")
+                observations = f"Action: {action}\n{observations} Unable to extract action. Verify the output and try again."
+                all_thoughts_and_obs.append(observations)
+                continue
+
             if action:
                 action_json = f"```json\n{output}\n```\n"
                 try:
