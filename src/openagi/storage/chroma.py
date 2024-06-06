@@ -24,9 +24,9 @@ class ChromaStorage(BaseStorage):
         if kwargs.get("host", None) and kwargs.get("port", None):
             _client = HttpClient(host=kwargs["host"], port=kwargs["port"])
         else:
-            _client = PersistentClient(
-                path=kwargs.get("persist_path", cls.get_default_persistent_path())
-            )
+            persit_pth = kwargs.get("persist_path", cls.get_default_persistent_path())
+            _client = PersistentClient(path=persit_pth)
+            logging.info(f"Using Chroma persistent client with path: {persit_pth}")
 
         _collection = _client.get_or_create_collection(kwargs.get("collection_name"))
         logging.debug(f"Collection: Name - {_collection.name}, ID - {_collection.id}")

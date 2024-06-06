@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Union
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
+from openagi.actions.compressor import SummarizerAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
 from openagi.actions.utils import run_action
@@ -63,6 +64,10 @@ class Admin(BaseModel):
     workers: List[Worker] = Field(
         default_factory=list,
         description="List of workers managed by the Admin agent.",
+    )
+    summarize_task_context: bool = Field(
+        default=True,
+        description="If set to True, the task context will be summarized and passed to the next task else the task context will be passed as is.",
     )
 
     def model_post_init(self, __context: Any) -> None:
@@ -152,6 +157,36 @@ class Admin(BaseModel):
         logging.debug(f"Created {task_lists.get_tasks_queue().qsize()} Tasks.")
         return task_lists
 
+    def get_previous_task_contexts(self, task_lists: TaskLists):
+        """
+        Summarizes the previous actions taken by the agent.
+        """
+        task_summaries = []
+        logging.info("Retrieving completed task contexts...")
+        t_list = task_lists.completed_tasks.queue
+        for indx, task in enumerate(t_list):
+            memory = run_action(
+                action_cls=MemoryRagAction,
+                task=task,
+                llm=self.llm,
+                memory=self.memory,
+                query=task.id,
+            )
+            if memory and self.summarize_task_context:
+                params = {
+                    "past_messages": memory,
+                    "llm": self.llm,
+                    "memory": self.memory,
+                    "instructions": "Include summary of all the thoughts, but include all the relevant points from the observations without missing any.",
+                }
+                memory = run_action(action_cls=SummarizerAction, **params)
+                if not memory:
+                    raise Exception("No memory returned after summarization.")
+            task_summaries.append(f"\n{indx}. {task.name} - {task.description}\n{memory}")
+        else:
+            logging.warning("No Tasks to summarize.")
+        return "\n".join(task_summaries)
+
     def _get_worker_by_id(self, worker_id: str):
         """
         Returns the worker object with the given worker id.
@@ -162,16 +197,21 @@ class Admin(BaseModel):
 
     def worker_task_execution(self, query: str, description: str, task_lists: TaskLists):
         res = None
+
         while not task_lists.all_tasks_completed:
             cur_task = task_lists.get_next_unprocessed_task()
             worker = self._get_worker_by_id(cur_task.worker_id)
-            res = worker.execute_task(cur_task, context=res)
+            res, task = worker.execute_task(
+                cur_task,
+                context=self.get_previous_task_contexts(task_lists=task_lists),
+            )
+            self.memory.update_task(task)
+            task_lists.add_completed_tasks(task)
 
         # Final result
         logging.info("Finished Execution...")
 
-        # print(f"\n ******** Final Response *******\n{res}\n\n")
-        if self.output_format == OutputFormat.markdown:
+        if self.output_format == OutputFormat.markdown and res:
             logging.info("Output Formatting...")
             output_formatter = FormatterAction(
                 content=res,
