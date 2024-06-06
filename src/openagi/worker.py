@@ -17,22 +17,29 @@ from openagi.utils.helper import get_default_id
 
 class Worker(BaseModel):
     id: str = Field(default_factory=get_default_id)
-    role: str
-    description: Optional[str]
+    role: str = Field(description="Role of the worker.")
+    instructions: Optional[str] = Field(description="Instructions the worker should follow.")
     llm: Optional[LLMBaseModel] = Field(
-        description="LLM Model to be used.", default=None, exclude=True
+        description="LLM Model to be used.",
+        default=None,
+        exclude=True,
     )
     memory: Optional[Memory] = Field(
-        default_factory=list, description="Memory to be used.", exclude=True
+        default_factory=list,
+        description="Memory to be used.",
+        exclude=True,
     )
     actions: Optional[List[Any]] = Field(
-        description="Actions that the Worker supports", default_factory=list
+        description="Actions that the Worker supports",
+        default_factory=list,
     )
     max_iterations: int = Field(
-        default=20, description="Maximum number of steps to achieve the objective."
+        default=20,
+        description="Maximum number of steps to achieve the objective.",
     )
     output_key: str = Field(
-        default="final_output", description="Key to be used to store the output."
+        default="final_output",
+        description="Key to be used to store the output.",
     )
     force_output: bool = Field(
         default=True,
@@ -57,27 +64,15 @@ class Worker(BaseModel):
         return {
             "worker_id": self.id,
             "role": self.role,
-            "description": self.description,
+            "description": self.instructions,
             "supported_actions": [action.cls_doc() for action in self.actions],
         }
-
-    @staticmethod
-    def get_last_final_output(text):
-        """Finds the content of the last <r_failure> tag in the given text."""
-        pattern = r"<r_failure>(.*?)</r_failure>"
-        matches = list(re.finditer(pattern, text, re.DOTALL))
-        if matches:
-            last_match = matches[-1]
-            return last_match.group(1)
-        else:
-            return None
 
     def provoke_thought_obs(self, observation):
         thoughts = dedent(f"""Observation: {observation}""".strip())
         return thoughts
 
     def should_continue(self, llm_resp: str) -> Union[bool, Optional[Dict]]:
-        print(f"LLM Response: {llm_resp}")
         output: Dict = get_last_json(llm_resp, llm=self.llm, max_iterations=self.max_iterations)
         output_key_exists = bool(output and output.get(self.output_key))
         return (not output_key_exists, output)
@@ -91,28 +86,32 @@ class Worker(BaseModel):
             + "Based on the previous action and observation, give me the output."
         )
         output = self.llm.run(prompt)
-        cont, final_output = self.get_last_final_output(output)
+        cont, final_output = self.should_continue(output)
         if cont:
             prompt = (
                 "\n".join(all_thoughts_and_obs)
                 + f"Based on the previous action and observation, give me the output. {final_output}"
             )
             output = self.llm.run(prompt)
-            cont, final_output = self.get_last_final_output(output)
+            cont, final_output = self.should_continue(output)
         if cont:
             raise OpenAGIException(
                 f"LLM did not produce the expected output after {self.max_iterations} iterations."
             )
         return (cont, final_output)
 
-    def execute_task(self, task: Task, context: Any) -> Any:
+    def save_to_memory(self, task: Task):
+        """Saves the output to the memory."""
+        return self.memory.update_task(task)
+
+    def execute_task(self, task: Task, context: Any = None) -> Any:
         """Executes the specified task."""
         logging.info(
-            f"{'>'*50} Executing Task - {task.name} with worker - {self.role}[{self.id}] {'<'*50}"
+            f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}"
         )
         iteration = 1
         task_to_execute = f"{task.description}"
-        worker_description = f"{self.role} - {self.description}"
+        worker_description = f"{self.role} - {self.instructions}"
         all_thoughts_and_obs = []
 
         initial_thought_provokes = self.provoke_thought_obs(None)
@@ -123,6 +122,7 @@ class Worker(BaseModel):
             thought_provokes=initial_thought_provokes,
             output_key=self.output_key,
             context=context,
+            max_iterations=self.max_iterations,
         )
 
         base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
@@ -135,19 +135,44 @@ class Worker(BaseModel):
         while iteration < max_iters:
             logging.info(f"---- Iteration {iteration} ----")
             continue_flag, output = self.should_continue(observations)
+
+            action = output.get("action") if output else None
+            if action:
+                action = [action]
+
+            # Save to memory
+            if output:
+                task.result = observations
+                task.actions = str([action.cls_doc() for action in self.actions])
+                self.save_to_memory(task=task)
+
             if not continue_flag:
                 logging.info(f"Output: {output}")
                 break
 
-            action = output.get("action") if output else None
             if action:
                 action_json = f"```json\n{output}\n```\n"
-                actions = get_act_classes_from_json([action])
+                try:
+                    actions = get_act_classes_from_json(action)
+                except KeyError as e:
+                    if "cls" in e or "module" in e or "kls" in e:
+                        observations = f"Action: {action_json}\n{observations}"
+                        all_thoughts_and_obs.append(action_json)
+                        all_thoughts_and_obs.append(observations)
+                        continue
+                    else:
+                        raise e
                 for act_cls, params in actions:
                     params["memory"] = self.memory
                     params["llm"] = self.llm
-                    res = run_action(action_cls=act_cls, **params)
-                    logging.info(f"Action Result -- {res}")
+                    try:
+                        res = run_action(action_cls=act_cls, **params)
+                    except Exception as e:
+                        logging.error(f"Error:{e}")
+                        observations = f"Action: {action_json}\n{observations}. {e} Try to fix the error and try again. Ignore if already tried more than twice"
+                        all_thoughts_and_obs.append(action_json)
+                        all_thoughts_and_obs.append(observations)
+                        continue
 
                     observation_prompt = f"Observation: {res}\n"
                     all_thoughts_and_obs.append(action_json)
@@ -173,6 +198,9 @@ class Worker(BaseModel):
                             f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
                         )
                     output = final_output
+                    task.result = observations
+                    task.actions = str([action.cls_doc() for action in self.actions])
+                    self.save_to_memory(task=task)
                 else:
                     raise OpenAGIException(
                         f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
@@ -181,4 +209,4 @@ class Worker(BaseModel):
         logging.info(
             f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
         )
-        return output
+        return output, task

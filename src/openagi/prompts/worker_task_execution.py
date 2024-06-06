@@ -15,7 +15,7 @@ You: {worker_description}
 - Take the context into account when you are answering the question. It will be the results or data from the past executions. If no context is provided, then you can assume that the context is empty and you can start from scratch. Use context to ensure consistency and accuracy in your responses.
 - Output the answer when you feel the observations are correct and aligned with the goal. They do not have to be very accurate, but ensure they are reasonably reliable.
 - The output should always be in the following format in all the iterations. Ensure the JSON format is suitable for utilization with json.loads(), enclosed in triple backticks:
-
+- No Action/Output should be without json. Trying not include your thoughts as part of the action. You can skip the action if not required.
 - For Running an action:
 ```json
 {
