@@ -54,7 +54,6 @@ class WriteFileAction(BaseAction):
     )
 
     def execute(self):
-        logging.debug(f"Running Action {self.__class__.__name__}")
         output_file = Path(self.filename)
         logging.info(f"Writing file - {output_file.absolute()}")
         with open(output_file.absolute(), self.file_mode) as f:
@@ -70,7 +69,6 @@ class ReadFileAction(BaseAction):
     file_path: str = Field(..., description="Name of the file along with the directory.")
 
     def execute(self):
-        logging.debug(f"Running Action {self.__class__.__name__}")
         output_file = Path(self.file_path)
         logging.info(f"Reading file - {output_file.absolute()}")
         with open(output_file.absolute(), "r") as f:
