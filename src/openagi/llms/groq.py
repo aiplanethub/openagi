@@ -13,7 +13,7 @@ class GroqConfigModel(LLMConfigModel):
 
     groq_api_key: str
     model_name: str = "mixtral-8x7b-32768"
-    temperature: int = 0.1
+    temperature: float = 0.1
 
 class GroqModel(LLMBaseModel):
     """Chat Groq Model implementation of the LLMBaseModel.
