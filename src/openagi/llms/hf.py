@@ -1,12 +1,15 @@
-from transformers import pipeline
+from typing import Any
+from langchain_core.messages import HumanMessage
+from langchain_groq import ChatGroq
+
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
-
 
 class HuggingFaceConfigModel(LLMConfigModel):
     """Configuration model for Hugging Face."""
 
-    huggingface_model: str
+    hf_token: str
+    model_name: str
 
 
 class HuggingFaceModel(LLMBaseModel):
@@ -20,7 +23,7 @@ class HuggingFaceModel(LLMBaseModel):
 
     def load(self):
         """Initializes the Hugging Face model with configurations."""
-        self.llm = pipeline("text-generation", model=self.config.huggingface_model)
+        
         return self.llm
 
     def run(self, input_text: str):
@@ -47,5 +50,6 @@ class HuggingFaceModel(LLMBaseModel):
             An instance of HuggingFaceConfigModel with loaded configurations.
         """
         return HuggingFaceConfigModel(
-            huggingface_model=read_from_env("HUGGINGFACE_MODEL", raise_exception=True),
+            hf_token = read_from_env("HUGGINGFACE_ACCESS_TOKEN",raise_exception=True),
+            model_name=read_from_env("HUGGINGFACE_MODEL", raise_exception=True),
         )
