@@ -9,6 +9,7 @@
 ## Components
 
 * [Admin](components/admin.md)
+* [Workers](components/workers.md)
 * [Planner](components/planner.md)
 * [LLM](components/llm.md)
 * [Action](components/action.md)
