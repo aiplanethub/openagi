@@ -1,9 +1,12 @@
 from typing import Any
 from langchain_core.messages import HumanMessage
-from langchain_groq import ChatGroq
-
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
+
+try:
+   from langchain_groq import ChatGroq
+except ImportError:
+  raise OpenAGIException("Install langchain groq with cmd `pip install langchain-groq`")
 
 class GroqConfigModel(LLMConfigModel):
     """Configuration model for Groq Chat model."""
@@ -55,4 +58,6 @@ class GroqModel(LLMBaseModel):
         """
         return GroqConfigModel(
             groq_api_key=read_from_env("GROQ_API_KEY", raise_exception=True),
+            model_name = read_from_env("GROQ_MODEL",raise_exception=True),
+            temperature=read_from_env("GROQ_TEMP",raise_exception=True)
         )
