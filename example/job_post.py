@@ -6,7 +6,6 @@ from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
 from openagi.worker import Worker
-
 from rich.console import Console
 from rich.markdown import Markdown
 
