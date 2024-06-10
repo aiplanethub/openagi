@@ -33,7 +33,7 @@
    pip install openagi
    ```
 
-## To setup your crendentials
+## To setup your credentials
 
 Follow this quick [installation guide](https://openagi.aiplanet.com/getting-started/installation) to complete the setup.
 
