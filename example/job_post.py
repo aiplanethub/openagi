@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 
+
 if __name__ == "__main__":
     config = AzureChatOpenAIModel.load_from_env_config()
     llm = AzureChatOpenAIModel(config=config)
