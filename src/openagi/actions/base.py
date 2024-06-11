@@ -1,3 +1,4 @@
+from textwrap import dedent
 from pydantic import BaseModel, Field
 from typing import Any, Optional
 
@@ -33,7 +34,7 @@ class BaseAction(BaseModel):
             "cls": {
                 "kls": cls.__name__,
                 "module": cls.__module__,
-                "doc": cls.__doc__,
+                "doc": dedent(cls.__doc__).strip() if cls.__doc__ else "",
             },
             "params": {
                 field_name: field.description
