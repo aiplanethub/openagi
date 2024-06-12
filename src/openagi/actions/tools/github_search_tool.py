@@ -49,7 +49,7 @@ class GitHubFileLoadAction(BaseAction):
         default_factory=str,
         description="Repository name- Format: username/repo e.g., aiplanthub/openagi",
     )
-    extension = Field(
+    extension: str = Field(
         ...,
         description="File extension to extract the data from. eg: `.py`, `.md`",
     )
