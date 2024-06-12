@@ -58,7 +58,7 @@ class GitHubFileLoadAction(BaseAction):
         access_token = os.environ.get("GITHUB_ACCESS_TOKEN")
 
         loader = OpenAGIGithubFileLoader(
-            repo="Shreeharivaasishta/openagi",
+            repo=self.repo,
             access_token=access_token,
             github_api_url="https://api.github.com",
             branch="main",
