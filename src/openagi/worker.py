@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import re
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union
@@ -190,7 +191,9 @@ class Worker(BaseModel):
 
                 prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
                 logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
-                with open(f"logs/{task.name}-{iteration}.log", "w") as f:
+                pth = Path(f"{self.memory.session_id}/logs/{task.name}-{iteration}.log")
+                pth.parent.mkdir(parents=True, exist_ok=True)
+                with open(pth, "w") as f:
                     f.write(f"{prompt}\n")
                 observations = self.llm.run(prompt)
             iteration += 1
