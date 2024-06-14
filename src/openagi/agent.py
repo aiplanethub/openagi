@@ -1,9 +1,9 @@
 import logging
 from enum import Enum
 from typing import Any, List, Optional, Union
-
+from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
-
+from yaspin import yaspin
 from openagi.actions.base import BaseAction
 from openagi.actions.compressor import SummarizerAction
 from openagi.actions.formatter import FormatterAction
@@ -22,8 +22,10 @@ from openagi.utils.extraction import (
     get_last_json,
 )
 from openagi.utils.helper import get_default_llm
+from openagi.utils.spin import show_spinner
 from openagi.worker import Worker
-
+import threading
+import time
 
 class OutputFormat(str, Enum):
     markdown = "markdown"
@@ -70,6 +72,8 @@ class Admin(BaseModel):
         description="If set to True, the task context will be summarized and passed to the next task else the task context will be passed as is.",
     )
 
+    log_file_path: str = Field(default_factory=lambda: str(Path.cwd() / 'logs'))
+
     def model_post_init(self, __context: Any) -> None:
         model = super().model_post_init(__context)
 
@@ -111,7 +115,7 @@ class Admin(BaseModel):
         else:
             self.workers.extend(workers)
 
-    def run_planner(self, query: str, descripton: str):
+    def run_planner(self, query: str, descripton: str, logger: logging):
         """
         Runs the planner to generate a plan for the given query and description, using the supported actions and workers.
 
@@ -125,7 +129,7 @@ class Admin(BaseModel):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
-        logging.info("Thinking...")
+        logger.info("Thinking...")
         actions_dict: List[BaseAction] = []
 
         for act in self.actions:
@@ -142,7 +146,7 @@ class Admin(BaseModel):
             supported_workers=workers_dict,
         )
 
-    def _generate_tasks_list(self, planned_tasks):
+    def _generate_tasks_list(self, planned_tasks, logger):
         """
         Generates a list of tasks to be executed by the agent.
 
@@ -154,15 +158,15 @@ class Admin(BaseModel):
         """
         task_lists = TaskLists()
         task_lists.add_tasks(tasks=planned_tasks)
-        logging.debug(f"Created {task_lists.get_tasks_queue().qsize()} Tasks.")
+        logger.debug(f"Created {task_lists.get_tasks_queue().qsize()} Tasks.")
         return task_lists
 
-    def get_previous_task_contexts(self, task_lists: TaskLists):
+    def get_previous_task_contexts(self, task_lists: TaskLists, logger: logging):
         """
         Summarizes the previous actions taken by the agent.
         """
         task_summaries = []
-        logging.info("Retrieving completed task contexts...")
+        logger.info("Retrieving completed task contexts...")
         t_list = task_lists.completed_tasks.queue
         for indx, task in enumerate(t_list):
             memory = run_action(
@@ -184,7 +188,7 @@ class Admin(BaseModel):
                     raise Exception("No memory returned after summarization.")
             task_summaries.append(f"\n{indx+1}. {task.name} - {task.description}\n{memory}")
         else:
-            logging.warning("No Tasks to summarize.")
+            logger.warning("No Tasks to summarize.")
         if task_summaries:
             return "\n".join(task_summaries).strip()
         return "None"
@@ -197,7 +201,7 @@ class Admin(BaseModel):
             if worker.id == worker_id:
                 return worker
 
-    def worker_task_execution(self, query: str, description: str, task_lists: TaskLists):
+    def worker_task_execution(self, query: str, description: str, task_lists: TaskLists, logger: Any):
         res = None
 
         while not task_lists.all_tasks_completed:
@@ -205,16 +209,17 @@ class Admin(BaseModel):
             worker = self._get_worker_by_id(cur_task.worker_id)
             res, task = worker.execute_task(
                 cur_task,
-                context=self.get_previous_task_contexts(task_lists=task_lists),
+                context=self.get_previous_task_contexts(task_lists=task_lists, logger=logger),
+                logger=logger
             )
             self.memory.update_task(task)
             task_lists.add_completed_tasks(task)
 
         # Final result
-        logging.info("Finished Execution...")
+        logger.info("Finished Execution...")
 
         if self.output_format == OutputFormat.markdown and res:
-            logging.info("Output Formatting...")
+            logger.info("Output Formatting...")
             output_formatter = FormatterAction(
                 content=res,
                 format_type=OutputFormat.markdown,
@@ -222,10 +227,10 @@ class Admin(BaseModel):
                 memory=self.memory,
             )
             res = output_formatter.execute()
-        logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
+        logger.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return res
 
-    def single_agent_execution(self, query: str, description: str, task_lists: TaskLists):
+    def single_agent_execution(self, query: str, description: str, task_lists: TaskLists, logger):
         """
         Executes a single agent's tasks for the given query and description, updating the task lists and memory as necessary.
 
@@ -245,13 +250,14 @@ class Admin(BaseModel):
         while not task_lists.all_tasks_completed:
             print(f"{'*'*100}{'*'*100}")
 
-            logging.info(f"Execuing Step {steps}")
+            logger.info(f"Execuing Step {steps}")
             cur_task = task_lists.get_next_unprocessed_task()
             res, actions = self.execute_task(
                 query=query,
                 task=cur_task,
                 all_tasks=_tasks_lists,
                 prev_task=prev_task,
+                logger=logger
             )
             if res:
                 cur_task.result = str(res)
@@ -261,11 +267,11 @@ class Admin(BaseModel):
             steps += 1
 
         # Final result
-        logging.info("Finished Execution...")
+        logger.info("Finished Execution...")
 
         # print(f"\n ******** Final Response *******\n{res}\n\n")
         if self.output_format == OutputFormat.markdown:
-            logging.info("Output Formatting...")
+            logger.info("Output Formatting...")
             output_formatter = FormatterAction(
                 content=res,
                 format_type=OutputFormat.markdown,
@@ -273,7 +279,7 @@ class Admin(BaseModel):
                 memory=self.memory,
             )
             res = output_formatter.execute()
-        logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
+        logger.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return res
 
     def run(self, query: str, description: str):
@@ -287,17 +293,48 @@ class Admin(BaseModel):
         Returns:
             The result of the task execution, either from the worker task execution or the single agent execution.
         """
-        logging.info("Running Admin Agent...")
-        logging.info(f"SessionID - {self.memory.session_id}")
+        # Ensure the directory exists
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)  # Set the logger to capture all levels of logs
 
-        # Planning stage to create list of tasks
-        planned_tasks = self.run_planner(query=query, descripton=description)
+        # Create a file handler to log to a file
+        log_file_path = Path(self.log_file_path) / f"app.log"
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setLevel(logging.DEBUG)  # Set the handler to capture all levels of logs
 
-        logging.info("Tasks Planned...")
-        logging.debug(f"{planned_tasks=}")
+        # Create a formatter and set it for the handler
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+
+        # Add the handler to the logger
+        logger.addHandler(file_handler)
+
+        # Running the agent
+        logger.info("Running Admin Agent...")
+        logger.info(f"SessionID - {self.memory.session_id}")
+
+        # Event to signal progress completion
+        spinner_event = threading.Event()
+
+        # Initialize the spinner
+        spinner = yaspin(text="Running Planner", spinner="dots")
+
+        # Start the spinner in a separate thread
+        spinner_thread = threading.Thread(target=show_spinner, args=(spinner, spinner_event))
+        spinner_thread.start()
+
+        # Run the planner
+        planned_tasks = self.run_planner(query=query, descripton=description, logger=logger)
+
+        # Stop the spinner
+        spinner_event.set()
+        spinner_thread.join()
+
+        logger.info("Tasks Planned...")
+        logger.debug(f"{planned_tasks=}")
 
         # Tasks List
-        task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
+        task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks, logger=logger)
 
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
 
@@ -306,12 +343,14 @@ class Admin(BaseModel):
                 query=query,
                 description=description,
                 task_lists=task_lists,
+                logger=logger
             )
 
         return self.single_agent_execution(
             query=query,
             description=description,
             task_lists=task_lists,
+            logger=logger
         )
 
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
@@ -335,6 +374,7 @@ class Admin(BaseModel):
         task: Task,
         all_tasks: TaskLists,
         prev_task: Task,
+        logger: logging
     ):
         """
         Executes a given task by running the necessary actions and returning the result.
@@ -348,8 +388,8 @@ class Admin(BaseModel):
         Returns:
             tuple: A tuple containing the result of the task execution and the last action executed.
         """
-        logging.info(f"{'>'*10} Starting execution of `{task.name} [{task.id}]` {'<'*10}")
-        logging.info(f"Description - {task.description}")
+        logger.info(f"{'>'*10} Starting execution of `{task.name} [{task.id}]` {'<'*10}")
+        logger.info(f"Description - {task.description}")
 
         # Get supported actions and convert to array of dict(actions)
         actions_dict: List[BaseAction] = []
@@ -373,12 +413,12 @@ class Admin(BaseModel):
         # TODO: Make TaskExecutor class customizable
         te = TaskExecutor.from_template(variables=te_vars)
 
-        logging.info("TastExecutor Prompt initiated...")
-        logging.debug(f"{te=}")
+        logger.info("TastExecutor Prompt initiated...")
+        logger.debug(f"{te=}")
 
         resp = self.llm.run(te)
 
-        logging.debug(f"{resp=}")
+        logger.debug(f"{resp=}")
 
         execute, content = self._can_task_execute(llm_resp=resp)
 
@@ -393,7 +433,7 @@ class Admin(BaseModel):
 
         res = None
 
-        logging.debug(f"{te_actions}")
+        logger.debug(f"{te_actions}")
 
         actions = get_act_classes_from_json(te_actions)
         # Pass previous action result of the current task to the next action as previous_obs
