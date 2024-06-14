@@ -193,7 +193,7 @@ class Worker(BaseModel):
                 logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
                 pth = Path(f"{self.memory.session_id}/logs/{task.name}-{iteration}.log")
                 pth.parent.mkdir(parents=True, exist_ok=True)
-                with open(pth, "w") as f:
+                with open(pth, "w", encoding='utf-8') as f:
                     f.write(f"{prompt}\n")
                 observations = self.llm.run(prompt)
             iteration += 1
