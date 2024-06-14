@@ -107,10 +107,16 @@ class Worker(BaseModel):
 
     def execute_task(self, task: Task, context: Any = None) -> Any:
         """Executes the specified task."""
+        iteration = 1
+        pth = Path(f"{self.memory.session_id}/logs/{task.name}-{iteration}.log")
+        pth.parent.mkdir(parents=True, exist_ok=True)
+        logging.basicConfig(filename=pth, level=logging.INFO, format='%(asctime)s %(message)s')
+        
         logging.info(
             f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}"
         )
-        iteration = 1
+        with open(pth, "a") as f:
+            f.write(f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}\n")
         task_to_execute = f"{task.description}"
         worker_description = f"{self.role} - {self.instructions}"
         all_thoughts_and_obs = []
@@ -129,13 +135,19 @@ class Worker(BaseModel):
         base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
         prompt = f"{base_prompt}\nThought:\nIteration: {iteration}\nActions:\n"
 
+        logging.info(f"Initial prompt: {prompt}")
+        with open(pth, "a") as f:
+            f.write(f"\n{'*'*20}Initial prompt{'*'*20}\n{prompt}\n{'*'*20}End Initial prompt{'*'*20}\n")
         observations = self.llm.run(prompt)
         all_thoughts_and_obs.append(prompt)
 
         max_iters = self.max_iterations + 1
         while iteration < max_iters:
             logging.info(f"---- Iteration {iteration} ----")
+            with open(pth, "a") as f:
+                f.write(f"{'*'*20}---- Iteration {iteration} ----{'*'*20}\n")
             continue_flag, output = self.should_continue(observations)
+            logging.info(f"Continue flag: {continue_flag}, Output: {output}")
 
             action = output.get("action") if output else None
             if action:
@@ -146,13 +158,19 @@ class Worker(BaseModel):
                 task.result = observations
                 task.actions = str([action.cls_doc() for action in self.actions])
                 self.save_to_memory(task=task)
-
+                logging.info(f"Task result saved to memory with observations: {observations}")
+                with open(pth, "a") as f:
+                    f.write(f"{'*'*20}----Task result saved to memory with observations----{'*'*20}\n{observations}\n{'*'*20}----End Task result saved to memory with observations----{'*'*20}\n")
             if not continue_flag:
-                logging.info(f"Output: {output}")
+                logging.info(f"Stopping as continue_flag is {continue_flag}. Final output: {output}")
+                with open(pth, "a") as f:
+                    f.write(f"{'*'*20}----Stopping as continue_flag-----{'*'*20}\nStopping as continue_flag is {continue_flag}. Final output: {output}\n{'*'*20}----End Stopping as continue_flag-----{'*'*20}\n")
                 break
 
             if not action:
                 logging.info(f"No action found in the output: {output}")
+                with open(pth, "a") as f:
+                    f.write(f"{'*'*20}-----No action found in the output-----{'*'*20}\n{output}\n{'*'*20}-----End No action found in the output-----{'*'*20}")
                 observations = f"Action: {action}\n{observations} Unable to extract action. Verify the output and try again."
                 all_thoughts_and_obs.append(observations)
                 continue
@@ -166,16 +184,25 @@ class Worker(BaseModel):
                         observations = f"Action: {action_json}\n{observations}"
                         all_thoughts_and_obs.append(action_json)
                         all_thoughts_and_obs.append(observations)
+                        logging.error(f"KeyError during action extraction: {e}")
+                        with open(pth, "a") as f:
+                            f.write(f"{'*'*20}----KeyError during action extraction-----{'*'*20}\n{e}\n{'*'*20}----End KeyError during action extraction-----{'*'*20}\n")
                         continue
                     else:
                         raise e
+
                 for act_cls, params in actions:
                     params["memory"] = self.memory
                     params["llm"] = self.llm
                     try:
                         res = run_action(action_cls=act_cls, **params)
+                        logging.info(f"Action {act_cls} executed with result: {res}")
+                        with open(pth, "a") as f:
+                            f.write(f"{'*'*20}----Action {act_cls} executed with result----{'*'*20}\nAction {act_cls} executed with result: {res}\n{'*'*20}----End Action {act_cls} executed with result----{'*'*20}\n")
                     except Exception as e:
-                        logging.error(f"Error:{e}")
+                        logging.error(f"Error during action execution: {e}")
+                        with open(pth, "a") as f:
+                            f.write(f"{'*'*20}----Error during action execution----{'*'*20}\nError during action execution: {e}\n{'*'*20}----End Error during action execution----{'*'*20}\n")
                         observations = f"Action: {action_json}\n{observations}. {e} Try to fix the error and try again. Ignore if already tried more than twice"
                         all_thoughts_and_obs.append(action_json)
                         all_thoughts_and_obs.append(observations)
@@ -191,15 +218,20 @@ class Worker(BaseModel):
 
                 prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
                 logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
-                pth = Path(f"{self.memory.session_id}/logs/{task.name}-{iteration}.log")
-                pth.parent.mkdir(parents=True, exist_ok=True)
-                with open(pth, "w") as f:
+                with open(pth, "a") as f:
+                    f.write(f"\n{'*' * 20}-----Prompt-----{'*' * 20}\nSTART:\n{prompt}\n:END\n{'*' * 20}-----End Prompt-----{'*' * 20}\n")
+                with open(pth, "a") as f:
                     f.write(f"{prompt}\n")
+                logging.info(f"Log for iteration {iteration} updated to {pth}")
+                with open(pth, 'a') as f:
+                    f.write(f"\n{'*'*20}----Log for iteration----{'*'*20}\nLog for iteration {iteration} updated to {pth}\n{'*'*20}----End Log for iteration----{'*'*20}\n")
                 observations = self.llm.run(prompt)
             iteration += 1
         else:
             if iteration == self.max_iterations:
                 logging.info("---- Forcing Output ----")
+                with open(pth, "a") as f:
+                    f.write("\n---- Forcing Output ----\n")
                 if self.force_output:
                     cont, final_output = self._force_output(observations, all_thoughts_and_obs)
                     if cont:
@@ -210,6 +242,9 @@ class Worker(BaseModel):
                     task.result = observations
                     task.actions = str([action.cls_doc() for action in self.actions])
                     self.save_to_memory(task=task)
+                    logging.info(f"Forced output saved to memory with observations: {observations}")
+                    with open(pth, "a") as f:
+                        f.write(f"\n{'*'*20}----Forced output saved to memory with observations----{'*'*20}\nForced output saved to memory with observations: {observations}\n{'*'*20}----End Forced output saved to memory with observations----{'*'*20}\n")
                 else:
                     raise OpenAGIException(
                         f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
@@ -218,4 +253,6 @@ class Worker(BaseModel):
         logging.info(
             f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
         )
+        with open(pth, "a") as f:
+            f.write(f"\n{'*'*20}-----Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations-----{'*'*20}\n")
         return output, task
