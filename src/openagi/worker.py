@@ -1,9 +1,9 @@
 import logging
 from pathlib import Path
-import re
+import re, threading
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union
-
+from yaspin import yaspin
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.utils import run_action
@@ -14,7 +14,7 @@ from openagi.prompts.worker_task_execution import WorkerAgentTaskExecution
 from openagi.tasks.task import Task
 from openagi.utils.extraction import get_act_classes_from_json, get_last_json
 from openagi.utils.helper import get_default_id
-
+from openagi.utils.spin import show_spinner
 
 class Worker(BaseModel):
     id: str = Field(default_factory=get_default_id)
@@ -105,11 +105,10 @@ class Worker(BaseModel):
         """Saves the output to the memory."""
         return self.memory.update_task(task)
 
-    def execute_task(self, task: Task, context: Any = None) -> Any:
+    def execute_task(self, task: Task, logger: logging, context: Any = None) -> Any:
         """Executes the specified task."""
-        logging.info(
-            f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}"
-        )
+        logger.info(f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}")
+
         iteration = 1
         task_to_execute = f"{task.description}"
         worker_description = f"{self.role} - {self.instructions}"
@@ -129,12 +128,29 @@ class Worker(BaseModel):
         base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
         prompt = f"{base_prompt}\nThought:\nIteration: {iteration}\nActions:\n"
 
+        # Event to signal spinner completion
+        spinner_event = threading.Event()
+
+        # Initialize the spinner
+        spinner = yaspin(text="Running LLM", spinner="dots")
+
+        # Start the spinner in a separate thread
+        spinner_thread = threading.Thread(target=show_spinner, args=(spinner, spinner_event))
+        spinner_thread.start()
+
+        # LLM Run
+        logger.info("Running LLM with initial prompt...")
         observations = self.llm.run(prompt)
+
+        # Stop the spinner
+        spinner_event.set()
+        spinner_thread.join()
+        logger.info(f"Executing...")
         all_thoughts_and_obs.append(prompt)
 
         max_iters = self.max_iterations + 1
         while iteration < max_iters:
-            logging.info(f"---- Iteration {iteration} ----")
+            logger.info(f"---- Iteration {iteration} ----")
             continue_flag, output = self.should_continue(observations)
 
             action = output.get("action") if output else None
@@ -148,11 +164,11 @@ class Worker(BaseModel):
                 self.save_to_memory(task=task)
 
             if not continue_flag:
-                logging.info(f"Output: {output}")
+                logger.info(f"Output: {output}")
                 break
 
             if not action:
-                logging.info(f"No action found in the output: {output}")
+                logger.info(f"No action found in the output: {output}")
                 observations = f"Action: {action}\n{observations} Unable to extract action. Verify the output and try again."
                 all_thoughts_and_obs.append(observations)
                 continue
@@ -175,7 +191,7 @@ class Worker(BaseModel):
                     try:
                         res = run_action(action_cls=act_cls, **params)
                     except Exception as e:
-                        logging.error(f"Error:{e}")
+                        logger.error(f"Error: {e}")
                         observations = f"Action: {action_json}\n{observations}. {e} Try to fix the error and try again. Ignore if already tried more than twice"
                         all_thoughts_and_obs.append(action_json)
                         all_thoughts_and_obs.append(observations)
@@ -190,7 +206,7 @@ class Worker(BaseModel):
                 all_thoughts_and_obs.append(f"\n{thought_prompt}\nActions:\n")
 
                 prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
-                logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
+                logger.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
                 pth = Path(f"{self.memory.session_id}/logs/{task.name}-{iteration}.log")
                 pth.parent.mkdir(parents=True, exist_ok=True)
                 with open(pth, "w", encoding='utf-8') as f:
@@ -199,7 +215,7 @@ class Worker(BaseModel):
             iteration += 1
         else:
             if iteration == self.max_iterations:
-                logging.info("---- Forcing Output ----")
+                logger.info("---- Forcing Output ----")
                 if self.force_output:
                     cont, final_output = self._force_output(observations, all_thoughts_and_obs)
                     if cont:
@@ -215,7 +231,7 @@ class Worker(BaseModel):
                         f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
                     )
 
-        logging.info(
+        logger.info(
             f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
         )
         return output, task
