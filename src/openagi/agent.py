@@ -25,7 +25,6 @@ from openagi.utils.helper import get_default_llm
 from openagi.utils.spin import show_spinner
 from openagi.worker import Worker
 import threading
-import time
 
 class OutputFormat(str, Enum):
     markdown = "markdown"
