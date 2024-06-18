@@ -57,7 +57,7 @@ class GitHubFileLoadAction(BaseAction):
         description="File directory that contains the supporting files i.e., src/openagi/llms",
     )
     extension: str = Field(
-        default_factory=str,
+        default_factory = ".txt",
         description="File extension to extract the data from. eg: `.py`, `.md`",
     )
 
