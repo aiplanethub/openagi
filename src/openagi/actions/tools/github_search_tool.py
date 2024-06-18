@@ -4,7 +4,6 @@ from typing import Dict, List
 
 import requests
 from langchain_community.document_loaders.github import GithubFileLoader
-from langchain_community.document_loaders import AsyncHtmlLoader
 from pydantic import Field
 from openagi.actions.base import BaseAction
 
@@ -36,7 +35,7 @@ class OpenAGIGithubFileLoader(GithubFileLoader):
 
     def get_file_content_by_path(self, path: str) -> str:
         base_url = f"{self.github_api_url}/repos/{self.repo}/contents/{path}"
-        print(base_url)
+        #print(base_url)
         response = requests.get(base_url, headers=self.headers)
         response.raise_for_status()
 
