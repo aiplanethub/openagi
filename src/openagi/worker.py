@@ -131,6 +131,7 @@ class Worker(BaseModel):
 
         logging.debug(f"Running LLM with prompt...")
         observations = self.llm.run(prompt)
+        logging.info(f"LLM execution completed. Observations: {observations}")
         all_thoughts_and_obs.append(prompt)
 
         max_iters = self.max_iterations + 1
@@ -166,6 +167,7 @@ class Worker(BaseModel):
                 try:
                     logging.debug(f"Getting action classes from JSON...")
                     actions = get_act_classes_from_json(action)
+                    logging.info(f"Extracted actions: {[act_cls.__name__ for act_cls, _ in actions]}")
                 except KeyError as e:
                     if "cls" in e or "module" in e or "kls" in e:
                         observations = f"Action: {action_json}\n{observations}"
@@ -180,6 +182,7 @@ class Worker(BaseModel):
                     try:
                         logging.debug(f"Running action: {act_cls.__name__}...")
                         res = run_action(action_cls=act_cls, **params)
+                        logging.info(f"Action '{act_cls.__name__}' completed. Result: {res}")
                     except Exception as e:
                         logging.error(f"Error running action: {e}")
                         observations = f"Action: {action_json}\n{observations}. {e} Try to fix the error and try again. Ignore if already tried more than twice"
