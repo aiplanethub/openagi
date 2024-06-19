@@ -107,14 +107,13 @@ class Worker(BaseModel):
 
     def execute_task(self, task: Task, context: Any = None) -> Any:
         """Executes the specified task."""
-        logging.info(
-            f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}"
-        )
+        logging.info(f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}")
         iteration = 1
         task_to_execute = f"{task.description}"
         worker_description = f"{self.role} - {self.instructions}"
         all_thoughts_and_obs = []
 
+        logging.debug(f"Provoking initial thought observation...")
         initial_thought_provokes = self.provoke_thought_obs(None)
         te_vars = dict(
             task_to_execute=task_to_execute,
@@ -126,33 +125,38 @@ class Worker(BaseModel):
             max_iterations=self.max_iterations,
         )
 
+        logging.debug(f"Generating base prompt...")
         base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
         prompt = f"{base_prompt}\nThought:\nIteration: {iteration}\nActions:\n"
 
+        logging.debug(f"Running LLM with prompt...")
         observations = self.llm.run(prompt)
         all_thoughts_and_obs.append(prompt)
 
         max_iters = self.max_iterations + 1
         while iteration < max_iters:
             logging.info(f"---- Iteration {iteration} ----")
+            logging.debug(f"Checking if task should continue...")
             continue_flag, output = self.should_continue(observations)
 
+            logging.debug(f"Extracting action from output...")
             action = output.get("action") if output else None
             if action:
                 action = [action]
 
             # Save to memory
             if output:
+                logging.debug(f"Saving task result and actions to memory...")
                 task.result = observations
                 task.actions = str([action.cls_doc() for action in self.actions])
                 self.save_to_memory(task=task)
 
             if not continue_flag:
-                logging.info(f"Output: {output}")
+                logging.info(f"Task completed. Output: {output}")
                 break
 
             if not action:
-                logging.info(f"No action found in the output: {output}")
+                logging.warning(f"No action found in the output: {output}")
                 observations = f"Action: {action}\n{observations} Unable to extract action. Verify the output and try again."
                 all_thoughts_and_obs.append(observations)
                 continue
@@ -160,6 +164,7 @@ class Worker(BaseModel):
             if action:
                 action_json = f"```json\n{output}\n```\n"
                 try:
+                    logging.debug(f"Getting action classes from JSON...")
                     actions = get_act_classes_from_json(action)
                 except KeyError as e:
                     if "cls" in e or "module" in e or "kls" in e:
@@ -173,9 +178,10 @@ class Worker(BaseModel):
                     params["memory"] = self.memory
                     params["llm"] = self.llm
                     try:
+                        logging.debug(f"Running action: {act_cls.__name__}...")
                         res = run_action(action_cls=act_cls, **params)
                     except Exception as e:
-                        logging.error(f"Error:{e}")
+                        logging.error(f"Error running action: {e}")
                         observations = f"Action: {action_json}\n{observations}. {e} Try to fix the error and try again. Ignore if already tried more than twice"
                         all_thoughts_and_obs.append(action_json)
                         all_thoughts_and_obs.append(observations)
@@ -186,6 +192,7 @@ class Worker(BaseModel):
                     all_thoughts_and_obs.append(observation_prompt)
                     observations = res
 
+                logging.debug(f"Provoking thought observation...")
                 thought_prompt = self.provoke_thought_obs(observations)
                 all_thoughts_and_obs.append(f"\n{thought_prompt}\nActions:\n")
 
@@ -195,18 +202,21 @@ class Worker(BaseModel):
                 pth.parent.mkdir(parents=True, exist_ok=True)
                 with open(pth, "w", encoding='utf-8') as f:
                     f.write(f"{prompt}\n")
+                logging.debug(f"Running LLM with updated prompt...")
                 observations = self.llm.run(prompt)
             iteration += 1
         else:
             if iteration == self.max_iterations:
                 logging.info("---- Forcing Output ----")
                 if self.force_output:
+                    logging.debug(f"Forcing output...")
                     cont, final_output = self._force_output(observations, all_thoughts_and_obs)
                     if cont:
                         raise OpenAGIException(
                             f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
                         )
                     output = final_output
+                    logging.debug(f"Saving final task result and actions to memory...")
                     task.result = observations
                     task.actions = str([action.cls_doc() for action in self.actions])
                     self.save_to_memory(task=task)
@@ -215,7 +225,5 @@ class Worker(BaseModel):
                         f"LLM did not produce the expected output after {iteration} iterations for task {task.name}"
                     )
 
-        logging.info(
-            f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
-        )
+        logging.info(f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations")
         return output, task
