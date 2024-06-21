@@ -32,6 +32,7 @@ worker = Worker(
 Below we have shown how one can initiate and run a simple admin-worker query.
 
 ```python
+# import the required packages
 from openagi.actions.files import WriteFileAction
 from openagi.actions.tools.ddg_search import DuckDuckGoNewsSearch
 from openagi.actions.tools.webloader import WebBaseContextTool
@@ -41,10 +42,13 @@ from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
 from openagi.worker import Worker
 
+# configure the LLM
 config = AzureChatOpenAIModel.load_from_env_config()
 llm = AzureChatOpenAIModel(config=config)
 
-# Workers
+# Declare the Worker objects
+
+# Initialize the researcher who uses DuckDuckGo to search a topic and extract information from the web pages.
 researcher = Worker(
     role="Researcher",
     instructions="sample instruction.",
@@ -53,6 +57,7 @@ researcher = Worker(
         WebBaseContextTool,
     ],
 )
+# initialize the writer who writes the content of the topic using the tools provided
 writer = Worker(
     role="Writer",
     instructions="sample instruction.",
@@ -61,6 +66,7 @@ writer = Worker(
         WebBaseContextTool,
     ],
 )
+# initialize the reviewer who reviews the content written by the writer and saves the content into a file using the write file action tool.
 reviewer = Worker(
     role="Reviewer",
     instructions="sample instruction.",
@@ -71,7 +77,7 @@ reviewer = Worker(
     ],
 )
 
-# Admin
+# declare the Admin object with Task Planner, Memory, and LLM
 admin = Admin(
     planner=TaskPlanner(human_intervene=False),
     memory=Memory(),
@@ -81,6 +87,7 @@ admin = Admin(
 # Assign sub-tasks to workers
 admin.assign_workers([researcher, writer, reviewer])
 
+# run the admin object
 res = admin.run(
     query="Write a blog post.",
     description="sample description.",
