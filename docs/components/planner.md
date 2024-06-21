@@ -4,6 +4,10 @@
 
 Planner is one of the important component of any Agent framework, which enables the agent to divide a task into multiple subtasks based on the requirement. We call this step as **Task Decomposition.**&#x20;
 
+The  `Planner` in the `OpenAGI` contains essential modules and components that handle task planning and decomposition. These components are designed to work together to break down complex tasks into manageable sub-tasks, which are then executed by Admin.&#x20;
+
+Below is a detailed explanation of the attributes and functionality of the modules within the  `Planner`.
+
 ## Attributes
 
 
@@ -13,6 +17,8 @@ Planner is one of the important component of any Agent framework, which enables 
 &#x20;&#x20;
 
 ### Code Snippet
+
+The primary component, `TaskPlanner`, allows for the decomposition of tasks into smaller sub-tasks and the planning of their execution. This modular approach facilitates efficient task management and execution within the OpenAGI framework.
 
 ```python
 from openagi.planner.task_decomposer import TaskPlanner
