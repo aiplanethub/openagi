@@ -8,7 +8,9 @@ Admin is the decision-maker that understand the specifications of tasks and exec
 
 ## Attributes
 
-Admin consist of various attributes that help us define the execution and output of the user query.
+The `Admin` class in the `openagi` library is a central component designed to manage and orchestrate various functionalities within the framework. Below is a detailed explanation of its components, attributes, and usage.
+
+The `Admin` class in the OpenAGI framework can be considered an Agent.&#x20;
 
 
 
