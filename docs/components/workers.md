@@ -14,6 +14,8 @@ Workers possess attributes that facilitate the execution and completion of small
 
 ### Code Snippet
 
+The primary components,`TaskWorker`, provide a structured way to define and execute tasks. The `TaskWorker` class specializes in executing specific tasks assigned by the planner.
+
 ```python
 from openagi.worker import Worker
 
