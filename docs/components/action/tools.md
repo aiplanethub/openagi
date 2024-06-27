@@ -165,3 +165,5 @@ class UnstructuredPdfLoaderAction(BaseAction):
 
         return str(dict_elements)
 ```
+
+For more examples of Tools integration, check reference code snippets here: [https://github.com/aiplanethub/openagi/tree/main/src/openagi/actions/tools](https://github.com/aiplanethub/openagi/tree/main/src/openagi/actions/tools)
