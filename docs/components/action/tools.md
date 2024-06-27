@@ -87,21 +87,81 @@ The Github SearchTool is used for retrieving information from Github repositorie
 import os
 
 os.environ['GITHUB_ACCESS_TOKEN'] = "<add-your-access-token>"
-os.environ['GITHUB_PRIVATE_KEY'] = "<your-private-id>"
 ```
 
-Get your API key:&#x20;
+Get your GitHub Access Token: [https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 
 ```python
-from openagi.actions.tools import GithubSearchTool
+from openagi.actions.tools import GitHubFileLoadAction
 from openagi.agent import Admin
 from openagi.llms import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
     llm = llm,
-    actions=[GithubSearchTool],
+    actions=[GitHubFileLoadAction],
     planner=TaskPlanner(),
 )
 ```
 
+### How to build a custom Tool?
+
+In OpenAGI, building a custom tool is straightforward by wrapping your custom logic inside a class that inherits from `BaseAction` and implementing the `execute` method. This setup allows you to encapsulate the necessary configurations and operations within the custom tool, making it easy to integrate and use within the OpenAGI framework.
+
+#### Syntax
+
+1. **Import Necessary Modules:**
+   * Begin by importing the necessary modules from `pydantic` and `openagi`. `Field` is used to define parameters, and `BaseAction` is the base class for creating custom actions in OpenAGI.
+2. **Define the Custom Tool Class:**
+   * Create a class `CustomToolName` that inherits from `BaseAction`. This class represents your custom tool.
+   * Within the class, define a variable `vars` using `Field()` from `pydantic`. This variable will hold any parameters required by your tool. Replace `dtype` with the actual data type of the parameter (e.g., `str`, `int`, `List[str]`).
+3. **Implement the `execute` Method:**
+   * The `execute` method is where the core logic of your tool will be implemented. This method will be called when the tool is executed.
+   * Inside the `execute` method, write the code necessary, this might include loading data, processing it, and returning the desired output.
+   * Make sure the execute function returns `str` data.&#x20;
+
+```python
+from pydantic import Field
+from openagi.actions.base import BaseAction
+
+class CustomToolName(BaseAction):
+    vars: dtype = Field() #define the required parameters for your tool. 
+    
+    def execute(self):
+        # tool integration code
+        return "str data"
+```
+
+#### **Example**
+
+In this custom tool integration example, we will implement the Unstructured IO data loading tool. This custom tool provides the flexibility to act as a wrapper for Unstructured IO as an action tool in OpenAGI.&#x20;
+
+The `execute` function is where the magic happens; if any variables or parameters need to be defined, they should be declared within the Custom Tool class. This setup ensures that all necessary configurations and parameters are encapsulated within the tool, allowing for seamless and efficient data loading and processing.
+
+```python
+from pydantic import Field
+from openagi.actions.base import BaseAction
+
+from unstructured.partition.pdf import partition_pdf
+from unstructured.chunking.title import chunk_by_title
+
+
+class UnstructuredPdfLoaderAction(BaseAction):
+    file_path: str = Field(
+        default_factory=str,
+        description="File or pdf file url from which content is extracted.",
+    )
+
+    def execute(self):        
+        elements = partition_pdf(self.file_path, extract_images_in_pdf=True)
+        chunks = chunk_by_title(elements)
+
+        dict_elements = []
+        for element in chunks:
+            dict_elements.append(element.to_dict())
+
+        with open("ele.txt", "w") as f:
+            f.write(str(dict_elements))
+
+        return str(dict_elements)
+```
