@@ -401,4 +401,4 @@ class Admin(BaseModel):
             params["previous_action"] = prev_task.result if prev_task else None
             res = run_action(action_cls=act_cls, **params)
 
-        return res
+        return res, te_actions

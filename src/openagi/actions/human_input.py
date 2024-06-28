@@ -1,6 +1,6 @@
-from typing import Any, Dict
-from openagi.actions.base import BaseAction
 from pydantic import Field
+
+from openagi.actions.base import BaseAction
 
 
 class HumanCLIInput(BaseAction):
@@ -10,5 +10,5 @@ class HumanCLIInput(BaseAction):
     )
 
     def execute(self):
-        response = input(self.ques_prompt)
+        response = input(f"Agent: {self.ques_prompt}\nYou: ")
         return response

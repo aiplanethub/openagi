@@ -12,6 +12,7 @@ from openagi.llms.azure import LLMBaseModel
 from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.constants import CLARIFIYING_VARS
+from openagi.prompts.task_clarification import TaskClarifier
 from openagi.prompts.task_creator import MultiAgentTaskCreator, SingleAgentTaskCreator
 from openagi.utils.extraction import get_last_json
 from openagi.worker import Worker
@@ -58,16 +59,51 @@ class TaskPlanner(BasePlanner):
         """
         return get_last_json(llm_response)
 
-    def _should_clarify(self, query: Optional[str]) -> bool:
+    def human_clarification(self, planner_vars) -> Dict:
         """
-        Determines whether the given query should be clarified.
+        Handles the human clarification process during task planning.
+
+        This method is responsible for interacting with the human user to clarify any
+        ambiguities or missing information in the task planning process. It uses a
+        TaskClarifier prompt to generate a question for the human, and then waits for
+        the human's response to update the planner variables accordingly.
+
+        The method will retry the clarification process up to `self.retry_threshold`
+        times before giving up and returning the current planner variables.
+
+        Args:
+            planner_vars (Dict): The current planner variables, which may be updated
+                based on the human's response.
 
         Returns:
-            bool: True if the query should be clarified, False otherwise.
+            Dict: The updated planner variables after the human clarification process.
         """
-        if query and len(query) > 0:
-            return True
-        return False
+
+        clarifier_prompt = TaskClarifier.from_template(
+            variables=planner_vars,
+        )
+        human_intervene = self.human_intervene
+        max_tries = self.retry_threshold
+
+        while human_intervene and max_tries > 0:
+            max_tries -= 1
+
+            resp = self.llm.run(clarifier_prompt)
+
+            # extract json from response
+            resp = get_last_json(resp, llm=self.llm)
+
+            question_to_ask = resp.get("question", "")
+            question_to_ask = question_to_ask.strip()
+
+            if question_to_ask:
+                human_intervene = self.input_action(ques_prompt=f"Agent:{question_to_ask}\nYou:")
+                human_resp = human_intervene.execute()
+                planner_vars["objective"] = f"{planner_vars['objective']} {human_resp}"
+            else:
+                return planner_vars
+
+        return planner_vars
 
     def extract_ques_and_task(self, ques_prompt):
         """
@@ -125,18 +161,16 @@ class TaskPlanner(BasePlanner):
             *args,
             **kwargs,
         )
+
+        if self.human_intervene:
+            planner_vars = self.human_clarification(planner_vars)
+
+        print(f"\n\nPlanner Variables: {planner_vars}\n\n")
         prompt_template = self.get_prompt()
+
         prompt: str = prompt_template.from_template(variables=planner_vars)
 
         resp = self.llm.run(prompt)
-        prompt, ques_to_human = self.extract_ques_and_task(resp)
-
-        while self.human_intervene and self._should_clarify(ques_to_human):
-            human_intervene = self.input_action(ques_prompt=ques_to_human)
-            human_resp = human_intervene.execute()
-            prompt = f"{prompt}\n{ques_to_human}\n{human_resp}"
-            resp = self.llm.run(prompt)
-            prompt, ques_to_human = self.extract_ques_and_task(resp)
 
         tasks = self._extract_task_with_retry(resp, prompt)
 
