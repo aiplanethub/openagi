@@ -20,7 +20,7 @@ from openagi.worker import Worker
 
 class TaskPlanner(BasePlanner):
     human_intervene: bool = Field(
-        default=True, description="If human internvention is required or not."
+        default=False, description="If human internvention is required or not."
     )
     input_action: Optional[BaseAction] = Field(
         default=HumanCLIInput,
@@ -28,7 +28,7 @@ class TaskPlanner(BasePlanner):
     )
     prompt: Optional[BasePrompt] = Field(
         description="Prompt to be used",
-        default_factory=str,
+        default=None,
     )
     workers: Optional[List[Worker]] = Field(
         default=None, description="List of workers to be used."
@@ -41,9 +41,9 @@ class TaskPlanner(BasePlanner):
     def get_prompt(self) -> None:
         if not self.prompt:
             if self.workers:
-                self.prompt = SingleAgentTaskCreator()
-            else:
                 self.prompt = MultiAgentTaskCreator(workers=self.workers)
+            else:
+                self.prompt = SingleAgentTaskCreator()
         logging.info(f"Using prompt: {self.prompt.__class__.__name__}")
         return self.prompt
 
@@ -97,7 +97,7 @@ class TaskPlanner(BasePlanner):
             question_to_ask = question_to_ask.strip()
 
             if question_to_ask:
-                human_intervene = self.input_action(ques_prompt=f"Agent:{question_to_ask}\nYou:")
+                human_intervene = self.input_action(ques_prompt=question_to_ask)
                 human_resp = human_intervene.execute()
                 planner_vars["objective"] = f"{planner_vars['objective']} {human_resp}"
             else:
@@ -169,8 +169,9 @@ class TaskPlanner(BasePlanner):
         prompt_template = self.get_prompt()
 
         prompt: str = prompt_template.from_template(variables=planner_vars)
-
+        print(f"\n\nPrompt: {prompt}\n\n")
         resp = self.llm.run(prompt)
+        print(f"\n\nResponse: {resp}\n\n")
 
         tasks = self._extract_task_with_retry(resp, prompt)
 
@@ -195,9 +196,12 @@ class TaskPlanner(BasePlanner):
             LLMResponseError: If the task could not be extracted after multiple retries.
         """
         retries = 0
+        print(f"\n\nLLM Response: {llm_response}\n\n")
         while retries < self.retry_threshold:
             try:
-                return self._extract_task_from_response(llm_response=llm_response)
+                resp = self._extract_task_from_response(llm_response=llm_response)
+                print(f"\n\nExtracted Task: {resp}\n\n")
+                return resp
             except json.JSONDecodeError:
                 retries += 1
                 logging.info(
