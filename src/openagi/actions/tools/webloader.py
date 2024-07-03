@@ -1,3 +1,4 @@
+import logging
 import nltk
 from langchain_community.document_loaders import WebBaseLoader
 from pydantic import Field
@@ -43,6 +44,7 @@ class WebBaseContextTool(BaseAction):
         if page_content:
             page_content = page_content.strip()
         if self.can_summarize:
+            logging.info(f"Summarizing the page {self.link}...")
             page_content = self._get_summary(page_content)
         context = metadata + page_content
         return context
