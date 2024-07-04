@@ -87,8 +87,6 @@ def get_act_classes_from_json(json_data) -> List[Tuple[str, Optional[Dict]]]:
         List[Tuple[type, Optional[Dict]]]: A list of tuples containing the Action class and its initialization parameters.
     """
     actions = []
-    print(f"JSON DATA {json_data}")
-    print(f"Type - {type(json_data)}")
 
     for item in json_data:
         # Extracting module and class name

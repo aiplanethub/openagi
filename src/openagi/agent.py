@@ -239,15 +239,17 @@ class Admin(BaseModel):
         Returns:
             str: The final result of the task execution.
         """
-        iteration = 1
-        max_iterations = self.max_iterations
         all_thoughts_and_obs = []
         output = None
         previous_task_context = None
 
         while not task_lists.all_tasks_completed:
-            logging.info(f"---- Iteration {iteration} ----")
+            iteration = 1
+            max_iterations = self.max_iterations
+
             cur_task = task_lists.get_next_unprocessed_task()
+            logging.info(f"**** Executing Task - {cur_task.name} [{cur_task.id}] ****")
+
             task_to_execute = f"{cur_task.name}. {cur_task.description}"
             agent_description = "Task executor"
 
@@ -281,7 +283,6 @@ class Admin(BaseModel):
                     break
 
                 resp_json = get_last_json(observations)
-                print(f"Response JSON: {resp_json}")
 
                 output = resp_json.get(self.output_key) if resp_json else None
                 if output:
@@ -290,7 +291,7 @@ class Admin(BaseModel):
                     self.memory.update_task(cur_task)
 
                 action_json = resp_json.get("action") if resp_json else None
-                print(f"Actions: {action_json}")
+
                 if action_json and not isinstance(action_json, list):
                     action_json = [action_json]
 
@@ -327,10 +328,6 @@ class Admin(BaseModel):
 
                     prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
                     logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
-                    pth = Path(f"{self.memory.session_id}/logs/{cur_task.name}-{iteration}.log")
-                    pth.parent.mkdir(parents=True, exist_ok=True)
-                    with open(pth, "w", encoding="utf-8") as f:
-                        f.write(f"{prompt}\n")
                     logging.debug("Running LLM with updated prompt...")
                     observations = self.llm.run(prompt)
                     iteration += 1
@@ -343,8 +340,9 @@ class Admin(BaseModel):
                             f"LLM did not produce the expected output after {iteration} iterations for task {cur_task.name}"
                         )
                     output = final_output
+                    cur_task.result = output
+                    self.memory.update_task(cur_task)
                     task_lists.add_completed_tasks(cur_task)
-                    break
 
             previous_task_context = self.get_previous_task_contexts(task_lists)
             task_lists.add_completed_tasks(cur_task)
@@ -395,62 +393,3 @@ class Admin(BaseModel):
         if content:
             return False, content
         return True, content
-
-    def execute_task(
-        self,
-        query: str,
-        task: Task,
-        all_tasks: TaskLists,
-        prev_task: Task,
-    ):
-        logging.info(f"{'>'*10} Starting execution of `{task.name} [{task.id}]` {'<'*10}")
-        logging.info(f"Description - {task.description}")
-
-        actions_dict: List[BaseAction] = []
-        for act in self.actions:
-            actions_dict.append(act.cls_doc())
-
-        prev_task_str = (
-            f"{prev_task.name}\n{prev_task.description}. Previous_Action: {prev_task.actions} Previous_Result: {prev_task.result}"
-            if prev_task
-            else None
-        )
-        te_vars = dict(
-            objective=query,
-            all_tasks=all_tasks,
-            current_task_name=task.name,
-            current_description=task.description,
-            previous_task=prev_task_str,
-            supported_actions=actions_dict,
-        )
-
-        te = TaskExecutor.from_template(variables=te_vars)
-
-        logging.info("TastExecutor Prompt initiated...")
-        logging.debug(f"{te=}")
-
-        resp = self.llm.run(te)
-
-        logging.debug(f"{resp=}")
-
-        execute, content = self._can_task_execute(llm_resp=resp)
-
-        if not execute and content:
-            raise ExecutionFailureException(
-                f"Execution Failed - {content}; for the task {task.name} [{str(task.id)}]."
-            )
-        te_actions = get_last_json(resp)
-
-        if not te_actions:
-            raise LLMResponseError("No Actions found in the model response.")
-
-        res = None
-
-        logging.debug(f"{te_actions}")
-
-        actions = get_act_classes_from_json(te_actions)
-        for act_cls, params in actions:
-            params["previous_action"] = prev_task.result if prev_task else None
-            res = run_action(action_cls=act_cls, **params)
-
-        return res, te_actions

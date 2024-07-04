@@ -16,6 +16,7 @@ nltk.download("punkt")
 class WebBaseContextTool(BaseAction):
     """
     Use this Action to extract actual context from a Webpage. The WebBaseContextTool class provides a way to load and optionally summarize the content of a webpage, returning the metadata and page content as a context string.
+    If a url seems to be failing for more than once, ignore it and move forward.
     """
 
     link: str = Field(

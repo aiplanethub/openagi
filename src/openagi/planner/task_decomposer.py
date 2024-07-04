@@ -165,13 +165,10 @@ class TaskPlanner(BasePlanner):
         if self.human_intervene:
             planner_vars = self.human_clarification(planner_vars)
 
-        print(f"\n\nPlanner Variables: {planner_vars}\n\n")
         prompt_template = self.get_prompt()
 
         prompt: str = prompt_template.from_template(variables=planner_vars)
-        print(f"\n\nPrompt: {prompt}\n\n")
         resp = self.llm.run(prompt)
-        print(f"\n\nResponse: {resp}\n\n")
 
         tasks = self._extract_task_with_retry(resp, prompt)
 
@@ -196,11 +193,10 @@ class TaskPlanner(BasePlanner):
             LLMResponseError: If the task could not be extracted after multiple retries.
         """
         retries = 0
-        print(f"\n\nLLM Response: {llm_response}\n\n")
         while retries < self.retry_threshold:
             try:
                 resp = self._extract_task_from_response(llm_response=llm_response)
-                print(f"\n\nExtracted Task: {resp}\n\n")
+                logging.debug(f"\n\nExtracted Task: {resp}\n\n")
                 return resp
             except json.JSONDecodeError:
                 retries += 1
