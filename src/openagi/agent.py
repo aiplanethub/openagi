@@ -341,6 +341,7 @@ class Admin(BaseModel):
                         )
                     output = final_output
                     cur_task.result = output
+                    cur_task.actions = te_vars["supported_actions"]
                     self.memory.update_task(cur_task)
                     task_lists.add_completed_tasks(cur_task)
 
