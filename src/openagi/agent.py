@@ -1,19 +1,20 @@
 import logging
 from enum import Enum
-from typing import Any, List, Optional, Union
-
+from textwrap import dedent
+from typing import Any, Dict, List, Optional, Union
+from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
-
 from openagi.actions.base import BaseAction
 from openagi.actions.compressor import SummarizerAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
 from openagi.actions.utils import run_action
-from openagi.exception import ExecutionFailureException, LLMResponseError
+from openagi.exception import ExecutionFailureException, LLMResponseError, OpenAGIException
 from openagi.llms.azure import LLMBaseModel
 from openagi.memory.memory import Memory
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
 from openagi.prompts.execution import TaskExecutor
+from openagi.prompts.worker_task_execution import WorkerAgentTaskExecution
 from openagi.tasks.lists import TaskLists
 from openagi.tasks.task import Task
 from openagi.utils.extraction import (
@@ -31,30 +32,21 @@ class OutputFormat(str, Enum):
 
 
 class Admin(BaseModel):
-    """
-    The `Admin` class is responsible for managing the overall execution. It handles task planning, task execution, and memory management.
-
-    The class has the following key responsibilities:
-    - Initializing and configuring the planner, LLM, and memory components.
-    - Validating the list of actions supported by the agent.
-    - Assigning workers to the agent.
-    - Running the planner to generate a list of tasks to achieve the given objective.
-    - Executing the tasks either in a single-agent mode or with multiple workers.
-    - Formatting the final result based on the specified output format.
-    - Providing utility methods to run individual actions.
-    """
-
     planner: Optional[BasePlanner] = Field(
-        description="Type of planner to use for task decomposition."
+        description="Type of planner to use for task decomposition.",
+        default=None,
     )
-    llm: Optional[LLMBaseModel] = Field(description="LLM Model to be used.")
+    llm: Optional[LLMBaseModel] = Field(
+        description="LLM Model to be used.",
+        default=None,
+    )
     memory: Optional[Memory] = Field(
         default_factory=list, description="Memory to be used.", exclude=True
     )
     actions: Optional[List[Any]] = Field(
         description="Actions that the Agent supports", default_factory=list
     )
-    max_steps: int = Field(
+    max_iterations: int = Field(
         default=20, description="Maximum number of steps to achieve the objective."
     )
     output_format: OutputFormat = Field(
@@ -68,6 +60,10 @@ class Admin(BaseModel):
     summarize_task_context: bool = Field(
         default=True,
         description="If set to True, the task context will be summarized and passed to the next task else the task context will be passed as is.",
+    )
+    output_key: str = Field(
+        default="final_output",
+        description="Key to be used to store the output.",
     )
 
     def model_post_init(self, __context: Any) -> None:
@@ -112,16 +108,6 @@ class Admin(BaseModel):
             self.workers.extend(workers)
 
     def run_planner(self, query: str, descripton: str):
-        """
-        Runs the planner to generate a plan for the given query and description, using the supported actions and workers.
-
-        Args:
-            query (str): The query to plan for.
-            description (str): The description of the task to plan for.
-
-        Returns:
-            The result of the planner's plan() method, which is likely a list of actions to execute.
-        """
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
@@ -143,24 +129,12 @@ class Admin(BaseModel):
         )
 
     def _generate_tasks_list(self, planned_tasks):
-        """
-        Generates a list of tasks to be executed by the agent.
-
-        Args:
-            planned_tasks (list): A list of tasks to be executed.
-
-        Returns:
-            TaskLists: A TaskLists object containing the generated tasks.
-        """
         task_lists = TaskLists()
         task_lists.add_tasks(tasks=planned_tasks)
         logging.debug(f"Created {task_lists.get_tasks_queue().qsize()} Tasks.")
         return task_lists
 
     def get_previous_task_contexts(self, task_lists: TaskLists):
-        """
-        Summarizes the previous actions taken by the agent.
-        """
         task_summaries = []
         logging.info("Retrieving completed task contexts...")
         t_list = task_lists.completed_tasks.queue
@@ -190,9 +164,6 @@ class Admin(BaseModel):
         return "None"
 
     def _get_worker_by_id(self, worker_id: str):
-        """
-        Returns the worker object with the given worker id.
-        """
         for worker in self.workers:
             if worker.id == worker_id:
                 return worker
@@ -210,7 +181,6 @@ class Admin(BaseModel):
             self.memory.update_task(task)
             task_lists.add_completed_tasks(task)
 
-        # Final result
         logging.info("Finished Execution...")
 
         if self.output_format == OutputFormat.markdown and res:
@@ -225,6 +195,38 @@ class Admin(BaseModel):
         logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return res
 
+    def _provoke_thought_obs(self, observation):
+        thoughts = dedent(f"""Observation: {observation}""".strip())
+        return thoughts
+
+    def _should_continue(self, llm_resp: str) -> Union[bool, Optional[Dict]]:
+        output: Dict = get_last_json(llm_resp, llm=self.llm, max_iterations=self.max_iterations)
+        output_key_exists = bool(output and output.get(self.output_key))
+        return (not output_key_exists, output)
+
+    def _force_output(
+        self, llm_resp: str, all_thoughts_and_obs: List[str]
+    ) -> Union[bool, Optional[str]]:
+        """Force the output once the max iterations are reached."""
+        prompt = (
+            "\n".join(all_thoughts_and_obs)
+            + "Based on the previous action and observation, give me the output."
+        )
+        output = self.llm.run(prompt)
+        cont, final_output = self._should_continue(output)
+        if cont:
+            prompt = (
+                "\n".join(all_thoughts_and_obs)
+                + f"Based on the previous action and observation, give me the output. {final_output}"
+            )
+            output = self.llm.run(prompt)
+            cont, final_output = self._should_continue(output)
+        if cont:
+            raise OpenAGIException(
+                f"LLM did not produce the expected output after {self.max_iterations} iterations."
+            )
+        return (cont, final_output)
+
     def single_agent_execution(self, query: str, description: str, task_lists: TaskLists):
         """
         Executes a single agent's tasks for the given query and description, updating the task lists and memory as necessary.
@@ -237,66 +239,139 @@ class Admin(BaseModel):
         Returns:
             str: The final result of the task execution.
         """
-        # Tasks execution
-        cur_task = None
-        prev_task = None
-        steps = 0
-        _tasks_lists = task_lists.get_tasks_lists()
+        all_thoughts_and_obs = []
+        output = None
+        previous_task_context = None
+
         while not task_lists.all_tasks_completed:
-            print(f"{'*'*100}{'*'*100}")
+            iteration = 1
+            max_iterations = self.max_iterations
 
-            logging.info(f"Execuing Step {steps}")
             cur_task = task_lists.get_next_unprocessed_task()
-            res, actions = self.execute_task(
-                query=query,
-                task=cur_task,
-                all_tasks=_tasks_lists,
-                prev_task=prev_task,
-            )
-            if res:
-                cur_task.result = str(res)
-                cur_task.actions = str(actions)
-                prev_task = cur_task.model_copy()
-                self.memory.update_task(prev_task)
-            steps += 1
+            logging.info(f"**** Executing Task - {cur_task.name} [{cur_task.id}] ****")
 
-        # Final result
+            task_to_execute = f"{cur_task.name}. {cur_task.description}"
+            agent_description = "Task executor"
+
+            logging.debug("Provoking initial thought observation...")
+            initial_thought_provokes = self._provoke_thought_obs(None)
+            te_vars = dict(
+                task_to_execute=task_to_execute,
+                worker_description=agent_description,
+                supported_actions=[action.cls_doc() for action in self.actions],
+                thought_provokes=initial_thought_provokes,
+                output_key=self.output_key,
+                context=previous_task_context,
+                max_iterations=max_iterations,
+            )
+
+            logging.debug("Generating base prompt...")
+            base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
+            prompt = f"{base_prompt}\nThought:\nIteration: {iteration}\nActions:\n"
+
+            logging.debug("Running LLM with prompt...")
+            observations = self.llm.run(prompt)
+            logging.info(f"LLM execution completed. Observations: {observations}")
+            all_thoughts_and_obs.append(prompt)
+
+            while iteration < max_iterations:
+                logging.info(f"---- Iteration {iteration} ----")
+                continue_flag, output = self._should_continue(observations)
+
+                if not continue_flag:
+                    logging.info(f"Task completed. Output: {output}")
+                    break
+
+                resp_json = get_last_json(observations)
+
+                output = resp_json.get(self.output_key) if resp_json else None
+                if output:
+                    cur_task.result = output
+                    cur_task.actions = te_vars["supported_actions"]
+                    self.memory.update_task(cur_task)
+
+                action_json = resp_json.get("action") if resp_json else None
+
+                if action_json and not isinstance(action_json, list):
+                    action_json = [action_json]
+
+                if not action_json:
+                    logging.warning(f"No action found in the output: {output}")
+                    observations = f"Action: {action_json}\n{observations} Unable to extract action. Verify the output and try again."
+                    all_thoughts_and_obs.append(observations)
+                    iteration += 1
+                elif action_json:
+                    actions = get_act_classes_from_json(action_json)
+
+                    for act_cls, params in actions:
+                        params["previous_action"] = None  # Modify as needed
+                        params["llm"] = self.llm
+                        params["memory"] = self.memory
+                        try:
+                            logging.debug(f"Running action: {act_cls.__name__}...")
+                            res = run_action(action_cls=act_cls, **params)
+                            logging.info(f"Action '{act_cls.__name__}' completed. Result: {res}")
+                        except Exception as e:
+                            logging.error(f"Error running action: {e}")
+                            observations = f"Action: {action_json}\n{observations}. {e} Try to fix the error and try again. Ignore if already tried more than twice"
+                            all_thoughts_and_obs.append(observations)
+                            iteration += 1
+                            continue
+
+                        observation_prompt = f"Observation: {res}\n"
+                        all_thoughts_and_obs.append(observation_prompt)
+                        observations = res
+
+                    logging.debug("Provoking thought observation...")
+                    thought_prompt = self._provoke_thought_obs(observations)
+                    all_thoughts_and_obs.append(f"\n{thought_prompt}\nActions:\n")
+
+                    prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
+                    logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
+                    logging.debug("Running LLM with updated prompt...")
+                    observations = self.llm.run(prompt)
+                    iteration += 1
+            else:
+                if iteration == max_iterations:
+                    logging.info("---- Forcing Output ----")
+                    cont, final_output = self._force_output(observations, all_thoughts_and_obs)
+                    if cont:
+                        raise OpenAGIException(
+                            f"LLM did not produce the expected output after {iteration} iterations for task {cur_task.name}"
+                        )
+                    output = final_output
+                    cur_task.result = output
+                    cur_task.actions = te_vars["supported_actions"]
+                    self.memory.update_task(cur_task)
+                    task_lists.add_completed_tasks(cur_task)
+
+            previous_task_context = self.get_previous_task_contexts(task_lists)
+            task_lists.add_completed_tasks(cur_task)
+
         logging.info("Finished Execution...")
 
-        # print(f"\n ******** Final Response *******\n{res}\n\n")
         if self.output_format == OutputFormat.markdown:
             logging.info("Output Formatting...")
             output_formatter = FormatterAction(
-                content=res,
+                content=output,
                 format_type=OutputFormat.markdown,
                 llm=self.llm,
                 memory=self.memory,
             )
-            res = output_formatter.execute()
+            output = output_formatter.execute()
+
         logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
-        return res
+        return output
 
     def run(self, query: str, description: str):
-        """
-        Runs the Admin Agent, which is responsible for planning and executing tasks based on a given query and description.
-
-        Args:
-            query (str): The query to be processed.
-            description (str): The description of the query.
-
-        Returns:
-            The result of the task execution, either from the worker task execution or the single agent execution.
-        """
         logging.info("Running Admin Agent...")
         logging.info(f"SessionID - {self.memory.session_id}")
 
-        # Planning stage to create list of tasks
         planned_tasks = self.run_planner(query=query, descripton=description)
 
         logging.info("Tasks Planned...")
         logging.debug(f"{planned_tasks=}")
 
-        # Tasks List
         task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
 
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
@@ -315,90 +390,7 @@ class Admin(BaseModel):
         )
 
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
-        """
-        Checks if a given LLM response can be executed as a task.
-
-        Args:
-            llm_resp (str): The LLM response to check.
-
-        Returns:
-            Union[bool, Optional[str]]: True if the task can be executed, False otherwise. If False, the second return value contains the reason why the task cannot be executed.
-        """
         content: str = find_last_r_failure_content(text=llm_resp)
         if content:
             return False, content
         return True, content
-
-    def execute_task(
-        self,
-        query: str,
-        task: Task,
-        all_tasks: TaskLists,
-        prev_task: Task,
-    ):
-        """
-        Executes a given task by running the necessary actions and returning the result.
-
-        Args:
-            query (str): The original query or objective that the task is trying to solve.
-            task (Task): The current task to be executed.
-            all_tasks (TaskLists): A list of all tasks that have been defined.
-            prev_task (Task): The previous task that was executed, if any.
-
-        Returns:
-            tuple: A tuple containing the result of the task execution and the last action executed.
-        """
-        logging.info(f"{'>'*10} Starting execution of `{task.name} [{task.id}]` {'<'*10}")
-        logging.info(f"Description - {task.description}")
-
-        # Get supported actions and convert to array of dict(actions)
-        actions_dict: List[BaseAction] = []
-        for act in self.actions:
-            actions_dict.append(act.cls_doc())
-
-        prev_task_str = (
-            f"{prev_task.name}\n{prev_task.description}. Previous_Action: {prev_task.actions} Previous_Result: {prev_task.result}"
-            if prev_task
-            else None
-        )
-        te_vars = dict(
-            objective=query,
-            all_tasks=all_tasks,
-            current_task_name=task.name,
-            current_description=task.description,
-            previous_task=prev_task_str,
-            supported_actions=actions_dict,
-        )
-
-        # TODO: Make TaskExecutor class customizable
-        te = TaskExecutor.from_template(variables=te_vars)
-
-        logging.info("TastExecutor Prompt initiated...")
-        logging.debug(f"{te=}")
-
-        resp = self.llm.run(te)
-
-        logging.debug(f"{resp=}")
-
-        execute, content = self._can_task_execute(llm_resp=resp)
-
-        if not execute and content:
-            raise ExecutionFailureException(
-                f"Execution Failed - {content}; for the task {task.name} [{str(task.id)}]."
-            )
-        te_actions = get_last_json(resp)
-
-        if not te_actions:
-            raise LLMResponseError("No Actions found in the model response.")
-
-        res = None
-
-        logging.debug(f"{te_actions}")
-
-        actions = get_act_classes_from_json(te_actions)
-        # Pass previous action result of the current task to the next action as previous_obs
-        for act_cls, params in actions:
-            params["previous_action"] = prev_task.result if prev_task else None
-            res = run_action(action_cls=act_cls, **params)
-
-        return res
