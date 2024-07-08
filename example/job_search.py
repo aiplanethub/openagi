@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     websearcher = Worker(
         role="SW",
-        description="You are a Expert Python SW Developer.",
+        instructions="You are a Expert Python SW Developer.",
         actions=[DuckDuckGoSearch],
     )
 
