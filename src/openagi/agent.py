@@ -110,6 +110,9 @@ class Admin(BaseModel):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
+
+            setattr(self.planner, "workers", self.workers)
+
         logging.info("Thinking...")
         actions_dict: List[BaseAction] = []
 
