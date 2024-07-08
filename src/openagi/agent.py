@@ -2,21 +2,20 @@ import logging
 from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union
-from pathlib import Path
+
 from pydantic import BaseModel, Field, field_validator
+
 from openagi.actions.base import BaseAction
 from openagi.actions.compressor import SummarizerAction
 from openagi.actions.formatter import FormatterAction
 from openagi.actions.obs_rag import MemoryRagAction
 from openagi.actions.utils import run_action
-from openagi.exception import ExecutionFailureException, LLMResponseError, OpenAGIException
+from openagi.exception import OpenAGIException
 from openagi.llms.azure import LLMBaseModel
 from openagi.memory.memory import Memory
 from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
-from openagi.prompts.execution import TaskExecutor
 from openagi.prompts.worker_task_execution import WorkerAgentTaskExecution
 from openagi.tasks.lists import TaskLists
-from openagi.tasks.task import Task
 from openagi.utils.extraction import (
     find_last_r_failure_content,
     get_act_classes_from_json,
@@ -167,6 +166,7 @@ class Admin(BaseModel):
         for worker in self.workers:
             if worker.id == worker_id:
                 return worker
+        raise ValueError(f"Worker with id {worker_id} not found.")
 
     def worker_task_execution(self, query: str, description: str, task_lists: TaskLists):
         res = None
