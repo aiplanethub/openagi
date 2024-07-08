@@ -1,7 +1,8 @@
-import logging
-from openagi.actions.base import BaseAction
-from pydantic import Field
 from pprint import pprint
+
+from pydantic import Field
+
+from openagi.actions.base import BaseAction
 
 
 class ConsolePrint(BaseAction):
