@@ -1,5 +1,6 @@
 from typing import Any
 from langchain_core.messages import HumanMessage
+from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
 

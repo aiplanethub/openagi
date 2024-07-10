@@ -1,3 +1,4 @@
+from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
 from typing import Any
@@ -58,6 +59,6 @@ class GeminiModel(LLMBaseModel):
         """
         return GeminiConfigModel(
             google_api_key = read_from_env("GOOGLE_API_KEY", raise_exception=True),
-            model_name = read_from_env("Gemini_MODEL",raise_exception=True),
-            temperature=read_from_env("Gemini_TEMP",raise_exception=True)
+            model_name = read_from_env("Gemini_MODEL",raise_exception=False),
+            temperature=read_from_env("Gemini_TEMP",raise_exception=False)
         )

@@ -17,10 +17,10 @@ class BaseAction(BaseModel):
     llm: Optional[LLMBaseModel] = Field(
         description="LLM Model to be used.", default=None, exclude=True
     )
-    memory: Memory = Field(
-        ...,
+    memory: Optional[Memory] = Field(
         description="Memory that stores the results of the earlier tasks executed for the current objective.",
         exclude=True,
+        default=None,
     )
 
     def execute(self):

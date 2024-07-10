@@ -1,3 +1,4 @@
+import logging
 import nltk
 from langchain_community.document_loaders import WebBaseLoader
 from pydantic import Field
@@ -15,6 +16,7 @@ nltk.download("punkt")
 class WebBaseContextTool(BaseAction):
     """
     Use this Action to extract actual context from a Webpage. The WebBaseContextTool class provides a way to load and optionally summarize the content of a webpage, returning the metadata and page content as a context string.
+    If a url seems to be failing for more than once, ignore it and move forward.
     """
 
     link: str = Field(
@@ -43,6 +45,7 @@ class WebBaseContextTool(BaseAction):
         if page_content:
             page_content = page_content.strip()
         if self.can_summarize:
+            logging.info(f"Summarizing the page {self.link}...")
             page_content = self._get_summary(page_content)
         context = metadata + page_content
         return context

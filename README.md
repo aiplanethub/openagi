@@ -45,7 +45,7 @@ For more queries find documentation for OpenAGI at [openagi.aiplanet.com](https:
 
 ![Thumbnails](https://github.com/aiplanethub/openagi/blob/dev/assets/openagi.png)
 
-## Example
+## Example (Single Agent)
 
 Follow this example to create a **Job Search Agent** that helps you to search available job posting for a given category.
 Here in the example we are using `AzureChatOpenAIModel` along with `GoogleSerpAPISearch` to search the internet for various job posting on the particular role.
@@ -98,31 +98,73 @@ Please provide a list of suitable job descriptions, including the key responsibi
     Console().print(Markdown(res))
 ```
 
-Below is the output from the agent:
+## Example (Workers)
+Workers are used to create a Multi-Agent architecture.
 
-```
-## Job Opportunities and Descriptions in Finance Technology
+Follow this example to create a **Blog post Agent** that helps you research and write blog posts. A number of workers (agents) are working together to achieve this task. 
 
-1. **Strategic Programs Finance Tech Manager** - The Finance technology team supervises a large portfolio of ongoing transformation programs that are each operated by individual teams from Finance, CIO and more. [More details](https://www.accenture.com/in-en/careers/jobdetails?id=R354135_en)
+```python
+from openagi.actions.files import WriteFileAction
+from openagi.actions.tools.ddg_search import DuckDuckGoNewsSearch
+from openagi.actions.tools.webloader import WebBaseContextTool
+from openagi.agent import Admin
+from openagi.llms.azure import AzureChatOpenAIModel
+from openagi.memory import Memory
+from openagi.planner.task_decomposer import TaskPlanner
+from openagi.worker import Worker
+from rich.console import Console
+from rich.markdown import Markdown
 
-2. **Finance Manager - FinTech** - A professional with 2+ years of experience is needed for end to end Business Finance like Strategic Planning, preparing & managing the finances. [More details](https://iimjobs.com/j/finance-manager-fintech-3-8-yrs-1194909)
+if __name__ == "__main__":
+    config = AzureChatOpenAIModel.load_from_env_config()
+    llm = AzureChatOpenAIModel(config=config)
 
-3. **Working in Fintech** - Fintech is a combination of finance and technology. This combination has set high standards in the field of employment. [More details](https://imarticus.org/blog/what-is-job-description-to-work-in-fintech-and-what-are-the-skills-required/)
+    # Team Members
+    researcher = Worker(
+        role="Research Analyst",
+        instructions="Uncover cutting-edge developments in AI and data science. You work at a leading tech think tank. Your expertise lies in identifying emerging trends. You have a knack for dissecting complex data and presenting actionable insights.",
+        actions=[
+            DuckDuckGoNewsSearch,
+            WebBaseContextTool,
+        ],
+    )
+    writer = Worker(
+        role="Tech Content Strategist",
+        instructions="Craft compelling content on tech advancements. You are a renowned Content Strategist, known for your insightful and engaging articles.You transform complex concepts into compelling narratives. Finally return the entire article as output.",
+        actions=[
+            DuckDuckGoNewsSearch,
+            WebBaseContextTool,
+        ],
+    )
+    reviewer = Worker(
+        role="Review and Editing Specialist",
+        instructions="Review the content for clarity, engagement, grammatical accuracy, and alignment with company values and refine it to ensure perfection. A meticulous editor with an eye for detail, ensuring every piece of content is clear, engaging, and grammatically perfect. Finally write the blog post to a file and return the same as output.",
+        actions=[
+            DuckDuckGoNewsSearch,
+            WebBaseContextTool,
+            WriteFileAction,
+        ],
+    )
 
-4. **Finance Technology Role** - Discover the typical qualifications and responsibilities for a role in Finance Technology. [More details](https://www.glassdoor.co.in/Career/technology-finance-career_KO0,18.htm)
+    # Team Manager/Admin
+    admin = Admin(
+        # actions=[DuckDuckGoSearch],
+        planner=TaskPlanner(human_intervene=False),
+        memory=Memory(),
+        llm=llm,
+    )
+    admin.assign_workers([researcher, writer, reviewer])
 
-5. **Strategic Programs Finance Tech Manager - Accenture** - Job Description for Strategic Programs Finance Tech Manager in Accenture in Gurgaon for 7 to 11 years of experience. [More details](https://www.naukri.com/job-listings-strategic-programs-finance-tech-manager-accenture-solutions-pvt-ltd-gurugram-7-to-11-years-020524909932)
+    res = admin.run(
+        query="Write a blog post about future of AI. Feel free to write files to maintain the context.",
+        description="Conduct a comprehensive analysis of the latest advancements in AI in 2024. Identify key trends, breakthrough technologies, and potential industry impacts. Using the insights provided, develop an engaging blog post that highlights the most significant AI advancements. Your post should be informative yet accessible, catering to a tech-savvy audience. Make it sound cool, avoid complex words so it doesn't sound like AI.",
+    )
 
-6. **Financier Job** - The core responsibilities of finance professionals involve analyzing data, reconciling, providing financial advice, optimizing cash flow, and preparing. [More details](https://emeritus.org/in/learn/financier-job-roles-and-responsibilities/)
+    # Print the results from the OpenAGI
+    print("-" * 100)  # Separator
+    Console().print(Markdown(res))
+``` 
 
-7. **12 Finance Tech Jobs** - Lucrative finance tech jobs including Compliance specialist, Cybersecurity specialist, App developer, Automation engineer, UX designer. [More details](https://www.indeed.com/career-advice/finding-a-job/finance-tech-jobs)
-
-8. **FIN-Global Middle Office** - Ability to understand the booking structure for complex trades and raise relevant issues to Product Control management. Good Logical reasoning skills, ability. [More details](https://careers.nomura.com/Nomura/job/Mumbai-FIN-Global-Middle-Office/1128931300/)
-
-9. **Financial Technology jobs in India** - Experience level. Internship (48). Entry level (1,708). Associate (588). Mid-Senior level (5,269). Director (402). [More details](https://in.linkedin.com/jobs/financial-technology-jobs)
-
-10. **Senior Executive/Middle level executive - Mumbai** - The ideal candidate will be responsible for identifying, analyzing, and strategizing the resolution of non-performing assets (NPAs) acquired. [More details](https://www.naukri.com/job-listings-senior-executive-middle-level-executive-acaipl-investment-financial-services-mumbai-3-to-8-years-080524005387)
-```
 
 ## Prominent Features:
 

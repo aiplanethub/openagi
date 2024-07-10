@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 
 def read_from_env(attr_name, raise_exception=False):
