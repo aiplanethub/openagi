@@ -178,7 +178,8 @@ class Admin(BaseModel):
             cur_task = task_lists.get_next_unprocessed_task()
             worker = self._get_worker_by_id(cur_task.worker_id)
             res, task = worker.execute_task(
-                cur_task,
+                query=query,
+                task=cur_task,
                 context=self.get_previous_task_contexts(task_lists=task_lists),
             )
             self.memory.update_task(task)
