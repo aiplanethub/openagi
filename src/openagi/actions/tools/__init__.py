@@ -4,3 +4,10 @@ from .webloader import WebBaseContextTool
 from .serp_search import GoogleSerpAPISearch
 from .tavilyqasearch import TavilyWebSearchQA
 from .youtubesearch import YouTubeSearchTool
+from .pdf_loader import PDFLoader
+from .pptx_loader import PPTXLoader
+from .docx_loader import DOCXLoader
+from .markdown_loader import MarkdownLoader
+from .text_loader import TxtLoader
+from .excel_loader import ExcelLoader
+from .csv_loader import CSVLoader

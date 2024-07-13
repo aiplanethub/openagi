@@ -5,13 +5,7 @@ class DataType(Enum):
     PDF = "PDF"
     DOCX = "DOCX"
     PPTX = "PPTX"
-    GOOGLE_DOC = "GOOGLE_DOC"
     MARKDOWN = "MARKDOWN"
-    GITHUB_REPOSITORY = "GITHUB_REPOSITORY"
-    WEBPAGE = "WEBPAGE"
-    NOTION = "NOTION"
-    URL = "URL"
-    YOUTUBE = "YOUTUBE"
     CSV = "CSV"
     XLSX = "XLSX"
 
