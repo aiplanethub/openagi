@@ -15,10 +15,8 @@ from openagi.tasks.task import Task
 from openagi.utils.extraction import get_act_classes_from_json, get_last_json
 from openagi.utils.helper import get_default_id
 from openagi.storage.chroma import ChromaStorage
-from openagi.data_extractors.data_loaders import DataLoader
-from openagi.data_extractors.data_source import DataSource
-from openagi.data_extractors.data_types import DataType
-
+from openagi.actions.data_loaders import DataLoader
+from openagi.actions.data_source import DataSource
 
 class Worker(BaseModel):
     id: str = Field(default_factory=get_default_id)
