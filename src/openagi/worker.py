@@ -123,7 +123,12 @@ class Worker(BaseModel):
         
         :param kwargs: Keyword arguments to configure the ChromaStorage.
         """
-        self.knowledge_base = ChromaStorage.from_kwargs(**kwargs)
+        if not self.knowledge_base:
+            collection_name = kwargs.get("collection_name", None)
+            if not collection_name:
+                collection_name = f"worker_{self.id}_knowledge"
+            kwargs["collection_name"] = collection_name
+            self.knowledge_base = ChromaStorage.from_kwargs(**kwargs)
 
     def load_document(self, id: str, document: [str], metadata: dict):
         """
