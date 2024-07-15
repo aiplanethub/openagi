@@ -53,6 +53,11 @@ class Worker(BaseModel):
         description="Knowledge base for worker",
         exclude=True
     )
+    n_results: int = Field(
+        default=3,
+        description="No of docs to be fetched",
+        exclude=True
+    )
 
     # Validate output_key. Should contain only alphabets and only underscore are allowed. Not alphanumeric
     @field_validator("output_key")
@@ -131,12 +136,17 @@ class Worker(BaseModel):
         if self.knowledge_base:
             self.knowledge_base.save_document(id, document, metadata)
 
-    def load_knowledge_from_source(self, data_source: DataSource):
+    def load_knowledge_from_source(self, data_source: DataSource, n_results: int = 3):
         """
         Loads knowledge from a given data source into the knowledge base.
-        
-        :param data_source: The source of the data to be loaded.
+        :param data_source: The source of the data to be loaded. This should be an 
+                            instance of the DataSource class or a compatible class 
+                            that provides a `load` method to retrieve documents.
+        :param n_results:   The number of documents to be fetched from knowledge base. 
+                            Default is 3.
         """
+        # Set the variable n_results value
+        self.n_results = n_results
         if not self.knowledge_base:
             self.init_knowledge_base(collection_name=f"worker_{self.id}_knowledge")
         
@@ -190,7 +200,7 @@ class Worker(BaseModel):
         if self.knowledge_base:
             query_results = self.knowledge_base.query_documents(
                 query_texts=[query],
-                n_results=3
+                n_results=self.n_results
             )
             knowledge_base_info = "\n".join([doc for doc in query_results['documents'][0]])
 
