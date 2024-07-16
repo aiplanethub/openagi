@@ -15,7 +15,8 @@ class ChatAnthropicConfigModel(LLMConfigModel):
     Configuration model Anthropic model. This provides opus, sonnet SOTA models
     """
     anthropic_api_key: str
-    model_name: str = "claude-3-opus-20240229"
+    temperature: float = 0.5
+    model_name: str = "claude-3-5-sonnet-20240620"
 
 class ChatAnthropicModel(LLMBaseModel):
     """
@@ -27,7 +28,8 @@ class ChatAnthropicModel(LLMBaseModel):
         """Initializes the ChatAnthropic instance with configurations."""
         self.llm = ChatAnthropic(
             model_name = self.config.model_name,
-            api_key = self.config.anthropic_api_key
+            api_key = self.config.anthropic_api_key,
+            temperature = self.config.temperature
         )
         return self.llm
 
@@ -59,4 +61,5 @@ class ChatAnthropicModel(LLMBaseModel):
         return ChatAnthropicConfigModel(
             anthropic_api_key = read_from_env("ANTHROPIC_API_KEY", raise_exception=True),
             model_name = read_from_env("CLAUDE_MODEL_NAME",raise_exception=False),
+            temperature = read_from_env("TEMPERATURE",raise_exception=False)
         )
