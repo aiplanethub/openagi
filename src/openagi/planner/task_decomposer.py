@@ -31,7 +31,8 @@ class TaskPlanner(BasePlanner):
         default=None,
     )
     workers: Optional[List[Worker]] = Field(
-        default=None, description="List of workers to be used."
+        default=None,
+        description="List of workers to be used.",
     )
     llm: Optional[LLMBaseModel] = Field(default=None, description="LLM Model to be used")
     retry_threshold: int = Field(
