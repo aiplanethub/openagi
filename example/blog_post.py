@@ -96,33 +96,6 @@ if __name__ == "__main__":
         ],
     )
 
-    # Team Members
-    # researcher = Worker(
-    #     role="Research Analyst",
-    #     instructions="Uncover cutting-edge developments in AI and data science. You work at a leading tech think tank. Your expertise lies in identifying emerging trends. You have a knack for dissecting complex data and presenting actionable insights.",
-    #     actions=[
-    #         DuckDuckGoNewsSearch,
-    #         WebBaseContextTool,
-    #     ],
-    # )
-    # writer = Worker(
-    #     role="Tech Content Strategist",
-    #     instructions="Craft compelling content on tech advancements. You are a renowned Content Strategist, known for your insightful and engaging articles.You transform complex concepts into compelling narratives. Finally return the entire article as output.",
-    #     actions=[
-    #         DuckDuckGoNewsSearch,
-    #         WebBaseContextTool,
-    #     ],
-    # )
-    # reviewer = Worker(
-    #     role="Review and Editing Specialist",
-    #     instructions="Review the content for clarity, engagement, grammatical accuracy, and alignment with company values and refine it to ensure perfection. A meticulous editor with an eye for detail, ensuring every piece of content is clear, engaging, and grammatically perfect. Finally write the blog post to a file and return the same as output.",
-    #     actions=[
-    #         DuckDuckGoNewsSearch,
-    #         WebBaseContextTool,
-    #         WriteFileAction,
-    #     ],
-    # )
-
     # Team Manager/Admin
     admin = Admin(
         # actions=[DuckDuckGoSearch],
