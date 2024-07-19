@@ -8,6 +8,10 @@ from openagi.planner.task_decomposer import TaskPlanner
 from openagi.worker import Worker
 from rich.console import Console
 from rich.markdown import Markdown
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 if __name__ == "__main__":
     config = AzureChatOpenAIModel.load_from_env_config()
@@ -16,17 +20,32 @@ if __name__ == "__main__":
     # Team Members
     feedback_collector = Worker(
         role="Customer Feedback Collector",
-        instructions="Gather customer feedback specifically about AirPods Pro from various online platforms, including social media, review sites, and forums. Focus on identifying common themes and sentiments related to this product.",
+        instructions=(
+            "1. Search for customer reviews of AirPods Pro on social media platforms like Twitter and Facebook.\n"
+            "2. Look for reviews on popular e-commerce websites like Amazon and Best Buy.\n"
+            "3. Collect feedback from technology review sites and forums such as Reddit and TechRadar.\n"
+            "4. Identify and document common themes and sentiments in the collected feedback."
+        ),
         actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
     data_analyst = Worker(
         role="Data Analyst",
-        instructions="Analyze the collected customer feedback data related to AirPods Pro to identify key trends, recurring issues, and overall customer sentiment. Use statistical tools to quantify the data and provide actionable insights.",
+        instructions=(
+            "1. Read the collected feedback data related to AirPods Pro.\n"
+            "2. Use statistical analysis tools to identify key trends and recurring issues.\n"
+            "3. Quantify overall customer sentiment towards the product.\n"
+            "4. Generate actionable insights based on the analysis."
+        ),
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
     report_creator = Worker(
         role="Report Creator",
-        instructions="Develop a comprehensive customer feedback analysis report based on the data analysis for AirPods Pro. Highlight key findings, trends, and recommendations for improving the product. Ensure the report is well-structured and visually appealing.",
+        instructions=(
+            "1. Develop a detailed analysis report based on the data analyst's findings.\n"
+            "2. Highlight key trends, issues, and overall customer sentiment.\n"
+            "3. Provide specific recommendations for product improvement.\n"
+            "4. Ensure the report is well-structured, clear, and includes visual elements like charts and graphs."
+        ),
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
@@ -40,13 +59,16 @@ if __name__ == "__main__":
 
     res = admin.run(
         query="Create a customer feedback analysis report for AirPods Pro.",
-        description="Collect and analyze customer feedback specifically for AirPods Pro from multiple online sources. Identify common themes, recurring issues, and overall customer sentiment. Develop a comprehensive report that provides actionable insights and recommendations for improving the AirPods Pro. Ensure the report is detailed, well-organized, and visually appealing.",
+        description=(
+            "1. Collect customer feedback on AirPods Pro from multiple online sources.\n"
+            "2. Analyze the feedback to identify common themes, recurring issues, and overall customer sentiment.\n"
+            "3. Develop a comprehensive report that provides actionable insights and recommendations for improving AirPods Pro.\n"
+            "4. Ensure the report is detailed, well-organized, and visually appealing."
+        ),
     )
-
 
     print("-" * 100)  # Separator
     Console().print(Markdown(res))
-
 
 
 ### Example 3: Marketing Campaign for Airpods pro 2
