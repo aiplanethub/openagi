@@ -18,17 +18,46 @@ if __name__ == "__main__":
     # Team Members
     researcher = Worker(
         role="Research Analyst",
-        instructions="Analyze the company website and provided description to extract insights on culture, values, and specific needs. Expert in analyzing company cultures and identifying key values and needs from various sources, including websites and brief descriptions.",
+        instructions="""
+        Analyze AI Planet (https://aiplanet.com/) to extract key information:
+        - Company culture and core values
+        - Main products or services in AI and ML
+        - Required technical skills (Python, ReactJS, Golang, NodeJS, SQL)
+        - Desired experience in Machine Learning and Deep Learning
+        - Any unique selling points or benefits of working at AI Planet
+        Compile findings in a structured format for the writer.
+        """,
         actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
+
     writer = Worker(
         role="Job Description Writer",
-        instructions="Use insights from the Research Analyst to create a detailed, engaging, and enticing job posting. Skilled in crafting compelling job descriptions that resonate with the company's values and attract the right candidates.",
+        instructions="""
+        Create an engaging SDE 2 Full Stack Developer job posting:
+        - Craft a compelling introduction highlighting AI Planet's mission
+        - List key responsibilities for a Full Stack SDE 2 role
+        - Detail required skills (Python, ReactJS, Golang, NodeJS, SQL)
+        - Mention desired ML/DL experience as a plus
+        - Include qualifications and years of experience expected
+        - Highlight growth opportunities and company culture
+        - Add a call-to-action for applying
+        Use the researcher's insights to align with company values.
+        """,
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
+
     reviewer = Worker(
         role="Review and Editing Specialist",
-        instructions="Review the job posting for clarity, engagement, grammatical accuracy, and alignment with company values and refine it to ensure perfection. A meticulous editor with an eye for detail, ensuring every piece of content is clear, engaging, and grammatically perfect.",
+        instructions="""
+        Refine the job posting for optimal impact:
+        - Ensure clarity and engaging tone throughout
+        - Verify technical accuracy of required skills
+        - Check for grammar, spelling, and punctuation
+        - Confirm alignment with AI Planet's values and culture
+        - Optimize structure for easy readability (use bullet points, short paragraphs)
+        - Ensure the job title and requirements match (SDE 2 Full Stack Developer)
+        Make final edits to polish the job description.
+        """,
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
@@ -42,8 +71,15 @@ if __name__ == "__main__":
     admin.assign_workers([researcher, writer, reviewer])
 
     res = admin.run(
-        query="SDE 2 Full Stack Developer",
-        description="Company - AI Planet(formerly DPhi), https://aiplanet.com/. Need a Full Stack SDE 2 with skills in stacks like Python, ReactJS, Golang, NodeJS, and SQL. Experience with Machine Learning and Deep Learning is a plus. Company Domain - Technology, AI and ML.",
+        query="Create a job posting for an SDE 2 Full Stack Developer at AI Planet",
+        description="""
+        Develop a compelling job description for AI Planet (https://aiplanet.com/):
+        - Position: SDE 2 Full Stack Developer
+        - Required skills: Python, ReactJS, Golang, NodeJS, SQL
+        - Preferred: Experience with Machine Learning and Deep Learning
+        - Company focus: Technology, AI and ML
+        Ensure the posting reflects AI Planet's culture and attracts qualified candidates.
+        """
     )
 
     # Print the results from the OpenAGI

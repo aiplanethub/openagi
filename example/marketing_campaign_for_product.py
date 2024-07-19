@@ -9,6 +9,9 @@ from openagi.worker import Worker
 from rich.console import Console
 from rich.markdown import Markdown
 
+from dotenv import load_dotenv
+load_dotenv()
+
 if __name__ == "__main__":
     config = AzureChatOpenAIModel.load_from_env_config()
     llm = AzureChatOpenAIModel(config=config)
@@ -16,18 +19,31 @@ if __name__ == "__main__":
     # Team Members
     market_researcher = Worker(
         role="Market Research Specialist",
-        instructions="Conduct market research to identify target audiences, key trends, and competitive landscape for the our new flagship phone Pineapple X smartphone. Use various online sources and tools to gather relevant data and insights.",
+        instructions="""
+        1. Identify target demographics and analyze current smartphone market trends for Pineapple X.
+        2. Conduct a competitive analysis of major smartphone brands in Pineapple X's market segment.
+        3. Compile a report summarizing findings, including Pineapple X's unique selling points and potential marketing angles.
+        """,
         actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
+
     content_creator = Worker(
         role="Content Creator",
-        instructions="Develop compelling marketing content for the Pineapple X launch, including social media posts, blog articles, email newsletters, and advertisements. Focus on engaging the target audience and highlighting the product's unique selling points.",
+        instructions="""
+        1. Review the market research report to understand target audiences and Pineapple X's unique selling points.
+        2. Develop diverse content for the Pineapple X launch, including social media posts, blog articles, an email newsletter, and advertisement concepts.
+        3. Ensure all content aligns with Pineapple X's brand voice and effectively communicates its unique selling points.
+        """,
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
     reviewer = Worker(
         role="Review and Editing Specialist",
-        instructions="Review the marketing campaign for clarity, engagement, grammatical accuracy, and alignment with company values and refine it to ensure perfection. A meticulous editor with an eye for detail, ensuring every piece of content is clear, engaging, and grammatically perfect.",
+        instructions="""
+        1. Review all marketing content for grammatical accuracy, clarity, brand alignment, and effectiveness in highlighting Pineapple X's unique selling points.
+        2. Provide feedback and make necessary edits to refine the content.
+        3. Ensure consistency across all marketing materials and compile a final report summarizing the changes.
+        """,
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
     
@@ -40,14 +56,16 @@ if __name__ == "__main__":
     admin.assign_workers([market_researcher, content_creator, reviewer])
 
     res = admin.run(
-        query="Create a marketing campaign for the launch of Pineapple X.",
-        description="Conduct market research to identify target audiences, key trends, and the competitive landscape. Develop engaging marketing content for social media, website, email newsletters, and advertisements. Ensure the campaign effectively highlights Pineapple X's unique selling points and engages the target audience.",
+        query="Create a comprehensive marketing campaign for the launch of Pineapple X smartphone.",
+        description="""
+        1. Conduct market research to identify target audiences and analyze the competitive landscape.
+        2. Develop engaging marketing content across multiple channels (social media, blog, email, ads).
+        3. Review and refine all materials to ensure a cohesive, high-quality campaign that highlights Pineapple X's unique selling points.
+        """,
     )
-
 
     print("-" * 100)  # Separator
     Console().print(Markdown(res))
-
 
 
 
