@@ -16,17 +16,42 @@ if __name__ == "__main__":
     # Team Members
     market_researcher = Worker(
         role="Market Research Analyst",
-        instructions="Analyze the latest trends and market dynamics in renewable energy. Your role involves collecting and interpreting market data to provide insights on industry growth, technological advancements, and competitive landscape.",
+        instructions="""
+        Analyze trends in renewable energy:
+        - Focus on major sectors (solar, wind, etc.)
+        - Collect data on market size, growth, and key players
+        - Research technological advancements and policies
+        - Examine competitive landscape and emerging markets
+        Compile findings for the report writer.
+        """,
         actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
+
     report_writer = Worker(
         role="Report Writer",
-        instructions="Create a comprehensive market research report based on the provided data and analysis. You specialize in translating complex data into clear, actionable insights for business leaders and stakeholders.",
+        instructions="""
+        Create a market research report based on the analyst's data:
+        - Include an executive summary and clear sections
+        - Use visuals to present data effectively
+        - Provide analysis of each major renewable energy sector
+        - Discuss industry trends, challenges, and opportunities
+        - Offer actionable insights for potential investors
+        Save the draft for editing.
+        """,
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
+
     content_editor = Worker(
         role="Content Editor",
-        instructions="Review and refine the market research report for accuracy, clarity, and professional tone. Ensure the report is well-organized and free of grammatical errors. Format the document according to the company's style guide.",
+        instructions="""
+        Review and refine the market research report:
+        - Ensure consistency in tone and formatting
+        - Check for errors and improve clarity
+        - Verify data accuracy and proper citations
+        - Format according to company style guide
+        - Create a table of contents
+        Finalize the polished report.
+        """,
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
@@ -39,10 +64,21 @@ if __name__ == "__main__":
     admin.assign_workers([market_researcher, report_writer, content_editor])
 
     res = admin.run(
-        query="Create a market research report on the latest trends in renewable energy.",
-        description="Conduct a thorough analysis of the current renewable energy market. Identify key trends, recent technological advancements, and major players in the industry. Develop a detailed market research report that provides strategic insights for businesses looking to invest in renewable energy. Ensure the report is well-structured, informative, and professionally formatted.",
+        query="""
+        Create a market research report on renewable energy trends:
+        - Cover major sectors, market size, and growth projections
+        - Include technological advancements and key players
+        - Analyze policies, emerging markets, and challenges
+        - Provide insights for potential investors
+        """,
+        description="""
+        Lead the team in producing a high-quality renewable energy market report:
+        - Oversee the research and writing process
+        - Ensure collaboration and timely completion
+        - Verify the report's accuracy, clarity, and value
+        Deliver a report that guides strategic decision-making in renewable energy.
+        """
     )
-
 
     print("-" * 100)  # Separator
     Console().print(Markdown(res))
