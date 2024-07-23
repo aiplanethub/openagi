@@ -5,7 +5,7 @@ from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
-
+from datetime import datetime
 from openagi.actions.utils import run_action
 from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel
@@ -14,7 +14,9 @@ from openagi.prompts.worker_task_execution import WorkerAgentTaskExecution
 from openagi.tasks.task import Task
 from openagi.utils.extraction import get_act_classes_from_json, get_last_json
 from openagi.utils.helper import get_default_id
-
+from openagi.storage.chroma import ChromaStorage
+from openagi.actions.data_loaders import DataLoader
+from openagi.actions.data_source import DataSource
 
 class Worker(BaseModel):
     id: str = Field(default_factory=get_default_id)
@@ -45,6 +47,16 @@ class Worker(BaseModel):
     force_output: bool = Field(
         default=True,
         description="If set to True, the output will be overwritten even if it exists.",
+    )
+    knowledge_base: Optional[ChromaStorage] = Field(
+        default=None,
+        description="Knowledge base for worker",
+        exclude=True
+    )
+    n_results: int = Field(
+        default=3,
+        description="No of docs to be fetched",
+        exclude=True
     )
 
     # Validate output_key. Should contain only alphabets and only underscore are allowed. Not alphanumeric
@@ -104,8 +116,79 @@ class Worker(BaseModel):
     def save_to_memory(self, task: Task):
         """Saves the output to the memory."""
         return self.memory.update_task(task)
+    
+    def init_knowledge_base(self, **kwargs):
+        """
+        Initializes the knowledge base using the provided keyword arguments.
+        
+        :param kwargs: Keyword arguments to configure the ChromaStorage.
+        """
+        if not self.knowledge_base:
+            collection_name = kwargs.get("collection_name", None)
+            if not collection_name:
+                collection_name = f"worker_{self.id}_knowledge"
+            kwargs["collection_name"] = collection_name
+            self.knowledge_base = ChromaStorage.from_kwargs(**kwargs)
 
-    def execute_task(self, task: Task, context: Any = None) -> Any:
+    def load_document(self, id: str, document: [str], metadata: dict):
+        """
+        Loads a single document into the knowledge base.
+        
+        :param id: Unique identifier for the document.
+        :param document: The content of the document to be saved.
+        :param metadata: Metadata associated with the document.
+        """
+        if self.knowledge_base:
+            self.knowledge_base.save_document(id, document, metadata)
+
+    def load_knowledge_from_source(self, data_source: DataSource, n_results: int = 3):
+        """
+        Loads knowledge from a given data source into the knowledge base.
+        :param data_source: The source of the data to be loaded. This should be an 
+                            instance of the DataSource class or a compatible class 
+                            that provides a `load` method to retrieve documents.
+        :param n_results:   The number of documents to be fetched from knowledge base. 
+                            Default is 3.
+        """
+        # Set the variable n_results value
+        self.n_results = n_results
+        if not self.knowledge_base:
+            self.init_knowledge_base(collection_name=f"worker_{self.id}_knowledge")
+        
+        loader = DataLoader(data_source=data_source)
+        documents = loader.load()
+        for i, chunk in enumerate(documents):
+            self.load_document(
+                id=f"{self.id}_chunk_{i}",
+                document=[chunk.page_content],
+                metadata={
+                    "source": chunk.metadata.get("source", ""),
+                    "page": chunk.metadata.get("page", ""),
+                    "chunk": i
+                }
+            )
+
+    def update_knowledge_base(self, task: Task):
+        """
+        Updates the knowledge base with the result of a completed task.
+        
+        :param task: The task whose results are to be saved.
+        """
+        if not self.knowledge_base:
+            return
+
+        self.knowledge_base.save_document(
+            id=f"task_result_{task.id}",
+            document=str(task.result),
+            metadata={
+                "task_name": task.name,
+                "task_description": task.description,
+                "timestamp": str(datetime.now())
+            }
+        )
+        logging.info(f"Updated knowledge base with results from task {task.id}")
+
+    def execute_task(self, query: str, task: Task, context: Any = None) -> Any:
         """Executes the specified task."""
         logging.info(
             f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}"
@@ -117,6 +200,16 @@ class Worker(BaseModel):
 
         logging.debug("Provoking initial thought observation...")
         initial_thought_provokes = self.provoke_thought_obs(None)
+
+        knowledge_base_info = "No relevant information found."
+        if self.knowledge_base:
+            query_results = self.knowledge_base.query_documents(
+                query_texts=[query],
+                n_results=self.n_results
+            )
+            knowledge_base_info = "\n".join([doc for doc in query_results['documents'][0]])
+
+
         te_vars = dict(
             task_to_execute=task_to_execute,
             worker_description=worker_description,
@@ -124,6 +217,7 @@ class Worker(BaseModel):
             thought_provokes=initial_thought_provokes,
             output_key=self.output_key,
             context=context,
+            knowledge_base_info=knowledge_base_info,
             max_iterations=self.max_iterations,
         )
 
