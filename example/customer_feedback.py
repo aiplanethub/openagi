@@ -15,20 +15,48 @@ if __name__ == "__main__":
 
     # Team Members
     feedback_collector = Worker(
-        role="Customer Feedback Collector",
-        instructions="Gather customer feedback specifically about AirPods Pro from various online platforms, including social media, review sites, and forums. Focus on identifying common themes and sentiments related to this product.",
-        actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
-    )
-    data_analyst = Worker(
-        role="Data Analyst",
-        instructions="Analyze the collected customer feedback data related to AirPods Pro to identify key trends, recurring issues, and overall customer sentiment. Use statistical tools to quantify the data and provide actionable insights.",
-        actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
-    )
-    report_creator = Worker(
-        role="Report Creator",
-        instructions="Develop a comprehensive customer feedback analysis report based on the data analysis for AirPods Pro. Highlight key findings, trends, and recommendations for improving the product. Ensure the report is well-structured and visually appealing.",
-        actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
-    )
+    role="Customer Feedback Collector",
+    instructions="""
+        Gather detailed customer feedback specifically about AirPods Pro from various online review platforms.
+        
+        Sources:
+        - Review Sites: Amazon,Flipkart
+        - Forums: Reddit, Apple Support Communities.
+        
+        Focus Areas:
+        - Identify recurring themes in customer feedback.
+        - Determine the overall sentiment (positive, negative, neutral).
+        - Look for comments on specific aspects like sound quality, comfort, battery life, connectivity, and price.
+        
+    """,
+    actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
+)
+
+     data_analyst = Worker(
+     role="Data Analyst",
+     instructions="""
+        Analyze the collected customer feedback data related to AirPods Pro.
+        
+        Analysis Tasks:
+        - Identify key trends in customer feedback.
+        - Highlight recurring issues mentioned by customers.
+        - Determine the overall customer sentiment towards AirPods Pro.
+    """,
+    actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
+)
+
+     report_creator = Worker(
+     role="Report Creator",
+     instructions="""
+        Develop a comprehensive customer feedback analysis report based on the data analysis for AirPods Pro.
+        
+        Report Tasks:
+        - Highlight key findings from the data analysis.
+        - Identify trends and recurring issues.
+    """,
+    actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
+)
+
 
     # Team Manager/Admin
     admin = Admin(
