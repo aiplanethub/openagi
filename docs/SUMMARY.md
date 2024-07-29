@@ -24,7 +24,6 @@
 * [Blog Writing Agent](use-cases/blog-writing-agent.md)
 * [News Agent](use-cases/github-agent.md)
 * [Itinerary Planner](use-cases/market-agent.md)
-* [Blog Post Agent](use-cases/blog-post-agent.md)
 
 ## Acknowledgment
 
