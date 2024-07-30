@@ -15,10 +15,9 @@ from openagi.tasks.task import Task
 from openagi.utils.extraction import get_act_classes_from_json, get_last_json
 from openagi.utils.helper import get_default_id
 
-
 class Worker(BaseModel):
     id: str = Field(default_factory=get_default_id)
-    role: str = Field(description="Role of the worker.")
+    role: Optional[str] = Field(description="Role of the worker.")
     instructions: Optional[str] = Field(description="Instructions the worker should follow.")
     llm: Optional[LLMBaseModel] = Field(
         description="LLM Model to be used.",
@@ -117,6 +116,7 @@ class Worker(BaseModel):
 
         logging.debug("Provoking initial thought observation...")
         initial_thought_provokes = self.provoke_thought_obs(None)
+        
         te_vars = dict(
             task_to_execute=task_to_execute,
             worker_description=worker_description,
@@ -209,8 +209,10 @@ class Worker(BaseModel):
 
                 prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
                 logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
+                
                 pth = Path(f"{self.memory.session_id}/logs/{task.name}-{iteration}.log")
                 pth.parent.mkdir(parents=True, exist_ok=True)
+                
                 with open(pth, "w", encoding="utf-8") as f:
                     f.write(f"{prompt}\n")
                 logging.debug("Running LLM with updated prompt...")

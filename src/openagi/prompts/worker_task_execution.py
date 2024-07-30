@@ -1,5 +1,4 @@
 from textwrap import dedent
-
 from openagi.prompts.base import BasePrompt
 
 WORKER_TASK_EXECUTION = dedent(
@@ -74,6 +73,13 @@ Begin!
 """.strip()
 )
 
+task_execution = dedent("""
+
+""".strip()
+)
 
 class WorkerAgentTaskExecution(BasePrompt):
     base_prompt: str = WORKER_TASK_EXECUTION
+
+class TaskExecuteWorker(BasePrompt):
+    base_prompt: str = task_execution

@@ -111,7 +111,7 @@ class Admin(BaseModel):
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
 
-            setattr(self.planner, "workers", self.workers)
+            #setattr(self.planner, "workers", self.workers)
 
         logging.info("Thinking...")
         actions_dict: List[BaseAction] = []
@@ -119,15 +119,15 @@ class Admin(BaseModel):
         for act in self.actions:
             actions_dict.append(act.cls_doc())
 
-        workers_dict = []
-        for worker in self.workers:
-            workers_dict.append(worker.worker_doc())
+        #workers_dict = []
+        #for worker in self.workers:
+        #    workers_dict.append(worker.worker_doc())
 
         return self.planner.plan(
             query=query,
             description=descripton,
             supported_actions=actions_dict,
-            supported_workers=workers_dict,
+            #supported_workers=workers_dict, #kwargs
         )
 
     def _generate_tasks_list(self, planned_tasks):
@@ -164,6 +164,9 @@ class Admin(BaseModel):
         if task_summaries:
             return "\n".join(task_summaries).strip()
         return "None"
+    
+    def _get_planner_by_id(self,planner_id:str):
+        pass
 
     def _get_worker_by_id(self, worker_id: str):
         for worker in self.workers:
@@ -174,9 +177,10 @@ class Admin(BaseModel):
     def worker_task_execution(self, query: str, description: str, task_lists: TaskLists):
         res = None
 
+        # planner_id
         while not task_lists.all_tasks_completed:
             cur_task = task_lists.get_next_unprocessed_task()
-            worker = self._get_worker_by_id(cur_task.worker_id)
+            worker = self._get_worker_by_id(cur_task.worker_id) #issue is been caused here
             res, task = worker.execute_task(
                 cur_task,
                 context=self.get_previous_task_contexts(task_lists=task_lists),
@@ -258,6 +262,7 @@ class Admin(BaseModel):
 
             logging.debug("Provoking initial thought observation...")
             initial_thought_provokes = self._provoke_thought_obs(None)
+            
             te_vars = dict(
                 task_to_execute=task_to_execute,
                 worker_description=agent_description,
@@ -371,6 +376,7 @@ class Admin(BaseModel):
         logging.info(f"SessionID - {self.memory.session_id}")
 
         planned_tasks = self.run_planner(query=query, descripton=description)
+        #print(f"{'****'*50}\n\n{planned_tasks}\n\n{'****'*50}")
 
         logging.info("Tasks Planned...")
         logging.debug(f"{planned_tasks=}")
@@ -378,7 +384,7 @@ class Admin(BaseModel):
         task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
 
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
-
+        
         if self.workers:
             return self.worker_task_execution(
                 query=query,

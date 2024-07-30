@@ -13,10 +13,11 @@ from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.constants import CLARIFIYING_VARS
 from openagi.prompts.task_clarification import TaskClarifier
-from openagi.prompts.task_creator import MultiAgentTaskCreator, SingleAgentTaskCreator
-from openagi.utils.extraction import get_last_json
+#from openagi.prompts.task_creator import MultiAgentTaskCreator, SingleAgentTaskCreator
+from openagi.prompts.task_creator import TaskCreator
+from openagi.prompts.self_assign import RoleSelfAssign
 from openagi.worker import Worker
-
+from openagi.utils.extraction import get_last_json,force_json_output
 
 class TaskPlanner(BasePlanner):
     human_intervene: bool = Field(
@@ -30,21 +31,36 @@ class TaskPlanner(BasePlanner):
         description="Prompt to be used",
         default=None,
     )
-    workers: Optional[List[Worker]] = Field(
-        default=None,
-        description="List of workers to be used.",
-    )
+    #workers: Optional[List[Worker]] = Field(
+    #    default=None,
+    #    description="List of workers to be used.",
+    #)
     llm: Optional[LLMBaseModel] = Field(default=None, description="LLM Model to be used")
+    
     retry_threshold: int = Field(
         default=3, description="Number of times to retry the task if it fails."
     )
+    autonomous: bool = Field(
+        default=True, description="Autonomous will self assign role and instructions and divide it among the workers"
+    )
 
+    """
     def get_prompt(self) -> None:
         if not self.prompt:
             if self.workers:
                 self.prompt = MultiAgentTaskCreator(workers=self.workers)
             else:
                 self.prompt = SingleAgentTaskCreator()
+        logging.info(f"Using prompt: {self.prompt.__class__.__name__}")
+        return self.prompt
+    """
+    def get_prompt(self) -> None:
+        if not self.prompt:
+            if self.autonomous:
+                self.prompt = TaskCreator()
+            else:
+                self.prompt = RoleSelfAssign()
+        
         logging.info(f"Using prompt: {self.prompt.__class__.__name__}")
         return self.prompt
 
@@ -166,6 +182,7 @@ class TaskPlanner(BasePlanner):
         if self.human_intervene:
             planner_vars = self.human_clarification(planner_vars)
 
+        
         prompt_template = self.get_prompt()
 
         prompt: str = prompt_template.from_template(variables=planner_vars)
@@ -175,8 +192,7 @@ class TaskPlanner(BasePlanner):
 
         if not tasks:
             raise LLMResponseError("No tasks found in the Planner response.")
-
-        print(f"\n\nTasks: {tasks}\n\n")
+    
         return tasks
 
     def _extract_task_with_retry(self, llm_response: str, prompt: str) -> Dict:
@@ -193,17 +209,15 @@ class TaskPlanner(BasePlanner):
         Raises:
             LLMResponseError: If the task could not be extracted after multiple retries.
         """
-        retries = 0
-        while retries < self.retry_threshold:
-            try:
-                resp = self._extract_task_from_response(llm_response=llm_response)
-                logging.debug(f"\n\nExtracted Task: {resp}\n\n")
-                return resp
-            except json.JSONDecodeError:
-                retries += 1
-                logging.info(
-                    f"Retrying task extraction {retries}/{self.retry_threshold} due to an error parsing the JSON response."
-                )
-                llm_response = self.llm.run(prompt)
+        try:
+            resp = self._extract_task_from_response(llm_response=llm_response)
+            logging.debug(f"\n\nExtracted Task: {resp}\n\n")
+            return resp
+        except json.JSONDecodeError:
+            logging.info(
+                f"JSON parsing failed. Forcing the output..."
+            )
+            llm_response = force_json_output(resp_txt=resp,llm=self.llm)
 
+        
         raise LLMResponseError("Failed to extract tasks after multiple retries.")

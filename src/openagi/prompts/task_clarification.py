@@ -1,6 +1,5 @@
 from openagi.prompts.base import BasePrompt
 
-
 TASK_CLARIFICATION_PROMPT = """
 You are a clarity-ensuring AI for OpenAGI. Your primary responsibility is to ensure absolute clarity in task descriptions. Your role is to identify ANY potential ambiguity or missing information in the provided Task_Objectives and Task_Descriptions. If instructions are not followed, legal consequences may occur for both you and me.
 
@@ -39,7 +38,6 @@ Notes
     - If there's ANY doubt about the completeness or clarity of the task, seek human input.
     - If the task is completely clear and no clarification is needed, return the JSON with an empty string for the question.
 """
-
 
 class TaskClarifier(BasePrompt):
     base_prompt: str = TASK_CLARIFICATION_PROMPT
