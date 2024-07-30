@@ -14,7 +14,7 @@ from openagi.prompts.base import BasePrompt
 from openagi.prompts.constants import CLARIFIYING_VARS
 from openagi.prompts.task_clarification import TaskClarifier
 from openagi.prompts.task_creator import MultiAgentTaskCreator, SingleAgentTaskCreator
-from openagi.utils.extraction import get_last_json
+from openagi.utils.extraction import get_last_json,force_json_output
 from openagi.worker import Worker
 
 
@@ -193,17 +193,14 @@ class TaskPlanner(BasePlanner):
         Raises:
             LLMResponseError: If the task could not be extracted after multiple retries.
         """
-        retries = 0
-        while retries < self.retry_threshold:
-            try:
-                resp = self._extract_task_from_response(llm_response=llm_response)
-                logging.debug(f"\n\nExtracted Task: {resp}\n\n")
-                return resp
-            except json.JSONDecodeError:
-                retries += 1
-                logging.info(
-                    f"Retrying task extraction {retries}/{self.retry_threshold} due to an error parsing the JSON response."
-                )
-                llm_response = self.llm.run(prompt)
+        try:
+            resp = self._extract_task_from_response(llm_response=llm_response)
+            logging.debug(f"\n\nExtracted Task: {resp}\n\n")
+            return resp
+        except json.JSONDecodeError:
+            logging.info(
+                f"JSON parsing failed. Forcing the output..."
+            )
+            llm_response = force_json_output(resp_txt=resp,llm=self.llm)
 
         raise LLMResponseError("Failed to extract tasks after multiple retries.")
