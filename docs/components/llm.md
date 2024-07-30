@@ -1,4 +1,4 @@
-# LLM
+# 🧠 LLM
 
 Large Language Models (LLMs) serve as the backbone for executing Agentic workflows. LLMs excel at generating responses and, when combined with human-like planning, reasoning, and task decomposition, give rise to the concept of Agents. In OpenAGI, LLMs plan and reason to decompose task objectives into sub-tasks. They then execute these sub-tasks and return meaningful responses to the user.&#x20;
 

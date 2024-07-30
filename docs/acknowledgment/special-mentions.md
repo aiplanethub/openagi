@@ -1,4 +1,4 @@
-# Special Mentions
+# 🏅 Special Mentions
 
 This work would not have been possible without the incredible support from various open source and other open integrations. We especially thank the following open-source tools for their inspiration.
 

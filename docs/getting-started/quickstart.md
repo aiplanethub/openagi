@@ -2,7 +2,7 @@
 description: Lets build our first Agent use cases.
 ---
 
-# Quickstart
+# 🚀 Quickstart
 
 In this quickstart, we'll explore one of the use cases to demonstrate the execution of the Agent. We'll focus on querying Search Engines tools like `DuckDuckGoSearchTool` to gather the  information on 3 Days Trip to San Francisco and Bay area based on recent days.&#x20;
 

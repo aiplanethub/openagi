@@ -1,4 +1,4 @@
-# ChromaStorage
+# 💾 ChromaStorage
 
 The `ChromaStorage` class is a specific implementation of the `Storage` class using `ChromaDB`. Here is how you can use it:
 

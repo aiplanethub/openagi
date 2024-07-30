@@ -1,4 +1,4 @@
-# Planner
+# 🗂 Planner
 
 ## What is Planner?
 

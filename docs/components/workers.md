@@ -1,4 +1,4 @@
-# Workers
+# 👷 Workers
 
 ### What is a Worker?
 

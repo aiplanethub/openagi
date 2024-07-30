@@ -1,4 +1,4 @@
-# Installation
+# 🔧 Installation
 
 To install OpenAGI, lets practice some best practice by creating a virtual environment and installing the package.
 

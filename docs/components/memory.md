@@ -1,4 +1,4 @@
-# Memory
+# 🧠 Memory
 
 ## What is Memory?
 

@@ -1,8 +1,18 @@
-# JobSearch Agent
+# 🔍 JobSearch Agent
 
 It utilize various tools for internet search and document comparison to fulfill its task. Upon finding the relevant job opportunities, The script configures the agent's role, goal, backstory, capabilities, and specific task to accomplish. Additionally, it initializes logging for debugging purposes and triggers the execution of the agent.
 
 **Import Required Libraries**
+
+First, we need to import the necessary modules. Each module serves a specific purpose in our script. We utilize various tools for internet search and document comparison to fulfill the agent's task. Here’s what each import does:
+
+* `GoogleSerpAPISearch` and `DuckDuckGoSearch` are tools for performing web searches.
+* `Admin` manages the overall execution of tasks.
+* `AzureChatOpenAIModel` is used to configure the large language model from Azure.
+* `Memory` is for maintaining context during the agent's operations.
+* `TaskPlanner` helps in decomposing tasks into manageable sub-tasks.
+* `Worker` represents individual agents with specific roles and responsibilities.
+* `Console` and `Markdown` from the `rich` library are used for printing formatted outputs.
 
 ```python
 from openagi.actions.tools.serp_search import GoogleSerpAPISearch
@@ -19,7 +29,7 @@ import os
 
 **Setup LLM**&#x20;
 
-Set up the environment variables and configure the Azure OpenAI model.
+Next, we set up the environment variables and configure the Azure OpenAI model. This setup allows us to use Azure's GPT-4 model with the script. Setting up the environment variables ensures the necessary keys and endpoints are accessible during execution.
 
 ```python
 os.environ["AZURE_BASE_URL"] = "https://<replace-with-your-endpoint>.openai.azure.com/"
@@ -34,19 +44,27 @@ llm = AzureChatOpenAIModel(config=config)
 
 **Define Workers**&#x20;
 
-Define the workers with specific roles and instructions.
+We define workers with specific roles and instructions. Each worker agent is equipped with the tools necessary to perform their designated tasks. The worker in this script is set up to search for job opportunities using DuckDuckGo.
 
-```python
+```
 websearcher = Worker(
     role="SW",
-    description="You are an Expert Python SW Developer.",
+    instructions="""
+    You are an Expert Python SW Developer with deep knowledge of job markets.
+    - Focus on SDE2 (Software Development Engineer II) positions
+    - Look for roles requiring 2+ years of Python experience
+    - Consider various industries and company sizes
+    - Pay attention to job descriptions, required skills, and company culture
+    """,
     actions=[DuckDuckGoSearch],
 )
 ```
 
+
+
 **Define Admin**&#x20;
 
-Create an admin to manage the workers and execute the task.
+The `Admin` agent manages the workers and executes the tasks. It is configured to use the task planner without human intervention and maintains context using memory.
 
 ```python
 admin = Admin(
@@ -60,18 +78,35 @@ admin.assign_workers([websearcher])
 
 **Execute Agent LLM**&#x20;
 
-Run the admin with a specific query to find job opportunities.
+The admin runs with a specific query to find job opportunities. The query includes detailed instructions on what information to gather and how to present it.
 
 ```python
-res = admin.run(
-    query="Give list of SDE2 Jobs that are relevant for people with 2+ years of experience in Python. Need at least 10 job opportunities.",
-    description="You are an expert Internet Job Searching agent, who gives you the best job opportunities that can be applied to.",
-)
+    res = admin.run(
+        query="""
+        Provide a list of at least 10 SDE2 job opportunities suitable for candidates with 2+ years of Python experience.
+        For each job, include:
+        1. Company name and location
+        2. Job title
+        3. Key responsibilities
+        4. Required skills
+        5. Any standout perks or benefits
+        6. Application link or process (if available)
+        """,
+        description="""
+        You are an expert Internet Job Searching agent. Your task is to:
+        - Find the most relevant and high-quality job opportunities
+        - Ensure jobs match the specified experience level and skill set
+        - Provide a diverse range of companies and industries
+        - Verify the credibility of job postings
+        - Organize the information in a clear, easy-to-read format
+        - Highlight any unique or particularly attractive aspects of each role
+        """,
+    )
 ```
 
 **Print the Results**
 
-&#x20;Output the results using the `rich` library.
+Finally, the results are outputted using the `rich` library, which allows us to print the data in a nicely formatted markdown.
 
 ```python
 # Print the results from the OpenAGI
@@ -79,7 +114,9 @@ print("-" * 100)  # Separator
 Console().print(Markdown(res))
 ```
 
-#### Output
+#### Sample Output
+
+The expected output is a list of job opportunities with detailed descriptions. Each job entry includes the company name, location, job title, responsibilities, required skills, standout perks, and an application link.
 
 ```markdown
 Job Opportunities and Descriptions in Finance Technology

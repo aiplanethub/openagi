@@ -1,4 +1,4 @@
-# VectorStore
+# 📦 VectorStore
 
 The Vector Store provides a structured way to store, update, delete, and query documents using various storage backends. It is designed to be inherited by specific storage implementations that define the actual methods for handling data.
 

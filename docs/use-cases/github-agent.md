@@ -1,8 +1,17 @@
-# News Agent
+---
+description: >-
+  Staying current with the latest developments is crucial, especially in the
+  fast-paced world of technology and artificial intelligence. A News Agent can
+  help you stay informed by gathering the latest n
+---
+
+# 📰 News Agent
 
 Be upto date on what's happening using News Agent
 
 **Import Required Libraries**
+
+First, import the necessary libraries and modules. These modules will enable the agent to perform web searches, handle task planning, and display results in a readable format.
 
 ```python
 from openagi.actions.tools.ddg_search import DuckDuckGoSearch
@@ -16,7 +25,7 @@ import os
 
 **Setup LLM**&#x20;
 
-Set up the environment variables and configure the Azure OpenAI model.
+Set up the environment variables required for Azure OpenAI configuration. These environment variables include the base URL, deployment name, model name, API version, and API key. This configuration is essential for the Large Language Model (LLM) to function correctly.
 
 ```python
 os.environ["AZURE_BASE_URL"] = "https://<replace-with-your-endpoint>.openai.azure.com/"
@@ -31,7 +40,7 @@ llm = AzureChatOpenAIModel(config=config)
 
 **Define Admin**&#x20;
 
-Create an admin to manage the actions and execute the task.
+Create an Admin instance to manage actions and execute tasks. The Admin will use the DuckDuckGoSearch tool to perform web searches and the TaskPlanner to manage task execution without human intervention.
 
 ```python
 admin = Admin(
@@ -43,7 +52,7 @@ admin = Admin(
 
 **Execute Agent LLM**&#x20;
 
-Run the admin with a specific query to get the latest news.
+Run the Admin with a specific query to fetch the latest news about AI from the web. In this case, the query is set to find recent news related to "Recent AI News Microsoft." The Admin will process this query and return the relevant news articles.
 
 ```python
 res = admin.run(
@@ -54,9 +63,10 @@ res = admin.run(
 
 **Print the Results**&#x20;
 
-Output the results using the `rich` library.
+Finally, use the rich library to output the results in a readable format. The Markdown class helps in rendering the news content neatly in the console.
 
 ```python
 Console().print(Markdown(res))
 ```
 
+By following these steps, you can set up a News Agent that keeps you updated with the latest news in the field of artificial intelligence. This example uses the power of Azure's GPT-4 model and OpenAGI to perform efficient web searches and present the information in an easily digestible format.
