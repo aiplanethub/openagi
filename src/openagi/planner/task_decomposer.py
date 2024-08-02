@@ -13,7 +13,8 @@ from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.constants import CLARIFIYING_VARS
 from openagi.prompts.task_clarification import TaskClarifier
-from openagi.prompts.task_creator import MultiAgentTaskCreator, SingleAgentTaskCreator
+#from openagi.prompts.task_creator import MultiAgentTaskCreator, SingleAgentTaskCreator
+from openagi.prompts.task_creator import AutoTaskCreator,SingleAgentTaskCreator
 from openagi.utils.extraction import get_last_json
 from openagi.worker import Worker
 
@@ -38,13 +39,27 @@ class TaskPlanner(BasePlanner):
     retry_threshold: int = Field(
         default=3, description="Number of times to retry the task if it fails."
     )
+    autonomous: bool = Field(
+        default=True, description="Autonomous will self assign role and instructions and divide it among the workers"
+    )
 
+    """
     def get_prompt(self) -> None:
         if not self.prompt:
             if self.workers:
                 self.prompt = MultiAgentTaskCreator(workers=self.workers)
             else:
                 self.prompt = SingleAgentTaskCreator()
+        logging.info(f"Using prompt: {self.prompt.__class__.__name__}")
+        return self.prompt
+    """
+    def get_prompt(self) -> None:
+        if not self.prompt:
+            if self.autonomous:
+                self.prompt = AutoTaskCreator()
+            else:
+                self.prompt = SingleAgentTaskCreator()
+
         logging.info(f"Using prompt: {self.prompt.__class__.__name__}")
         return self.prompt
 
@@ -174,7 +189,7 @@ class TaskPlanner(BasePlanner):
         tasks = self._extract_task_with_retry(resp, prompt)
 
         if not tasks:
-            raise LLMResponseError("No tasks found in the Planner response.")
+            raise LLMResponseError("Note: This not a error => No tasks was planned in the Planner response. Tweak the prompt and actions, then try again")
 
         print(f"\n\nTasks: {tasks}\n\n")
         return tasks
