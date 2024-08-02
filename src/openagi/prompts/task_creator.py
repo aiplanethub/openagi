@@ -108,29 +108,29 @@ Your expertise lies in comprehending the nuances of `Task_Objectives` and `Task_
 - SUPPORTED_ACTIONS: {supported_actions}
 
 **Output Specification:**
-Generate a JSON-parseable array of Workers and their assigned tasks, each containing "worker_id", "role", "instruction", "task_name", "description", and "supported_actions" keys. Enclose the output in triple backticks.
+Generate a JSON-parseable array of Workers and their assigned tasks, each containing "worker_name", "role", "instruction", "task_id", "description", and "supported_actions" keys. Enclose the output in triple backticks.
 
 ```json
 [
     {
-        "worker_name": "Worker1",
+        "worker_name": "ExpertWorker1",
         "role": "<Expert role description>",
         "instruction": "<General instruction related to user query>",
-        "task_name": "<concise, action-oriented name that includes supported actions information>",
+        "task_id": "<unique identifier for the task>",
         "description": "<detailed, step-by-step instructions including error handling>",
         "supported_actions": ["<list of required actions for this Worker>"]
     },
     {
-        "worker_name": "Worker2",
-        ...same as above
+        "worker_name": "ExpertWorker2",
+        ...
     }
 ]
 ```
 """
+#task_id => TaskList . Not Generating via LLM. 
 
 class SingleAgentTaskCreator(BasePrompt):
     base_prompt: str = single_agent_task_creation
-
 
 class MultiAgentTaskCreator(SingleAgentTaskCreator):
     base_prompt: str = worker_task_creation
