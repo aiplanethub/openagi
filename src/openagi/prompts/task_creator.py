@@ -91,7 +91,7 @@ Your expertise lies in comprehending the nuances of `Task_Objectives` and `Task_
 1. Atomic Task Decomposition: Break down tasks to their most fundamental, indivisible units.
 2. Action Alignment: Each micro-task must correspond to exactly one supported action.
 3. Sequential Logic: Ensure a clear, logical progression from one micro-task to the next.
-4. Worker Specialization: Assign tasks to Workers based on their expertise and the required actions.
+4. Worker Specialization: Assign tasks to Workers based on their expertise and the required actions. Be clever to not assign more workers, for revelant task one worker should do
 5. Goal Orientation: Every micro-task must directly contribute to the overarching objective.
 
 **Task Creation and Assignment Guidelines:**
@@ -117,6 +117,7 @@ Generate a JSON-parseable array of Workers and their assigned tasks, each contai
         "role": "<Expert role description>",
         "instruction": "<General instruction related to user query>",
         "task_id": "<unique identifier for the task>",
+        "task_name": "<concise, action-oriented name that includes supported actions information>",
         "description": "<detailed, step-by-step instructions including error handling>",
         "supported_actions": ["<list of required actions for this Worker>"]
     },

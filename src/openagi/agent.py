@@ -118,7 +118,7 @@ class Admin(BaseModel):
 
         for act in self.actions:
             actions_dict.append(act.cls_doc())
-
+                
         workers_dict = []
         for worker in self.workers:
             workers_dict.append(worker.worker_doc())
@@ -229,6 +229,58 @@ class Admin(BaseModel):
                 f"LLM did not produce the expected output after {self.max_iterations} iterations."
             )
         return (cont, final_output)
+    
+    def auto_workers_assignment(self,query:str,description:str,task_lists:TaskLists):
+        """
+        Autonomously generates the Workers with the 
+
+        Args:
+            query (str): The query to be processed.
+            description (str): A description of the task.
+            task_lists (TaskLists): The task lists to be processed.
+
+        Returns:
+            str: JSON of the list of Workers that needs to be executed
+        """
+        all_thoughts_and_obs = []
+        output = None
+        previous_task_context = None
+      
+        while not task_lists.all_tasks_completed:
+            iteration = 1
+            max_iterations = self.max_iterations
+
+            cur_task = task_lists.get_next_unprocessed_task()
+            print(cur_task)
+            logging.info(f"**** Executing Task - {cur_task.name} [{cur_task.id}] ****")
+
+            task_to_execute = f"{cur_task.name}. {cur_task.description}"
+            worker_description = f"{cur_task.role} - {cur_task.instructions}"
+            
+            print(task_to_execute)
+            print(worker_description)
+            
+            logging.debug("Provoking initial thought observation...")
+            initial_thought_provokes = self._provoke_thought_obs(None)
+
+            auto_task_vars = dict(
+                task_to_execute = task_to_execute,
+                worker_description = worker_description,
+                supported_actions = [action.cls_doc() for action in self.actions],
+                thought_provokes = initial_thought_provokes,
+                output_key = self.output_key,
+                context = previous_task_context,
+                max_iterations = max_iterations,
+            )
+            logging.debug("Generating base prompt...")
+            base_prompt = WorkerAgentTaskExecution().from_template(auto_task_vars)
+            prompt = f"{base_prompt}\nThought:\nIteration: {iteration}\nActions:\n"
+
+            logging.debug("Running LLM with prompt...")
+            observations = self.llm.run(prompt)
+            logging.info(f"LLM execution completed. Observations: {observations}")
+            all_thoughts_and_obs.append(prompt)
+
 
     def single_agent_execution(self, query: str, description: str, task_lists: TaskLists):
         """
@@ -258,6 +310,7 @@ class Admin(BaseModel):
 
             logging.debug("Provoking initial thought observation...")
             initial_thought_provokes = self._provoke_thought_obs(None)
+
             te_vars = dict(
                 task_to_execute=task_to_execute,
                 worker_description=agent_description,
@@ -378,19 +431,26 @@ class Admin(BaseModel):
         task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
 
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
-
-        if self.workers:
-            return self.worker_task_execution(
+        
+        if self.planner.autonomous:
+            return self.auto_workers_assignment(
+                query=query,
+                description=description,
+                task_lists=task_lists
+            )
+        else:
+            if self.workers:
+                return self.worker_task_execution(
                 query=query,
                 description=description,
                 task_lists=task_lists,
             )
-
-        return self.single_agent_execution(
-            query=query,
-            description=description,
-            task_lists=task_lists,
-        )
+            else:
+                return self.single_agent_execution(
+                    query=query,
+                    description=description,
+                    task_lists=task_lists
+                )
 
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
         content: str = find_last_r_failure_content(text=llm_resp)
