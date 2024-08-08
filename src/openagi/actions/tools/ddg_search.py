@@ -3,7 +3,7 @@ from typing import Any
 from openagi.actions.base import BaseAction
 from pydantic import Field
 from duckduckgo_search import DDGS
-
+import logging
 
 class DuckDuckGoSearch(BaseAction):
     """Use this Action to search DuckDuckGo for a query."""
@@ -31,6 +31,10 @@ class DuckDuckGoSearch(BaseAction):
         return DDGS()
 
     def execute(self):
+        if self.max_results > 15:
+            logging.info("Over threshold value... Limiting the Max results to 15")
+            self.max_results = 15
+        
         result = self._get_ddgs().text(
             self.query,
             max_results=self.max_results,

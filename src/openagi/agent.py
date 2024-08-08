@@ -46,7 +46,7 @@ class Admin(BaseModel):
         description="Actions that the Agent supports", default_factory=list
     )
     max_iterations: int = Field(
-        default=20, description="Maximum number of steps to achieve the objective."
+        default=15, description="Maximum number of steps to achieve the objective."
     )
     output_format: OutputFormat = Field(
         default=OutputFormat.markdown,
@@ -366,11 +366,12 @@ class Admin(BaseModel):
         logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return output
 
-    def run(self, query: str, description: str):
+    def run(self, query: str, description: str,planned_tasks: Optional[List[Dict]] = None):
         logging.info("Running Admin Agent...")
         logging.info(f"SessionID - {self.memory.session_id}")
 
-        planned_tasks = self.run_planner(query=query, descripton=description)
+        if planned_tasks is None:
+            planned_tasks = self.run_planner(query=query, descripton=description)
 
         logging.info("Tasks Planned...")
         logging.debug(f"{planned_tasks=}")
