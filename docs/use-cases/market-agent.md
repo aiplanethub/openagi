@@ -17,9 +17,6 @@ from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 from openagi.agent import Admin
 from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
-from rich.console import Console
-from rich.markdown import Markdown
-import os
 ```
 
 **Setup LLM**
@@ -28,6 +25,7 @@ Set up the environment variables required for the OpenAI configuration. These en
 
 ```python
 # Set up the environment variables for OpenAI
+import os
 os.environ["OPENAI_API_KEY"] = "sk-proj-xxxxxxxxxxxxxxxxxx"
 
 # Initialize the OpenAI Model
@@ -59,7 +57,7 @@ Run the Admin with a specific query to create an itinerary for a trip to the San
 
 ```python
 # Execute the Agent to create an itinerary
-   response = Admin(actions=[DuckDuckGoSearch]).run(
+travel_plan = Admin(actions=[DuckDuckGoSearch]).run(
     query="3 Days Trip to san francisco bay area",
     description="You are a knowledgeable local guide with extensive information about the city, it's attractions and customs",
 )
@@ -71,12 +69,12 @@ Finally, use the rich library to output the results in a readable format. The Ma
 
 ```python
 # Print the results from OpenAGI using rich library
-Console().print(Markdown(res))
+print(travel_plan)
 ```
 
 By following these steps, you can set up a News Agent that helps you plan activities or trips effectively. This example uses the power of the OpenAI model and OpenAGI to perform efficient web searches and present the information in an easily digestible format, ensuring you stay informed and well-prepared.
 
-### Sample Output
+### Output
 
 When this code is executed, the output in the console might resemble the following itinerary:
 

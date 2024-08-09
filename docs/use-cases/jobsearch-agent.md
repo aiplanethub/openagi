@@ -22,12 +22,10 @@ from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
 from openagi.worker import Worker
-from rich.console import Console
-from rich.markdown import Markdown
 import os
 ```
 
-**Setup LLM**&#x20;
+**Setup LLM**
 
 Next, we set up the environment variables and configure the Azure OpenAI model. This setup allows us to use Azure's GPT-4 model with the script. Setting up the environment variables ensures the necessary keys and endpoints are accessible during execution.
 
@@ -42,7 +40,7 @@ config = AzureChatOpenAIModel.load_from_env_config()
 llm = AzureChatOpenAIModel(config=config)
 ```
 
-**Define Workers**&#x20;
+**Define Workers**
 
 We define workers with specific roles and instructions. Each worker agent is equipped with the tools necessary to perform their designated tasks. The worker in this script is set up to search for job opportunities using DuckDuckGo.
 
@@ -60,9 +58,7 @@ websearcher = Worker(
 )
 ```
 
-
-
-**Define Admin**&#x20;
+**Define Admin**
 
 The `Admin` agent manages the workers and executes the tasks. It is configured to use the task planner without human intervention and maintains context using memory.
 
@@ -76,12 +72,12 @@ admin = Admin(
 admin.assign_workers([websearcher])
 ```
 
-**Execute Agent LLM**&#x20;
+**Execute Agent LLM**
 
 The admin runs with a specific query to find job opportunities. The query includes detailed instructions on what information to gather and how to present it.
 
 ```python
-    res = admin.run(
+job_desc = admin.run(
         query="""
         Provide a list of at least 10 SDE2 job opportunities suitable for candidates with 2+ years of Python experience.
         For each job, include:
@@ -110,11 +106,10 @@ Finally, the results are outputted using the `rich` library, which allows us to 
 
 ```python
 # Print the results from the OpenAGI
-print("-" * 100)  # Separator
-Console().print(Markdown(res))
+print(job_desc)
 ```
 
-#### Sample Output
+#### Output
 
 The expected output is a list of job opportunities with detailed descriptions. Each job entry includes the company name, location, job title, responsibilities, required skills, standout perks, and an application link.
 

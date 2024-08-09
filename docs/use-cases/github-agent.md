@@ -18,12 +18,10 @@ from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 from openagi.agent import Admin
 from openagi.llms.azure import AzureChatOpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
-from rich.console import Console
-from rich.markdown import Markdown
 import os
 ```
 
-**Setup LLM**&#x20;
+**Setup LLM**
 
 Set up the environment variables required for Azure OpenAI configuration. These environment variables include the base URL, deployment name, model name, API version, and API key. This configuration is essential for the Large Language Model (LLM) to function correctly.
 
@@ -38,7 +36,7 @@ config = AzureChatOpenAIModel.load_from_env_config()
 llm = AzureChatOpenAIModel(config=config)
 ```
 
-**Define Admin**&#x20;
+**Define Admin**
 
 Create an Admin instance to manage actions and execute tasks. The Admin will use the DuckDuckGoSearch tool to perform web searches and the TaskPlanner to manage task execution without human intervention.
 
@@ -50,28 +48,28 @@ admin = Admin(
 )
 ```
 
-**Execute Agent LLM**&#x20;
+**Execute Agent LLM**
 
 Run the Admin with a specific query to fetch the latest news about AI from the web. In this case, the query is set to find recent news related to "Recent AI News Microsoft." The Admin will process this query and return the relevant news articles.
 
 ```python
 res = admin.run(
     query="Recent AI News Microsoft",
-    description="",
+    description="Under the latest trends that is currently going on in the AI world. Brief out the details on the recent news along with small description and the date",
 )
 ```
 
-**Print the Results**&#x20;
+**Print the Results**
 
 Finally, use the rich library to output the results in a readable format. The Markdown class helps in rendering the news content neatly in the console.
 
 ```python
-Console().print(Markdown(res))
+print(res)
 ```
 
 By following these steps, you can set up a News Agent that keeps you updated with the latest news in the field of artificial intelligence. This example uses the power of Azure's GPT-4 model and OpenAGI to perform efficient web searches and present the information in an easily digestible format.
 
-### Sample Output
+### Output
 
 When the above code is executed, the output in the console might look like this:
 

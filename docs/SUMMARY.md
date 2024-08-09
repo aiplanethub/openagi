@@ -10,7 +10,7 @@
 
 * [👨‍💼 Admin](components/admin.md)
 * [👷 Workers](components/workers.md)
-* [🗂 Planner](components/planner.md)
+* [🗂️ Planner](components/planner.md)
 * [🧠 LLM](components/llm.md)
 * [🔧 Action](components/action/README.md)
   * [🛠️ Tools](components/action/tools.md)
