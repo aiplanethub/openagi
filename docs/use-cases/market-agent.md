@@ -75,3 +75,37 @@ Console().print(Markdown(res))
 ```
 
 By following these steps, you can set up a News Agent that helps you plan activities or trips effectively. This example uses the power of the OpenAI model and OpenAGI to perform efficient web searches and present the information in an easily digestible format, ensuring you stay informed and well-prepared.
+
+### Sample Output
+
+When this code is executed, the output in the console might resemble the following itinerary:
+
+```
+# Itinerary for a 3-Day Trip to San Francisco Bay Area
+
+## Day 1: Explore San Francisco
+
+- **Morning**: Visit the iconic Golden Gate Bridge. Enjoy a walk or rent a bike to cross the bridge for stunning views.
+  
+- **Afternoon**: Head to Fisherman’s Wharf for lunch. Try the famous clam chowder in a sourdough bread bowl.
+
+- **Evening**: Explore Pier 39, watch the sea lions, and enjoy street performances. Consider dining at one of the waterfront restaurants.
+
+## Day 2: Culture and History
+
+- **Morning**: Visit Alcatraz Island. Book your tickets in advance to explore the historic prison.
+
+- **Afternoon**: Discover the San Francisco Museum of Modern Art (SFMOMA). Enjoy lunch at a nearby café.
+
+- **Evening**: Stroll through the Mission District and enjoy the vibrant murals. Dine at a local taqueria for authentic Mexican food.
+
+## Day 3: Nature and Surroundings
+
+- **Morning**: Take a trip to Muir Woods National Monument. Enjoy a hike among the towering redwoods.
+
+- **Afternoon**: Visit Sausalito for lunch and explore the charming waterfront town.
+
+- **Evening**: Return to San Francisco and enjoy a sunset view from Twin Peaks. Consider a farewell dinner in the city.
+```
+
+This output provides a structured and detailed itinerary for a three-day trip to the San Francisco Bay Area, formatted for easy reading.
