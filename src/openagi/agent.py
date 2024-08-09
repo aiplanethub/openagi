@@ -246,11 +246,6 @@ class Admin(BaseModel):
             str: JSON of the list of Workers that needs to be executed
         """
 
-        worker_dict = {}
-
-        # all_thoughts_and_obs = []
-        # output = None
-        # previous_task_context = None
         workers = []
         worker_dict = {}
         main_task_list = TaskLists()
@@ -259,11 +254,6 @@ class Admin(BaseModel):
             print(cur_task)
             logging.info(f"**** Executing Task - {cur_task.name} [{cur_task.id}] ****")
 
-            # task_to_execute = f"{cur_task.name}. {cur_task.description}"
-            # worker_description = f"{cur_task.role} - {cur_task.instructions}"
-
-            # print(task_to_execute)
-            # print(worker_description)
             worker_config = cur_task.worker_config
 
             worker_instance = None
