@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from pydantic import BaseModel, Field
 
@@ -19,7 +19,9 @@ class Task(BaseModel):
         description="WorkerId associated to accomplish the given task using supported actions.",
         default_factory=str,
     )
-
+    worker_config: Optional[Dict[str, Any]] = Field(
+        description="Stores workers configuration values"
+    )
     @property
     def is_done(self):
         return bool(self.result)
