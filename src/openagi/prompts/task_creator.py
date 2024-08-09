@@ -119,7 +119,7 @@ Generate a JSON-parseable array of Workers and their assigned tasks, each contai
         "task_id": "<unique identifier for the task>",
         "task_name": "<concise, action-oriented name that includes supported actions information>",
         "description": "<detailed, step-by-step instructions including error handling>",
-        "supported_actions": ["<list of required actions for this Worker>"]
+        "supported_actions": ["<list of required actions in str for this Worker>"]
     },
     {
         "worker_name": "ExpertWorker2",

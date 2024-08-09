@@ -24,8 +24,8 @@ from openagi.utils.extraction import (
     get_last_json,
 )
 from openagi.utils.helper import get_default_llm
+from openagi.utils.tool_list import get_tool_list
 from openagi.worker import Worker
-from openagi.actions import tools
 
 
 class OutputFormat(str, Enum):
@@ -121,7 +121,7 @@ class Admin(BaseModel):
 
         for act in self.actions:
             actions_dict.append(act.cls_doc())
-                
+
         workers_dict = []
         for worker in self.workers:
             workers_dict.append(worker.worker_doc())
@@ -232,10 +232,10 @@ class Admin(BaseModel):
                 f"LLM did not produce the expected output after {self.max_iterations} iterations."
             )
         return (cont, final_output)
-    
-    def auto_workers_assignment(self,query:str,description:str,task_lists:TaskLists):
+
+    def auto_workers_assignment(self, query: str, description: str, task_lists: TaskLists):
         """
-        Autonomously generates the Workers with the 
+        Autonomously generates the Workers with the
 
         Args:
             query (str): The query to be processed.
@@ -248,7 +248,6 @@ class Admin(BaseModel):
 
         worker_dict = {}
 
-
         # all_thoughts_and_obs = []
         # output = None
         # previous_task_context = None
@@ -256,25 +255,26 @@ class Admin(BaseModel):
         worker_dict = {}
         main_task_list = TaskLists()
         while not task_lists.all_tasks_completed:
-
             cur_task = task_lists.get_next_unprocessed_task()
             print(cur_task)
             logging.info(f"**** Executing Task - {cur_task.name} [{cur_task.id}] ****")
 
             # task_to_execute = f"{cur_task.name}. {cur_task.description}"
             # worker_description = f"{cur_task.role} - {cur_task.instructions}"
-            
+
             # print(task_to_execute)
             # print(worker_description)
             worker_config = cur_task.worker_config
 
             worker_instance = None
-            if worker_config["role"] not in worker_dict: 
+            if worker_config["role"] not in worker_dict:
                 worker_instance = Worker(
                     role=worker_config["role"],
                     instructions=worker_config["instructions"],
                     llm=self.llm,
-                    actions=self.get_supported_actions_for_worker(worker_config["supported_actions"])
+                    actions=self.get_supported_actions_for_worker(
+                        worker_config["supported_actions"]
+                    ),
                 )
                 worker_dict[worker_config["role"]] = worker_instance
             else:
@@ -283,7 +283,7 @@ class Admin(BaseModel):
             cur_task.worker_id = worker_instance.id
             main_task_list.add_task(cur_task)
 
-        task_lists=main_task_list
+        task_lists = main_task_list
         self.assign_workers(workers=workers)
 
         if self.workers:
@@ -292,7 +292,6 @@ class Admin(BaseModel):
                 description=description,
                 task_lists=task_lists,
             )
-
 
     def single_agent_execution(self, query: str, description: str, task_lists: TaskLists):
         """
@@ -443,25 +442,21 @@ class Admin(BaseModel):
         task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
 
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
-        
+
         if self.planner.autonomous:
             return self.auto_workers_assignment(
-                query=query,
-                description=description,
-                task_lists=task_lists
+                query=query, description=description, task_lists=task_lists
             )
         else:
             if self.workers:
                 return self.worker_task_execution(
-                query=query,
-                description=description,
-                task_lists=task_lists,
-            )
-            else:
-                return self.single_agent_execution(
                     query=query,
                     description=description,
-                    task_lists=task_lists
+                    task_lists=task_lists,
+                )
+            else:
+                return self.single_agent_execution(
+                    query=query, description=description, task_lists=task_lists
                 )
 
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
@@ -470,28 +465,19 @@ class Admin(BaseModel):
             return False, content
         return True, content
 
-
     def get_supported_actions_for_worker(self, actions_list: List[str]):
         """
         This function takes a list of action names (strings) and returns a list of class objects
         from the modules within the 'tools' folder that match these action names and inherit from BaseAction.
-        
+
         :param actions_list: List of action names as strings.
         :return: List of matching class objects.
         """
         matching_classes = []
-
+        tool_list = get_tool_list()
         # Iterate through all modules in the tools package
-        for module_info in pkgutil.iter_modules(tools.__path__):
-            module_name = f"{tools.__name__}.{module_info.name}"
-            module = importlib.import_module(module_name)
-            
-            # Inspect the module for classes
-            for name, obj in inspect.getmembers(module, inspect.isclass):
-                # Check if the class name matches any of the action names in the list
-                # and if the class inherits from BaseAction
-                if name in actions_list and issubclass(obj, BaseAction) and obj is not BaseAction:
-                    matching_classes.append(obj)  # Append the class object, not an instance
+        for action in tool_list:
+            if action.__name__ in actions_list:
+                matching_classes.append(action)
 
         return matching_classes
-
