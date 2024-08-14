@@ -1,9 +1,14 @@
 from openagi.actions.base import BaseAction
 from pydantic import Field
 from typing import Any
-import yt_dlp
-from youtube_search import YoutubeSearch
-    
+from openagi.exception import OpenAGIException
+
+try:
+   import yt_dlp
+   from youtube_search import YoutubeSearch
+except ImportError:
+  raise OpenAGIException("Install YouTube transcript with cmd `pip install yt-dlp` and `pip install youtube-search`")
+
 class YouTubeSearchTool(BaseAction):
     """Youtube Search Tool"""
 

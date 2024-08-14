@@ -1,7 +1,12 @@
 from openagi.actions.base import BaseAction
 import os
 from pydantic import Field
-from exa_py import Exa
+from openagi.exception import OpenAGIException
+
+try:
+   from exa_py import Exa
+except ImportError:
+  raise OpenAGIException("Install Exa Py with cmd `pip install exa_py`")
 
 class ExaSearch(BaseAction):
     """

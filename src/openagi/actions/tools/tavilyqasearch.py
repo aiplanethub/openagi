@@ -1,7 +1,12 @@
 from openagi.actions.base import BaseAction
 import os
 from pydantic import Field
-from tavily import TavilyClient
+from openagi.exception import OpenAGIException
+
+try:
+   from tavily import TavilyClient
+except ImportError:
+  raise OpenAGIException("Install Tavily with cmd `pip install tavily-python`")
 
 class TavilyWebSearchQA(BaseAction):
     """
