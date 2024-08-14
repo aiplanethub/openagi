@@ -8,7 +8,7 @@ from openagi.actions.tools import (
     youtubesearch,
     exasearch,
 )
-from openagi.actions import obs_rag, files, formatter, human_input, compressor, console
+from openagi.actions import files, formatter, human_input, compressor, console, obs_rag
 
 # List of modules to inspect
 modules = [
@@ -19,12 +19,12 @@ modules = [
     webloader,
     youtubesearch,
     exasearch,
-    obs_rag,
     files,
     formatter,
     human_input,
     compressor,
     console,
+    obs_rag
 ]
 
 
@@ -46,8 +46,9 @@ def get_tool_list():
 
     return class_list
 
-
+"""
 # Example usage
 tools = get_tool_list()
 for tool in tools:
     print(tool.__name__)  # Print the name of each class
+"""

@@ -1,7 +1,4 @@
 import logging
-import inspect
-import importlib.util
-import pkgutil
 from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union
@@ -26,7 +23,6 @@ from openagi.utils.extraction import (
 from openagi.utils.helper import get_default_llm
 from openagi.utils.tool_list import get_tool_list
 from openagi.worker import Worker
-
 
 class OutputFormat(str, Enum):
     markdown = "markdown"
@@ -83,7 +79,6 @@ class Admin(BaseModel):
         self.actions = self.actions or []
 
         default_actions = [MemoryRagAction]
-
         self.actions.extend(default_actions)
 
         return model
@@ -247,6 +242,14 @@ class Admin(BaseModel):
         """
 
         workers = []
+        tools_list = get_tool_list()
+        
+        # for custom tool if added by the user
+        for action in self.actions:
+        #    if action.__name__ == "MemoryRagAction":
+        #        continue
+            tools_list.append(action)
+
         worker_dict = {}
         main_task_list = TaskLists()
         while not task_lists.all_tasks_completed:
@@ -263,7 +266,7 @@ class Admin(BaseModel):
                     instructions=worker_config["instructions"],
                     llm=self.llm,
                     actions=self.get_supported_actions_for_worker(
-                        worker_config["supported_actions"]
+                        worker_config["supported_actions"],tools_list
                     ),
                 )
                 worker_dict[worker_config["role"]] = worker_instance
@@ -455,7 +458,7 @@ class Admin(BaseModel):
             return False, content
         return True, content
 
-    def get_supported_actions_for_worker(self, actions_list: List[str]):
+    def get_supported_actions_for_worker(self, actions_list: List[str],tool_list: List[str]):
         """
         This function takes a list of action names (strings) and returns a list of class objects
         from the modules within the 'tools' folder that match these action names and inherit from BaseAction.
@@ -464,7 +467,7 @@ class Admin(BaseModel):
         :return: List of matching class objects.
         """
         matching_classes = []
-        tool_list = get_tool_list()
+        #tool_list = get_tool_list()
         # Iterate through all modules in the tools package
         for action in tool_list:
             if action.__name__ in actions_list:
