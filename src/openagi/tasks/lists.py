@@ -1,6 +1,5 @@
 from queue import Queue
-from typing import Dict, List
-
+from typing import Dict, List, Optional
 from openagi.tasks.task import Task
 
 
@@ -16,12 +15,15 @@ class TaskLists:
     def add_tasks(self, tasks: List[Dict[str, str]]):
         for task in tasks:
             task["name"] = task["task_name"]
-            worker_config = {
-                "role": task["role"],
-                "instructions": task["instruction"],
-                "name": task["worker_name"],
-                "supported_actions": task["supported_actions"]
-            }
+            worker_config: Optional[Dict[str, str]] = None
+            
+            if all(key in task for key in ["role", "instruction", "worker_name", "supported_actions"]):
+                worker_config = {
+                    "role": task["role"],
+                    "instructions": task["instruction"],
+                    "name": task["worker_name"],
+                    "supported_actions": task["supported_actions"]
+                }
             task["worker_config"] = worker_config
             self.add_task(Task(**task))
 
