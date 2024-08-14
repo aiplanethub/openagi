@@ -13,20 +13,37 @@ def force_json_output(resp_txt: str, llm):
     """
     Forces the output once the max iterations are reached.
     """
+    #prompt = dedent(
+    #    """
+    #    Below is a JSON block. Please try to provide the output in the format shown below only
+    #    ```json
+    #        {"key": "value"}
+    #    ```
+    #    the contents between ```json and ``` will be extracted and passed to json.loads() in python to convert it to a dictionary. Make sure that it works when passed else you will be fined. If its already in the correct format, then you can return the same output in the expected output format.
+    #    Input:
+    #    {resp_txt}
+    #    Output:
+    #    """
+    #).strip()
+
     prompt = dedent(
         """
-        Below is a JSON block. Please try to provide the output in the format shown below.
+        Your task is to process the input JSON and provide a valid JSON output. Follow these instructions carefully:
+        1. The output must be enclosed in a code block using triple backticks and the 'json' language identifier, like this:
         ```json
-            {"key": "value"}
+         {"key": "value"}
         ```
-        the contents between ```json and ``` will be extracted and passed to json.loads() in python to convert it to a dictionary. Make sure that it works when passed else you will be fined. If its already in the correct format, then you can return the same output in the expected output format.
-
-        Input:
-        {resp_txt}
-
+        2. The JSON inside the code block must be valid and parseable by Python's json.loads() function.
+        3. Ensure there are no extra spaces, newlines, or characters outside the JSON object within the code block.
+        4. If the input is already in the correct format, reproduce it exactly in the output format specified above.
+        5. Do not include any explanations, comments, or additional text in your response. The output needs be in JSON only. 
+        6. Verify your output carefully before submitting. Incorrect responses will result in penalties.
+        
+        Input: {resp_txt}
         Output:
         """
     ).strip()
+
     prompt = prompt.replace("{resp_txt}", resp_txt)
     return llm.run(prompt)
 
