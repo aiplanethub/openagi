@@ -13,7 +13,7 @@ from openagi.planner.base import BasePlanner
 from openagi.prompts.base import BasePrompt
 from openagi.prompts.constants import CLARIFIYING_VARS
 from openagi.prompts.task_clarification import TaskClarifier
-#from openagi.prompts.task_creator import MultiAgentTaskCreator, SingleAgentTaskCreator
+from openagi.prompts.task_creator import MultiAgentTaskCreator
 from openagi.prompts.task_creator import AutoTaskCreator,SingleAgentTaskCreator
 from openagi.utils.extraction import get_last_json
 from openagi.worker import Worker
@@ -58,8 +58,11 @@ class TaskPlanner(BasePlanner):
             if self.autonomous:
                 self.prompt = AutoTaskCreator()
             else:
-                self.prompt = SingleAgentTaskCreator()
-
+                if self.workers:
+                    self.prompt = MultiAgentTaskCreator(workers=self.workers) 
+                else:
+                    self.prompt = SingleAgentTaskCreator()
+                    
         logging.info(f"Using prompt: {self.prompt.__class__.__name__}")
         return self.prompt
 
