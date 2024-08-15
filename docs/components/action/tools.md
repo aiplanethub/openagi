@@ -4,6 +4,8 @@
 
 Tool is a functionality based on which the data is fetched to the Agent for further analysis and decision making. A wide array of tools is cataloged in the tools database, designed to support activities such as internet searches, email dispatch, interactions with Git repositories, and much more. Users have the flexibility to create their own tools and seamlessly integrate them into the framework's operations.
 
+> Note: Some of the tools are not pre-installed with the OpenAGI library. If you encounter an `OpenAGIException` due to an Import Error, you'll need to manually install the required package to use the tool.
+
 ## Tool configuration
 
 ### 1. DuckDuckGoSearch Tool
@@ -104,6 +106,127 @@ admin = Admin(
 )
 ```
 
+### 5. YouTube Search Tool
+
+The YouTube Search tool allows users to search for videos on YouTube using natural language queries. This tool retrieves relevant video content based on user-defined search parameters, making it easier to find specific videos or topics of interest.
+
+The YouTube Search tool does not require an API key but does require the installation of specific libraries. You need to install `yt-dlp` and `youtube-search` to use this tool.
+
+```
+pip install yt-dlp
+pip install youtube-search
+```
+
+**Code Snippet** To initialize the YouTube Search tool, you can use the following code:
+
+```python
+from openagi.actions.tools import YouTubeSearch
+from openagi.agent import Admin
+from openagi.llms import OpenAIModel
+from openagi.planner.task_decomposer import TaskPlanner
+
+admin = Admin(
+    llm=llm,
+    actions=[YouTubeSearch],
+    planner=TaskPlanner(),
+)
+```
+
+### 6. Tavily QA Search Tool
+
+The Tavily QA Search tool is designed to provide answers to user queries by fetching data from various online sources. This tool enhances the capability of the agent to retrieve precise information and answer questions effectively.
+
+**Installation**
+
+```
+pip install tavily-python
+```
+
+For the Tavily QA Search tool, you also need to set up the API key in your environment variables:
+
+```python
+import os
+
+# Set the Tavily API key in the environment variable
+os.environ['TAVILY_API_KEY'] = "<replace-with-your-tavily-api-key>"
+```
+
+**Code Snippet** To initialize the Tavily QA Search tool, you can use the following code:
+
+```python
+from openagi.actions.tools import TavilyWebSearchQA
+from openagi.agent import Admin
+from openagi.llms import OpenAIModel
+from openagi.planner.task_decomposer import TaskPlanner
+
+admin = Admin(
+    llm=llm,
+    actions=[TavilyQASearch],
+    planner=TaskPlanner(),
+)
+```
+
+### 7. Exa Search Tool
+
+The Exa Search tool allows users to query the Exa API to retrieve relevant responses based on user-defined questions. This tool is particularly useful for extracting information and insights from various data sources using natural language queries.
+
+**Installation**
+
+```
+pip install exa-py
+```
+
+To use the Exa Search tool, you need to set up the API key in your environment variables. Here’s how to do that:
+
+```python
+import os
+
+# Set the Exa API key in the environment variable
+os.environ['EXA_API_KEY'] = "<replace-with-your-exa-api-key>"
+```
+
+
+
+**Code Snippet**
+
+```python
+from openagi.actions.tools import ExaSearch
+from openagi.agent import Admin
+from openagi.llms import OpenAIModel
+from openagi.planner.task_decomposer import TaskPlanner
+
+admin = Admin(
+    llm=llm,
+    actions=[ExaSearch],
+    planner=TaskPlanner(),
+)
+```
+
+### 8. Unstructured PDF Loader Tool
+
+The Unstructured PDF Loader tool is designed to extract content, including metadata, from PDF files. It utilizes the Unstructured library to partition the PDF and chunk the content based on titles. This tool is useful for processing large volumes of PDF documents and making their contents accessible for further analysis.
+
+**Installation**
+
+```
+pip install unstructured
+```
+
+**Code Snippet**
+
+```python
+from openagi.actions.tools import UnstructuredPdfLoaderAction
+from openagi.agent import Admin
+from openagi.llms import OpenAIModel
+from openagi.planner.task_decomposer import TaskPlanner
+
+admin = Admin(
+    llm=llm,
+    actions=[UnstructuredPdfLoaderAction],
+    planner=TaskPlanner(),
+)
+```
+
 ### How to build a custom Tool?
 
 In OpenAGI, building a custom tool is straightforward by wrapping your custom logic inside a class that inherits from `BaseAction` and implementing the `execute` method. This setup allows you to encapsulate the necessary configurations and operations within the custom tool, making it easy to integrate and use within the OpenAGI framework.
@@ -125,6 +248,9 @@ from pydantic import Field
 from openagi.actions.base import BaseAction
 
 class CustomToolName(BaseAction):
+    """
+    docstring for the tool is must
+    """
     vars: dtype = Field() #define the required parameters for your tool. 
     
     def execute(self):
@@ -147,6 +273,10 @@ from unstructured.chunking.title import chunk_by_title
 
 
 class UnstructuredPdfLoaderAction(BaseAction):
+    """
+    Use this Action to extract content from PDFs including metadata.
+    Returns a list of dictionary with keys 'type', 'element_id', 'text', 'metadata'.
+    """
     file_path: str = Field(
         default_factory=str,
         description="File or pdf file url from which content is extracted.",

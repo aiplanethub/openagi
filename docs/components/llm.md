@@ -72,21 +72,48 @@ config = GeminiModel.load_from_env_config()
 llm = GeminiModel(config=config)
 ```
 
-### Huggingface Hub Model
+### Ollama Model
 
-The Hugging Face Hub is an online platform featuring over 100K text-generation models, 100K datasets, and 400K demo apps (Spaces), all open source and publicly accessible. To use any LLMs from the Hugging Face Hub, you need to provide an access token, along with the model name, temperature setting, and the maximum number of new tokens allowed.
+Ollama allows you to run models locally, providing a straightforward way to integrate them into your applications.**Installation Steps:**
 
-Get the HuggingFace Hub Access Token from here: [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+1. **Download Ollama**: Visit [Ollama's download page](https://ollama.com/download) to get the appropriate version for your operating system (macOS, Linux, or Windows).
+2.  **Install Ollama**: Use the following command to install Ollama via pip:
+
+    ```
+    pip install ollama
+    ```
+
+**Basic Ollama Commands:**
+
+*   To load the Llama2 model locally:
+
+    ```
+    ollama pull mistral
+    ```
+*   To load the Gemma model locally:
+
+    ```
+    ollama pull gemma
+    ```
+*   To display all the models that are installed:
+
+    ```
+    ollama list
+    ```
+
+For more commands, refer to the [Ollama GitHub repository](https://github.com/ollama/ollama).
+
+**Running the Model:**Before executing the Ollama model, ensure that the model is running locally in your terminal. You can start the Llama2 model with the following command:
+
+```
+ollama run mistral
+```
+
+This setup allows you to utilize the Ollama model effectively within your applications, similar to other models supported by OpenAGI. This format aligns with the existing documentation style and provides clear instructions for users to get started with the Ollama model.
 
 ```python
 import os
-from openagi.llms.hf import HuggingFaceModel
-
-os.environ['HUGGINGFACE_ACCESS_TOKEN'] = '<hf-access-token>'
-os.environ['HUGGINGFACE_MODEL'] = '<hf-model-name>'
-os.environ['TEMPERATURE'] = '<temperature>'
-os.environ['MAX_NEW_TOKENS'] = '<max-new-tokens>'
-
-config = HuggingFaceModel.load_from_env_config()
-llm = HuggingFaceModel(config=config)
+from openagi.llms.azure.ollama  import OllamaModel
+    
+llm = OllamaModel(model="mistral")
 ```
