@@ -1,7 +1,12 @@
 from openagi.actions.base import BaseAction
 import os
 from pydantic import Field
-from exa_py import Exa
+from openagi.exception import OpenAGIException
+
+try:
+   from exa_py import Exa
+except ImportError:
+  raise OpenAGIException("Install Exa Py with cmd `pip install exa_py`")
 
 class ExaSearch(BaseAction):
     """
@@ -10,7 +15,7 @@ class ExaSearch(BaseAction):
     query: str = Field(..., description="User query or question ")
    
     def execute(self):
-        api_key = os.environ("EXA_API_KEY")
+        api_key = os.environ["EXA_API_KEY"]
         
         exa = Exa(api_key = api_key)
         results = exa.search_and_contents(self.query, 
