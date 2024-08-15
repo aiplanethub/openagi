@@ -15,7 +15,7 @@ class TavilyWebSearchQA(BaseAction):
     query: str = Field(..., description="User query or question ")
 
     def execute(self):
-        api_key = os.environ("TAVILY_API_KEY")
+        api_key = os.environ['TAVILY_API_KEY']
         
         client = TavilyClient(api_key=api_key)
         response = client.qna_search(query=self.query)
