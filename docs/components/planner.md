@@ -12,7 +12,7 @@ Below is a detailed explanation of the attributes and functionality of the modul
 
 
 
-<table><thead><tr><th width="185">Parameter</th><th width="195">Optional Parameter</th><th>Description</th></tr></thead><tbody><tr><td>human_intervene</td><td>No</td><td>It indicates the framework that after generating output, it should ask human for feedback and make changes to output based on that.</td></tr><tr><td>input_action</td><td>Yes</td><td>It shows how user can provide feedback to the Admin during execution.</td></tr><tr><td>prompt</td><td>Yes</td><td>An optional prompt to be used for task planning.</td></tr><tr><td>workers</td><td>Yes</td><td>Workers can represent different agents or processes that handle specific subtasks, enabling parallel execution and improving efficiency. If no workers are specified, the planner will operate without additional parallel processing capabilities.</td></tr><tr><td>llm</td><td>Yes</td><td>This parameter allows the user to specify the Large Language Model (LLM) that will be used for generating responses and planning tasks.</td></tr><tr><td>retry_threshold</td><td>Yes</td><td>This parameter defines the maximum number of times the planner will attempt to retry a task if it fails to execute successfully. The default value is <code>3.</code></td></tr></tbody></table>
+<table><thead><tr><th width="185">Parameter</th><th width="195">Optional Parameter</th><th>Description</th></tr></thead><tbody><tr><td>human_intervene</td><td>No</td><td>It indicates the framework that after generating output, it should ask human for feedback and make changes to output based on that.</td></tr><tr><td>autonomous</td><td>No</td><td>Autonomous will self assign role and instructions and divide it among the workers. The default is `False`</td></tr><tr><td>input_action</td><td>Yes</td><td>It shows how user can provide feedback to the Admin during execution.</td></tr><tr><td>prompt</td><td>Yes</td><td>An optional prompt to be used for task planning.</td></tr><tr><td>workers</td><td>Yes</td><td>Workers can represent different agents or processes that handle specific subtasks, enabling parallel execution and improving efficiency. If no workers are specified, the planner will operate without additional parallel processing capabilities.</td></tr><tr><td>llm</td><td>Yes</td><td>This parameter allows the user to specify the Large Language Model (LLM) that will be used for generating responses and planning tasks.</td></tr><tr><td>retry_threshold</td><td>Yes</td><td>This parameter defines the maximum number of times the planner will attempt to retry a task if it fails to execute successfully. The default value is <code>3.</code></td></tr></tbody></table>
 
 &#x20;&#x20;
 
@@ -24,6 +24,9 @@ The primary component, `TaskPlanner`, allows for the decomposition of tasks into
 from openagi.planner.task_decomposer import TaskPlanner
 
 planner = TaskPlanner(human_intervene=False)
+# make TaskPlanner autonomous = True for auto creating workers
+# Autonomous Multi Agent Architecture
+# plan = TaskPlanner(autonomous=True,human_intervene=True)
 ```
 
 Below we have shown how one can initiate and run using  query.
