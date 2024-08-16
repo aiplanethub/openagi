@@ -7,6 +7,7 @@ If instructions are not followed, legal consequences may occur for both you and 
 
 Instructions:
 1. Examine the task for ambiguities or missing crucial details.
+2. Atleast ask one clarify question in beginning, even if the task is clear
 2. If unclear points exist, formulate a single, specific question addressing the most critical ambiguity.
 3. Do not repeat questions or ask about information already provided.
 4. If the task is clear, no new questions are needed, be smart and return an empty string.

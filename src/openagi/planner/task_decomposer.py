@@ -40,7 +40,7 @@ class TaskPlanner(BasePlanner):
         default=3, description="Number of times to retry the task if it fails."
     )
     autonomous: bool = Field(
-        default=True, description="Autonomous will self assign role and instructions and divide it among the workers"
+        default=False, description="Autonomous will self assign role and instructions and divide it among the workers"
     )
     """
     def get_prompt(self) -> None:
