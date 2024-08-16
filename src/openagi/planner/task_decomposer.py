@@ -42,7 +42,6 @@ class TaskPlanner(BasePlanner):
     autonomous: bool = Field(
         default=True, description="Autonomous will self assign role and instructions and divide it among the workers"
     )
-
     """
     def get_prompt(self) -> None:
         if not self.prompt:
@@ -98,31 +97,33 @@ class TaskPlanner(BasePlanner):
             Dict: The updated planner variables after the human clarification process.
         """
 
-        clarifier_prompt = TaskClarifier.from_template(
-            variables=planner_vars,
-        )
-        human_intervene = self.human_intervene
-        max_tries = self.retry_threshold
-
-        while human_intervene and max_tries > 0:
-            max_tries -= 1
-
-            resp = self.llm.run(clarifier_prompt)
-
-            # extract json from response
-            resp = get_last_json(resp, llm=self.llm)
-
-            question_to_ask = resp.get("question", "")
-            question_to_ask = question_to_ask.strip()
-
-            if question_to_ask:
-                human_intervene = self.input_action(ques_prompt=question_to_ask)
-                human_resp = human_intervene.execute()
-                planner_vars["objective"] = f"{planner_vars['objective']} {human_resp}"
-            else:
+        logging.info(f"Initiating Human Clarification. Make sure to clarify the questions, if not just type `I dont know` to stop")
+        chat_history = []
+    
+        while True:
+            clarifier_vars = {
+                **planner_vars,
+                "chat_history": "\n".join(chat_history)
+            }
+            clarifier = TaskClarifier.from_template(variables=clarifier_vars)
+            
+            response = self.llm.run(clarifier)
+            parsed_response = get_last_json(response, llm=self.llm)
+            question = parsed_response.get("question", "").strip()
+            
+            if not question:
                 return planner_vars
-
-        return planner_vars
+            
+            human_input = self.input_action(ques_prompt=question).execute()
+            planner_vars["objective"] += f" {human_input}"
+            
+            # Update chat history
+            chat_history.append(f"Q: {question}")
+            chat_history.append(f"A: {human_input}")
+            
+            # Check for unwillingness to continue
+            if any(phrase in human_input.lower() for phrase in ["don't know", "no more questions", "that's all", "stop asking"]):
+                return planner_vars
 
     def extract_ques_and_task(self, ques_prompt):
         """
