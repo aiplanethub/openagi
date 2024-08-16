@@ -1,8 +1,9 @@
+import os 
 from openagi.actions.files import WriteFileAction, ReadFileAction
 from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 from openagi.actions.tools.webloader import WebBaseContextTool
 from openagi.agent import Admin
-from openagi.llms.azure import AzureChatOpenAIModel
+from openagi.llms.gemini import GeminiModel
 from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
 from openagi.worker import Worker
@@ -14,38 +15,26 @@ load_dotenv()
 
 
 if __name__ == "__main__":
-    config = AzureChatOpenAIModel.load_from_env_config()
-    llm = AzureChatOpenAIModel(config=config)
+    os.environ['GOOGLE_API_KEY'] = ""
+    os.environ['Gemini_MODEL'] = "gemini-1.5-flash"
+    os.environ['Gemini_TEMP'] = "0.1"
 
     # Team Members
     feedback_collector = Worker(
-        role="Customer Feedback Collector",
-        instructions=(
-            "1. Search for customer reviews of AirPods Pro on social media platforms like Twitter and Facebook.\n"
-            "2. Look for reviews on popular e-commerce websites like Amazon and Best Buy.\n"
-            "3. Collect feedback from technology review sites and forums such as Reddit and TechRadar.\n"
-            "4. Identify and document common themes and sentiments in the collected feedback."
-        ),
-        actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
+    role="Customer Feedback Collector",
+    instructions="Gather AirPods Pro customer reviews from social media, e-commerce sites, and tech forums. Identify common themes and sentiments in the feedback.",
+    actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
+
     data_analyst = Worker(
         role="Data Analyst",
-        instructions=(
-            "1. Read the collected feedback data related to AirPods Pro.\n"
-            "2. Use statistical analysis tools to identify key trends and recurring issues.\n"
-            "3. Quantify overall customer sentiment towards the product.\n"
-            "4. Generate actionable insights based on the analysis."
-        ),
+        instructions="Analyze collected AirPods Pro feedback data. Identify key trends, quantify customer sentiment, and generate actionable insights.",
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
+
     report_creator = Worker(
         role="Report Creator",
-        instructions=(
-            "1. Develop a detailed analysis report based on the data analyst's findings.\n"
-            "2. Highlight key trends, issues, and overall customer sentiment.\n"
-            "3. Provide specific recommendations for product improvement.\n"
-            "4. Ensure the report is well-structured, clear, and includes visual elements like charts and graphs."
-        ),
+        instructions="Create a detailed analysis report on AirPods Pro feedback. Highlight key trends, issues, and customer sentiment. Provide specific improvement recommendations with visual elements.",
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
@@ -59,25 +48,15 @@ if __name__ == "__main__":
 
     res = admin.run(
         query="Create a customer feedback analysis report for AirPods Pro.",
-        description=(
-            "1. Collect customer feedback on AirPods Pro from multiple online sources.\n"
-            "2. Analyze the feedback to identify common themes, recurring issues, and overall customer sentiment.\n"
-            "3. Develop a comprehensive report that provides actionable insights and recommendations for improving AirPods Pro.\n"
-            "4. Ensure the report is detailed, well-organized, and visually appealing."
-        ),
+        description="Collect and analyze AirPods Pro customer feedback from various online sources. Identify trends, issues, and overall sentiment. Develop a comprehensive report with actionable insights and recommendations for product improvement.",
     )
-
     print("-" * 100)  # Separator
     Console().print(Markdown(res))
 
 
-### Example 3: Marketing Campaign for Airpods pro 2
+### Marketing Campaign for Airpods pro 2
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃                                                                          Comprehensive Customer Feedback Analysis Report: AirPods Pro                                                                          ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-#                                                                                              Key Findings and Trends                                                                                              
+#                                                                                                   Trends                                                                                              
 
 #  1 Noise Cancellation: Highly praised by users.                                                                                                                                                                   
 #  2 Sound Quality: Generally excellent feedback.                                                                                                                                                                   

@@ -13,72 +13,24 @@ if __name__ == "__main__":
     config = AzureChatOpenAIModel.load_from_env_config()
     llm = AzureChatOpenAIModel(config=config)
 
-    # Team Members
-    market_researcher = Worker(
-        role="Market Research Analyst",
-        instructions="""
-        Analyze trends in renewable energy:
-        - Focus on major sectors (solar, wind, etc.)
-        - Collect data on market size, growth, and key players
-        - Research technological advancements and policies
-        - Examine competitive landscape and emerging markets
-        Compile findings for the report writer.
-        """,
-        actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
-    )
-
-    report_writer = Worker(
-        role="Report Writer",
-        instructions="""
-        Create a market research report based on the analyst's data:
-        - Include an executive summary and clear sections
-        - Use visuals to present data effectively
-        - Provide analysis of each major renewable energy sector
-        - Discuss industry trends, challenges, and opportunities
-        - Offer actionable insights for potential investors
-        Save the draft for editing.
-        """,
-        actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
-    )
-
-    content_editor = Worker(
-        role="Content Editor",
-        instructions="""
-        Review and refine the market research report:
-        - Ensure consistency in tone and formatting
-        - Check for errors and improve clarity
-        - Verify data accuracy and proper citations
-        - Format according to company style guide
-        - Create a table of contents
-        Finalize the polished report.
-        """,
-        actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
-    )
-
-    # Team Manager/Admin
+    
+    plan = TaskPlanner(autonomous=True) 
+    
     admin = Admin(
-        planner=TaskPlanner(human_intervene=False),
-        memory=Memory(),
+        actions = [DuckDuckGoSearch],
+        planner = plan,
         llm=llm,
     )
-    admin.assign_workers([market_researcher, report_writer, content_editor])
+    
 
     res = admin.run(
-        query="""
-        Create a market research report on renewable energy trends:
-        - Cover major sectors, market size, and growth projections
-        - Include technological advancements and key players
-        - Analyze policies, emerging markets, and challenges
-        - Provide insights for potential investors
-        """,
-        description="""
-        Lead the team in producing a high-quality renewable energy market report:
-        - Oversee the research and writing process
-        - Ensure collaboration and timely completion
-        - Verify the report's accuracy, clarity, and value
-        Deliver a report that guides strategic decision-making in renewable energy.
-        """
-    )
+    query="""
+    Create a comprehensive market research report on renewable energy trends. The report should cover major sectors within renewable energy, assess current market size, and provide growth projections. Include an analysis of technological advancements and profiles of key industry players. Examine relevant policies, explore emerging markets, and discuss challenges facing the industry. Provide valuable insights for potential investors considering entering the renewable energy market.
+    """,
+    description="""
+    Lead the team in producing this high-quality renewable energy market report. Oversee the research and writing process, ensure effective collaboration among team members, and manage timely completion of all sections. Verify the report's accuracy, clarity, and overall value to readers. The final deliverable should be a strategic resource that guides decision-making in the renewable energy sector.
+    """
+)
 
     print("-" * 100)  # Separator
     Console().print(Markdown(res))
@@ -89,8 +41,8 @@ if __name__ == "__main__":
 
 #  The comprehensive market research report on renewable energy includes sections on trends, technological innovations, major players, regulatory impacts, and future potential. Key highlights are:                
                                                                                                                                                                                                                   
-#  1. **Trends and Projections**: Renewables are expected to surpass coal by 2025.                                                                                                                                  
+#  1. **Major Players**: Leading companies like NextEra Energy and Brookfield Renewable Partners.                                                                                                                    
 #  2. **Technological Innovations**: Advancements in high-efficiency solar technologies, AI, big data, and distributed energy storage systems.                                                                      
-#  3. **Major Players**: Leading companies like NextEra Energy and Brookfield Renewable Partners.                                                                                                                   
+#  3. **Trends and Projections**: Renewables are expected to surpass coal by 2025.                                                                                                                                  
 #  4. **Regulatory and Investment Impacts**: Historic investments and the importance of reskilling the workforce.                                                                                                   
 #  5. **Future Potential**: Innovations in solar, wind, bioenergy, and green hydrogen technologies.
