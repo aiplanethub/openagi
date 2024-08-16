@@ -1,7 +1,7 @@
 import base64
 import os
 from typing import Dict, List
-
+from openagi.exception import OpenAGIException
 import requests
 from langchain_community.document_loaders.github import GithubFileLoader
 from pydantic import Field

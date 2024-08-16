@@ -4,9 +4,9 @@ from pydantic import Field
 from openagi.exception import OpenAGIException
 
 try:
-    from tavily import TavilyClient
+   from tavily import TavilyClient
 except ImportError:
-    raise OpenAGIException("Install Tavily Client before you want to use it as action: `pip install tavily-python`")
+  raise OpenAGIException("Install Tavily with cmd `pip install tavily-python`")
 
 class TavilyWebSearchQA(BaseAction):
     """
@@ -16,7 +16,6 @@ class TavilyWebSearchQA(BaseAction):
 
     def execute(self):
         api_key = os.environ['TAVILY_API_KEY']
-        
         client = TavilyClient(api_key=api_key)
         response = client.qna_search(query=self.query)
         return response

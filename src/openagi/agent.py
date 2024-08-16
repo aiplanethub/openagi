@@ -2,7 +2,6 @@ import logging
 from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union
-
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
@@ -22,8 +21,8 @@ from openagi.utils.extraction import (
     get_last_json,
 )
 from openagi.utils.helper import get_default_llm
+from openagi.utils.tool_list import get_tool_list
 from openagi.worker import Worker
-
 
 class OutputFormat(str, Enum):
     markdown = "markdown"
@@ -80,7 +79,6 @@ class Admin(BaseModel):
         self.actions = self.actions or []
 
         default_actions = [MemoryRagAction]
-
         self.actions.extend(default_actions)
 
         return model
@@ -230,6 +228,61 @@ class Admin(BaseModel):
             )
         return (cont, final_output)
 
+    def auto_workers_assignment(self, query: str, description: str, task_lists: TaskLists):
+        """
+        Autonomously generates the Workers with the
+
+        Args:
+            query (str): The query to be processed.
+            description (str): A description of the task.
+            task_lists (TaskLists): The task lists to be processed.
+
+        Returns:
+            str: JSON of the list of Workers that needs to be executed
+        """
+
+        workers = []
+        tools_list = get_tool_list()
+        
+        for action in self.actions:
+            tools_list.append(action)
+
+        worker_dict = {}
+        main_task_list = TaskLists()
+        while not task_lists.all_tasks_completed:
+            cur_task = task_lists.get_next_unprocessed_task()
+            print(cur_task)
+            logging.info(f"**** Executing Task - {cur_task.name} [{cur_task.id}] ****")
+
+            worker_config = cur_task.worker_config
+
+            worker_instance = None
+            if worker_config["role"] not in worker_dict:
+                worker_instance = Worker(
+                    role=worker_config["role"],
+                    instructions=worker_config["instructions"],
+                    llm=self.llm,
+                    actions=self.get_supported_actions_for_worker(
+                        worker_config["supported_actions"],tools_list
+                    ),
+                )
+                worker_dict[worker_config["role"]] = worker_instance
+            else:
+                worker_instance = worker_dict[worker_config["role"]]
+            workers.append(worker_instance)
+            cur_task.worker_id = worker_instance.id
+            main_task_list.add_task(cur_task)
+
+        task_lists = main_task_list
+        self.assign_workers(workers=workers)
+
+        if self.workers:
+            return self.worker_task_execution(
+                query=query,
+                description=description,
+                task_lists=task_lists,
+            )
+
     def single_agent_execution(self, query: str, description: str, task_lists: TaskLists):
         """
         Executes a single agent's tasks for the given query and description, updating the task lists and memory as necessary.
@@ -258,6 +311,7 @@ class Admin(BaseModel):
 
             logging.debug("Provoking initial thought observation...")
             initial_thought_provokes = self._provoke_thought_obs(None)
+
             te_vars = dict(
                 task_to_execute=task_to_execute,
                 worker_description=agent_description,
@@ -379,21 +433,41 @@ class Admin(BaseModel):
 
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
 
-        if self.workers:
-            return self.worker_task_execution(
-                query=query,
-                description=description,
-                task_lists=task_lists,
+        if self.planner.autonomous:
+            return self.auto_workers_assignment(
+                query=query, description=description, task_lists=task_lists
             )
-
-        return self.single_agent_execution(
-            query=query,
-            description=description,
-            task_lists=task_lists,
-        )
+        else:
+            if self.workers:
+                return self.worker_task_execution(
+                    query=query,
+                    description=description,
+                    task_lists=task_lists,
+                )
+            else:
+                return self.single_agent_execution(
+                    query=query, description=description, task_lists=task_lists
+                )
 
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
         content: str = find_last_r_failure_content(text=llm_resp)
         if content:
             return False, content
         return True, content
+
+    def get_supported_actions_for_worker(self, actions_list: List[str],tool_list: List[str]):
+        """
+        This function takes a list of action names (strings) and returns a list of class objects
+        from the modules within the 'tools' folder that match these action names and inherit from BaseAction.
+
+        :param actions_list: List of action names as strings.
+        :return: List of matching class objects.
+        """
+        matching_classes = []
+        #tool_list = get_tool_list()
+        # Iterate through all modules in the tools package
+        for action in tool_list:
+            if action.__name__ in actions_list:
+                matching_classes.append(action)
+
+        return matching_classes

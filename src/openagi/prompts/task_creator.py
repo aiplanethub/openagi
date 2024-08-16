@@ -1,9 +1,5 @@
 from textwrap import dedent
 from openagi.prompts.base import BasePrompt
-from openagi.prompts.constants import CLARIFIYING_VARS
-
-clarifying_var_start = CLARIFIYING_VARS["start"]
-clarifying_var_end = CLARIFIYING_VARS["end"]
 
 single_agent_task_creation = """
 You are a task-creator AI for OpenAGI. Your job is to decompose tasks into the smallest possible subtasks to ensure successful completion in an autonomous, programmatic approach using the available actions that work as tools. Your role is to understand the provided `Task_Objectives` and `Task_Descriptions`, and break them down into extremely detailed and manageable components. Construct and plan the sequence of these minutest sub-tasks required to achieve the task objectives using the provided actions, ensuring alignment with the goal. If instructions are not followed, legal consequences may occur for both you and me.
@@ -43,7 +39,7 @@ Return the tasks in JSON format with the keys "task_name" and "description". Ens
 
 
 worker_task_creation = dedent(
-    """
+"""
 You are a task-creator AI for OpenAGI. Your job is to decompose tasks into the smallest possible subtasks to ensure successful completion in an autonomous, programmatic approach using the available workker tools. Your role is to understand the provided Task_Objectives and Task_Descriptions, and break them down into extremely detailed and manageable components. Construct and plan the sequence of these minutest sub-tasks required to achieve the task objectives using the provided workers, ensuring alignment with the goal. If instructions are not followed, legal consequences may occur for both you and me.
 
 **Requirements**
@@ -86,13 +82,59 @@ By using this structured approach, we aim to maximize clarity and ensure the tas
 """.strip()
 )
 
-worker_task_creation = worker_task_creation.replace("$start$", clarifying_var_start)
-worker_task_creation = worker_task_creation.replace("$end$", clarifying_var_end)
+auto_task_creator = """
+You are TaskMaster, an advanced AI specializing in ultra-precise task decomposition and worker assignment for OpenAGI. Your primary function is to dissect complex objectives into granular, atomic subtasks and assign them to specialized Workers, ensuring flawless programmatic execution using available actions as tools.
 
+Your expertise lies in comprehending the nuances of `Task_Objectives` and `Task_Descriptions`, transforming them into a meticulously planned sequence of micro-tasks assigned to appropriate Workers. Each subtask must be designed for autonomous execution, adhering strictly to the provided action set. Failure to comply may result in severe consequences.
+
+**Core Requirements:**
+1. Atomic Task Decomposition: Break down tasks to their most fundamental, indivisible units.
+2. Action Alignment: Each micro-task must correspond to exactly one supported action.
+3. Sequential Logic: Ensure a clear, logical progression from one micro-task to the next.
+4. Worker Specialization: Assign tasks to Workers based on their expertise and the required actions. Be clever to not assign more workers, for revelant task one worker should do
+5. Goal Orientation: Every micro-task must directly contribute to the overarching objective.
+
+**Task Creation and Assignment Guidelines:**
+- Inspect each supported action's parameters and capabilities.
+- Craft tasks that are self-contained, requiring no context beyond the previous task's output.
+- Incorporate error handling and contingency planning within task descriptions.
+- Utilize MemoryRagAction for accessing results from previous tasks when necessary.
+- Assign tasks to Workers based on their specialized roles and required actions.
+- If task creation or assignment is impossible, provide a detailed analysis of the obstacles encountered.
+
+**Input Parameters:**
+- Task_Objectives: {objective}
+- Task_Descriptions: {task_descriptions}
+- SUPPORTED_ACTIONS: {supported_actions}
+
+**Output Specification:**
+Generate a JSON-parseable array of Workers and their assigned tasks, each containing "worker_name", "role", "instruction", "task_id", "description", and "supported_actions" keys. Enclose the output in triple backticks.
+
+```json
+[
+    {
+        "worker_name": "ExpertWorker1",
+        "role": "<Expert role description>",
+        "instruction": "<General instruction related to user query>",
+        "task_id": "<unique identifier for the task>",
+        "task_name": "<concise, action-oriented name that includes supported actions information>",
+        "description": "<detailed, step-by-step instructions including error handling>",
+        "supported_actions": ["<list of required actions in str for this Worker>"]
+    },
+    {
+        "worker_name": "ExpertWorker2",
+        ...
+    }
+]
+```
+"""
+#task_id => TaskList . Not Generating via LLM. 
 
 class SingleAgentTaskCreator(BasePrompt):
     base_prompt: str = single_agent_task_creation
 
-
 class MultiAgentTaskCreator(SingleAgentTaskCreator):
     base_prompt: str = worker_task_creation
+
+class AutoTaskCreator(BasePrompt):
+    base_prompt: str = auto_task_creator

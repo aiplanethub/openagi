@@ -1,9 +1,13 @@
 import logging
 from pydantic import Field
-from unstructured.partition.pdf import partition_pdf
-from unstructured.chunking.title import chunk_by_title
-
+from openagi.exception import OpenAGIException
 from openagi.actions.base import BaseAction
+
+try:
+   from unstructured.partition.pdf import partition_pdf
+   from unstructured.chunking.title import chunk_by_title
+except ImportError:
+  raise OpenAGIException("Install Unstructured with cmd `pip install 'unstructured[all-docs]'`")
 
 
 class UnstructuredPdfLoaderAction(BaseAction):
