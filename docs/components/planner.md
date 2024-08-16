@@ -4,7 +4,7 @@
 
 Planner is one of the important component of any Agent framework, which enables the agent to divide a task into multiple subtasks based on the requirement. We call this step as **Task Decomposition.**&#x20;
 
-The  `Planner` in the `OpenAGI` contains essential modules and components that handle task planning and decomposition. These components are designed to work together to break down complex tasks into manageable sub-tasks, which are then executed by Admin.&#x20;
+The `Planner` in the `OpenAGI` contains essential modules and components that handle task planning and decomposition. These components are designed to work together to break down complex tasks into manageable sub-tasks, which are then executed by Admin.&#x20;
 
 Below is a detailed explanation of the attributes and functionality of the modules within the  `Planner`.
 
@@ -12,7 +12,7 @@ Below is a detailed explanation of the attributes and functionality of the modul
 
 
 
-<table><thead><tr><th width="185">Parameter</th><th width="195">Optional Parameter</th><th>Description</th></tr></thead><tbody><tr><td>human_intervene</td><td>Yes</td><td>It indicates the framework that after generating output, it should ask human for feedback and make changes to output based on that.</td></tr><tr><td>input_action</td><td>Yes</td><td>It shows how user can provide feedback to the Admin during execution.</td></tr></tbody></table>
+<table><thead><tr><th width="185">Parameter</th><th width="195">Optional Parameter</th><th>Description</th></tr></thead><tbody><tr><td>human_intervene</td><td>No</td><td>It indicates the framework that after generating output, it should ask human for feedback and make changes to output based on that.</td></tr><tr><td>input_action</td><td>Yes</td><td>It shows how user can provide feedback to the Admin during execution.</td></tr><tr><td>prompt</td><td>Yes</td><td>An optional prompt to be used for task planning.</td></tr><tr><td>workers</td><td>Yes</td><td>Workers can represent different agents or processes that handle specific subtasks, enabling parallel execution and improving efficiency. If no workers are specified, the planner will operate without additional parallel processing capabilities.</td></tr><tr><td>llm</td><td>Yes</td><td>This parameter allows the user to specify the Large Language Model (LLM) that will be used for generating responses and planning tasks.</td></tr><tr><td>retry_threshold</td><td>Yes</td><td>This parameter defines the maximum number of times the planner will attempt to retry a task if it fails to execute successfully. The default value is <code>3.</code></td></tr></tbody></table>
 
 &#x20;&#x20;
 

@@ -70,3 +70,25 @@ Console().print(Markdown(res))
 ```
 
 By following these steps, you can set up a News Agent that keeps you updated with the latest news in the field of artificial intelligence. This example uses the power of Azure's GPT-4 model and OpenAGI to perform efficient web searches and present the information in an easily digestible format.
+
+### Sample Output
+
+When the above code is executed, the output in the console might look like this:
+
+```
+# Recent AI News from Microsoft
+
+## 1. Microsoft Unveils New AI Features in Office Suite
+*Date: August 8, 2024*  
+Microsoft has announced the integration of advanced AI features in its Office suite, aiming to enhance productivity and collaboration among users.
+
+## 2. Microsoft AI Research Breakthroughs
+*Date: August 7, 2024*  
+Recent research from Microsoft AI has shown significant improvements in natural language processing, potentially revolutionizing how machines understand human language.
+
+## 3. Microsoft Partners with OpenAI for New Developments
+*Date: August 6, 2024*  
+In a strategic partnership, Microsoft and OpenAI are set to collaborate on new AI technologies that promise to push the boundaries of artificial intelligence applications.
+```
+
+This output showcases the latest news articles related to Microsoft's developments in artificial intelligence, formatted neatly for readability.
