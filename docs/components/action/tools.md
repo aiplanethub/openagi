@@ -13,9 +13,9 @@ Tool is a functionality based on which the data is fetched to the Agent for furt
 The DuckDuckGoSearch tool is a tool that can be used to search for words, documents, images, videos, news, maps and text translation using the DuckDuckGo.com search engine. DuckDuckGo Search is a web search engine that _DuckDuckGo_ is an independent Google alternative that lets you search and browse the web, but it emphasises protecting user privacy and avoiding the filter bubble of personalised search results.
 
 ```python
-from openagi.actions.tools import DuckDuckGoSearch
+from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
@@ -40,9 +40,9 @@ os.environ['SERPER_API_KEY'] = "<replace-with-your-api-key>"
 Get your API key: [https://serper.dev/](https://serper.dev/)
 
 ```python
-from openagi.actions.tools import SerperSearch
+from openagi.actions.tools.serper_search import SerperSearch
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
@@ -67,9 +67,9 @@ os.environ['GOOGLE_SERP_API_KEY'] = "<replace-with-your-api-key>"
 Get your API key: [https://serpapi.com/manage-api-key/](https://serpapi.com/manage-api-key/)
 
 ```python
-from openagi.actions.tools import GoogleSerpAPISearch
+from openagi.actions.tools.serp_search import GoogleSerpAPISearch
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
@@ -94,9 +94,9 @@ os.environ['GITHUB_ACCESS_TOKEN'] = "<add-your-access-token>"
 Get your GitHub Access Token: [https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 
 ```python
-from openagi.actions.tools import GitHubFileLoadAction
+from openagi.actions.tools.github_search_tool import GitHubFileLoadAction
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
@@ -120,9 +120,9 @@ pip install youtube-search
 **Code Snippet** To initialize the YouTube Search tool, you can use the following code:
 
 ```python
-from openagi.actions.tools import YouTubeSearch
+from openagi.actions.tools.youtubesearch import YouTubeSearchTool
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
@@ -154,9 +154,9 @@ os.environ['TAVILY_API_KEY'] = "<replace-with-your-tavily-api-key>"
 **Code Snippet** To initialize the Tavily QA Search tool, you can use the following code:
 
 ```python
-from openagi.actions.tools import TavilyWebSearchQA
+from openagi.actions.tools.tavilyqasearch import TavilyWebSearchQA
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
@@ -190,9 +190,9 @@ os.environ['EXA_API_KEY'] = "<replace-with-your-exa-api-key>"
 **Code Snippet**
 
 ```python
-from openagi.actions.tools import ExaSearch
+from openagi.actions.tools.exasearch import ExaSearch
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
@@ -217,7 +217,7 @@ pip install unstructured
 ```python
 from openagi.actions.tools import UnstructuredPdfLoaderAction
 from openagi.agent import Admin
-from openagi.llms import OpenAIModel
+from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
 
 admin = Admin(
