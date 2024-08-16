@@ -244,10 +244,7 @@ class Admin(BaseModel):
         workers = []
         tools_list = get_tool_list()
         
-        # for custom tool if added by the user
         for action in self.actions:
-        #    if action.__name__ == "MemoryRagAction":
-        #        continue
             tools_list.append(action)
 
         worker_dict = {}
