@@ -215,7 +215,7 @@ pip install unstructured
 **Code Snippet**
 
 ```python
-from openagi.actions.tools import UnstructuredPdfLoaderAction
+from openagi.actions.tools.unstructured_io import UnstructuredPdfLoaderAction
 from openagi.agent import Admin
 from openagi.llms.openai import OpenAIModel
 from openagi.planner.task_decomposer import TaskPlanner
