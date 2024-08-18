@@ -97,7 +97,7 @@ admin.run(
 )
 ```
 
-## 📝 Sample Output
+## 📝 Output
 
 When executed, this script generates a structured study plan with YouTube video references for each optimization technique topic. The study plan is written to a markdown file, and the output might look like this:
 
