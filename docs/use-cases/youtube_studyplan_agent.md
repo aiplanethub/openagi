@@ -57,7 +57,7 @@ Set up the Admin agent, which manages the workflow and assigns tasks to worker a
 admin = Admin(
     llm=llm,
     planner=planner,
-    max_steps=5,
+    max_iterations=5,
     memory=Memory(),
     output_format="markdown"
 )
