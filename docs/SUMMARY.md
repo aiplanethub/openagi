@@ -27,6 +27,7 @@
 
 ## 💬 ACKNOWLEDGMENT
 
+* [👀 Show your work](acknowledgment/show-your-work.md)
 * [🏅 Special Mentions](acknowledgment/special-mentions.md)
 
 ***
