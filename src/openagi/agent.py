@@ -45,7 +45,7 @@ class Admin(BaseModel):
         description="Actions that the Agent supports", default_factory=list
     )
     max_iterations: int = Field(
-        default=15, description="Maximum number of steps to achieve the objective."
+        default=20, description="Maximum number of steps to achieve the objective."
     )
     output_format: OutputFormat = Field(
         default=OutputFormat.markdown,
