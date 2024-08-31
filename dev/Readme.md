@@ -40,6 +40,7 @@
    ```bash
    export AZURE_OPENAI_API_KEY="<your key>" # required AZURE OPENAI USAGE
    export SERPER_API_KEY="<your key>" # required for Google Serper API
+   export SEARCHAPI_API_KEY="<your key>" # required to perform web searches on any search engines.
    python usecases/ProfAgent.py
    ```
 

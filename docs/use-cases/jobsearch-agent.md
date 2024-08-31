@@ -6,7 +6,7 @@ It utilize various tools for internet search and document comparison to fulfill 
 
 First, we need to import the necessary modules. Each module serves a specific purpose in our script. We utilize various tools for internet search and document comparison to fulfill the agent's task. Here’s what each import does:
 
-* `GoogleSerpAPISearch` and `DuckDuckGoSearch` are tools for performing web searches.
+* `SearchApiSearch`, `GoogleSerpAPISearch` and `DuckDuckGoSearch` are tools for performing web searches.
 * `Admin` manages the overall execution of tasks.
 * `AzureChatOpenAIModel` is used to configure the large language model from Azure.
 * `Memory` is for maintaining context during the agent's operations.

@@ -2,6 +2,7 @@ import inspect
 from openagi.actions.tools import (
     ddg_search,
     document_loader,
+    searchapi_search,
     serp_search,
     serper_search,
     webloader,
@@ -14,6 +15,7 @@ from openagi.actions import files, formatter, human_input, compressor, console, 
 modules = [
     document_loader,
     ddg_search,
+    searchapi_search,
     serp_search,
     serper_search,
     webloader,
