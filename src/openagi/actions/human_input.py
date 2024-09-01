@@ -9,6 +9,6 @@ class HumanCLIInput(BaseAction):
         description="question to be asked to human",
     )
 
-    def execute(self):
-        response = input(f"Agent: {self.ques_prompt}\nYou: ")
+    def execute(self, prompt=ques_prompt):
+        response = input(f"Agent: {prompt}\nYou: ")
         return response

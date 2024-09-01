@@ -3,6 +3,8 @@ import logging
 import re
 from typing import Dict, List, Optional, Union
 
+from click import prompt
+from numpy.f2py.crackfortran import previous_context
 from pydantic import Field
 
 from openagi.actions.base import BaseAction
@@ -22,8 +24,8 @@ class TaskPlanner(BasePlanner):
     human_intervene: bool = Field(
         default=False, description="If human internvention is required or not."
     )
-    input_action: Optional[BaseAction] = Field(
-        default=HumanCLIInput,
+    input_action: Optional[HumanCLIInput] = Field(
+        default_factory=HumanCLIInput,
         description="If `human_intervene` is enabled, which action to be performed.",
     )
     prompt: Optional[BasePrompt] = Field(
@@ -51,7 +53,7 @@ class TaskPlanner(BasePlanner):
         logging.info(f"Using prompt: {self.prompt.__class__.__name__}")
         return self.prompt
     """
-    def get_prompt(self) -> None:
+    def get_prompt(self) -> BasePrompt:
         if not self.prompt:
             if self.autonomous:
                 self.prompt = AutoTaskCreator()
@@ -112,8 +114,10 @@ class TaskPlanner(BasePlanner):
             
             if not question:
                 return planner_vars
-            
-            human_input = self.input_action(ques_prompt=question).execute()
+
+            # set the ques_prompt to question in input_action
+            # self.input_action.ques_prompt = question
+            human_input = self.input_action.execute(prompt=question)
             planner_vars["objective"] += f" {human_input}"
             
             # Update chat history
@@ -156,6 +160,7 @@ class TaskPlanner(BasePlanner):
         self,
         query: str,
         description: str,
+        long_term_context : str,
         supported_actions: List[Dict],
         *args,
         **kwargs,
@@ -172,11 +177,16 @@ class TaskPlanner(BasePlanner):
 
         Returns:
             Dict: A dictionary containing the planned tasks.
+            :param supported_actions:
+            :param query:
+            :param description:
+            :param long_term_context:
         """
         planner_vars = dict(
             objective=query,
             task_descriptions=description,
             supported_actions=supported_actions,
+            previous_context=long_term_context,
             *args,
             **kwargs,
         )
