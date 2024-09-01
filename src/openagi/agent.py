@@ -499,7 +499,10 @@ class Admin(BaseModel):
                         bad_feedback = True
                         bad_session = SessionDict.from_dict(metadata)
                         break
-                ltm.append(LTMFormatPrompt().base_prompt.format(**metadata))
+                # ltm.append(LTMFormatPrompt().base_prompt.format(**metadata))
+                # the above is commented because i think it is better to have a threshold on what gets retrieved
+                # instead of relying on top k. This way we only retrieve one session though, but it should be a
+                # good session.
 
         old_context = "\n\n".join(ltm)
 

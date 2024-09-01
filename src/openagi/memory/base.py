@@ -25,7 +25,7 @@ class BaseMemory(BaseModel):
     )
 
     long_term: bool = Field(default=False, description="Whether or not to use long term memory")
-    ltm_threshold: float = Field(default=0.7,
+    ltm_threshold: float = Field(default=0.6,
                                  description="Semantic similarity threshold for long term memory instance retrieval")
 
     long_term_dir: str = Field(default=None, description="Path to directory for long-term memory storage")
@@ -45,7 +45,7 @@ class BaseMemory(BaseModel):
                 collection_name="long_term_memory",
                 persist_path=self.long_term_dir
             )
-            assert 1 >= self.ltm_threshold >= 0.7, "Semantic similarity threshold should be between 0.7 and 1"
+            assert 1 >= self.ltm_threshold >= 0.6, "Semantic similarity threshold should be between 0.6 and 1"
 
         logging.info(f"Session ID initialized: {self.session_id}")
         if self.long_term:
