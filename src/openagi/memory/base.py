@@ -34,9 +34,14 @@ class BaseMemory(BaseModel):
         super().__init__(**data)
         self.storage = ChromaStorage.from_kwargs(collection_name=self.session_id)
 
-        # Set long_term_dir from environment variable if not provided
+        # Setting the long_term_dir from environment variable if not provided
         if self.long_term_dir is None:
             self.long_term_dir = os.getenv("LONG_TERM_DIR", ".long_term_dir")
+
+        # Ensuring the directory is hidden by prefixing with a dot if necessary
+        if not os.path.basename(self.long_term_dir).startswith('.'):
+            self.long_term_dir = os.path.join(os.path.dirname(self.long_term_dir),
+                                              f".{os.path.basename(self.long_term_dir)}")
 
         if self.long_term:
             os.makedirs(self.long_term_dir, exist_ok=True)
