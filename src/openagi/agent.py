@@ -569,25 +569,35 @@ class Admin(BaseModel):
 
         return matching_classes
 
-    def save_ltm(self, type:str, session:SessionDict):
+    def save_ltm(self, action_type: str, session: SessionDict):
         """
-        Save a session to the long term memory, either by adding or by updating an existing session.
-        :param session: The SessionDict object that has all the details of the session
+        Save a session to long-term memory by either adding or updating an existing session.
+
+        :param action_type: Type of operation: 'add' or 'update'
+        :param session: The SessionDict object containing session details
         """
+        # Get feedback for plan and answer
         session.plan_feedback = self.input_action.execute(
-            prompt=f"Please review the plan generated: \n{session.plan}\nIf you are satisfied "
-                   f"with the plan, press enter, else please provide a detailed description of the "
-                   f"problem, along with how the plan could have been better:")
+            prompt=(
+                f"Review the generated plan: \n{session.plan}\n"
+                "If satisfied, press ENTER. \nOtherwise, describe the issue and suggest improvements:"
+            )
+        ).strip()
 
         session.ans_feedback = self.input_action.execute(
-            prompt=f"Please review the answer generated: \n{session.answer}\nIf you are satisfied"
-                   f"with the answer, press enter, else please provide a detailed description of"
-                   f"the problem, along with how the answer could have been better:")
-        if type == "add":
+            prompt=(
+                f"Review the generated answer: \n{session.answer}\n"
+                "If satisfied, press ENTER. \nOtherwise, describe the issue and suggest improvements:"
+            )
+        ).strip()
+
+        # Save or update based on the action_type
+        if action_type == "add":
             self.memory.add_ltm(session)
-            logging.info(f"Session saved to long term memory: {session}")
-        elif type == "update":
+            logging.info(f"Session added to long-term memory: {session}")
+        elif action_type == "update":
             self.memory.update_ltm(session)
-            logging.info(f"Session updated in long term memory: {session}")
+            logging.info(f"Session updated in long-term memory: {session}")
         else:
-            raise ValueError("Invalid type. Please provide either 'add' or 'update'.")
+            raise ValueError("Invalid action_type. Use 'add' or 'update'.")
+
