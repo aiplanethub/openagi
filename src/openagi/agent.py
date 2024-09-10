@@ -444,6 +444,9 @@ class Admin(BaseModel):
         logging.info("Running Admin Agent...")
         logging.info(f"SessionID - {self.memory.session_id}")
 
+        if self.memory.long_term and planned_tasks:
+            logging.warning("Long Term Memory is not applicable for user given plan.")
+
         """
         ltm_context = ""
         bad_feedback = False
@@ -504,7 +507,8 @@ class Admin(BaseModel):
                 # instead of relying on top k. This way we only retrieve one session though, but it should be a
                 # good session.
 
-            old_context = "\n\n".join(ltm)
+        old_context = "\n\n".join(ltm)
+        if not planned_tasks:
             planned_tasks = self.run_planner(query=query, descripton=description, long_term_context=old_context)
 
 
