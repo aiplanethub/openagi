@@ -10,7 +10,7 @@ from openagi.utils.yamlParse import read_from_env
 class OpenAIConfigModel(LLMConfigModel):
     """Configuration model for OpenAI."""
 
-    model_name: str = "gpt-4-turbo"
+    model_name: str = "gpt-4o"
     openai_api_key: str
 
 

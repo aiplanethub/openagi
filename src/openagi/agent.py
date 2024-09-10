@@ -440,7 +440,7 @@ class Admin(BaseModel):
         return output
 
 
-    def run(self, query: str, description: str):
+    def run(self, query: str, description: str,planned_tasks: Optional[List[Dict]] = None):
         logging.info("Running Admin Agent...")
         logging.info(f"SessionID - {self.memory.session_id}")
 
@@ -478,7 +478,7 @@ class Admin(BaseModel):
         ltm = ["None"]
         bad_feedback = False
         bad_session = None
-        if self.memory.long_term:
+        if self.memory.long_term and not planned_tasks:
             logging.info("Retrieving similar queries from long term memory...")
             similar_sessions = self.memory.get_ltm(query)
             ltm = []
@@ -504,9 +504,8 @@ class Admin(BaseModel):
                 # instead of relying on top k. This way we only retrieve one session though, but it should be a
                 # good session.
 
-        old_context = "\n\n".join(ltm)
-
-        planned_tasks = self.run_planner(query=query, descripton=description, long_term_context=old_context)
+            old_context = "\n\n".join(ltm)
+            planned_tasks = self.run_planner(query=query, descripton=description, long_term_context=old_context)
 
 
         logging.info("Tasks Planned...")
