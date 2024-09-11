@@ -208,4 +208,3 @@ class BaseMemory(BaseModel):
 
         logging.info(f"No documents found for query: {query}")
         return results
-#
