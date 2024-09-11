@@ -74,7 +74,7 @@ class Admin(BaseModel):
     )
 
     input_action: Optional[HumanCLIInput] = Field(default_factory=HumanCLIInput,
-                                               description="To get feedback in case ltm has been enabled")
+                                               description="To get feedback in case long term memory has been enabled")
 
     def model_post_init(self, __context: Any) -> None:
         model = super().model_post_init(__context)
@@ -132,17 +132,13 @@ class Admin(BaseModel):
         workers_dict = []
         for worker in self.workers:
             workers_dict.append(worker.worker_doc())
-########################################################################################################################
             for action in worker.actions:
                 actions_dict.append(action.cls_doc())
-########################################################################################################################
 
         return self.planner.plan(
             query=query,
             description=descripton,
-########################################################################################################################
             long_term_context=long_term_context,
-########################################################################################################################
             supported_actions=actions_dict,
             supported_workers=workers_dict,
         )
