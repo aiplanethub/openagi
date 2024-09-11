@@ -3,8 +3,6 @@ import logging
 import re
 from typing import Dict, List, Optional, Union
 
-from click import prompt
-from numpy.f2py.crackfortran import previous_context
 from pydantic import Field
 
 from openagi.actions.base import BaseAction

@@ -443,37 +443,6 @@ class Admin(BaseModel):
         if self.memory.long_term and planned_tasks:
             logging.warning("Long Term Memory is not applicable for user given plan.")
 
-        """
-        ltm_context = ""
-        bad_feedback = False
-        bad_session = None
-        if ltm enabled:
-            retrieve ltm
-            for sessions in ltm:
-                if any sim(session, query) > threshold 
-                    if no negative feedback:
-                        ans = session.answer
-                        take feedback 
-                        update session with new feedback  ##UPDATION
-                        return ans
-                    else:
-                        ltm_context += session
-                        bad_feedback = True
-                        bad_session = session
-                        break
-                ltm_context += session
-        
-        planned_tasks = run_planner(query, description, ltm_contText)
-        
-        ans = execute(planned_tasks)
-        
-        if ltm enabled:
-            if bad_feedback:
-                update bad_session with new feedback  ##UPDATION
-            else:
-                save session in ltm                   ##ADD
-        return ans
-        """
         ltm = ["None"]
         bad_feedback = False
         bad_session = None
@@ -483,10 +452,9 @@ class Admin(BaseModel):
             ltm = []
             for memory in similar_sessions:
                 metadata = memory["metadata"]
-                print(memory["similarity_score"])
                 if memory["similarity_score"] >= self.memory.ltm_threshold:
                     if metadata["ans_feedback"]=='' and metadata["plan_feedback"]=='':
-                        logging.info("Found a very similar query in long term memory without negative feedback, returning answer directly")
+                        logging.info(f"Found a very similar query (similarity = {memory['similarity_score']} in long term memory without negative feedback, returning answer directly")
                         result = memory["document"]
                         # ask for feedback here and UPDATE the response
                         # write for case when threshold is crossed but negative feedback
