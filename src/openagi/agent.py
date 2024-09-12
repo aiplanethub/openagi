@@ -1,12 +1,8 @@
 import logging
-import pprint
 from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union, Tuple
-
-from click import prompt
 from pydantic import BaseModel, Field, field_validator
-from transformers.utils.hub import SESSION_ID
 
 from openagi.actions.base import BaseAction
 from openagi.actions.compressor import SummarizerAction
@@ -34,7 +30,6 @@ from openagi.prompts.ltm import LTMFormatPrompt
 class OutputFormat(str, Enum):
     markdown = "markdown"
     raw_text = "raw_text"
-
 
 session = None
 
