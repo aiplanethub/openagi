@@ -30,10 +30,10 @@ class SearchApiSearch(BaseAction):
         response = requests.request("GET", url)
         json_response = response.json()
 
-        if not json_response:
-            raise OpenAGIException(f"Unable to generate result for the query {self.query}")
+        # if not json_response:
+        #     raise OpenAGIException(f"Unable to generate result for the query {self.query}")
 
-        logging.debug(json_response)
+        # logging.debug(json_response)
 
         organic_results = json_response.get("organic_results", [])
 
