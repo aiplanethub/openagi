@@ -1,7 +1,7 @@
 import logging
 from enum import Enum
 from textwrap import dedent
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
@@ -23,11 +23,15 @@ from openagi.utils.extraction import (
 from openagi.utils.helper import get_default_llm
 from openagi.utils.tool_list import get_tool_list
 from openagi.worker import Worker
+from openagi.memory.sessiondict import SessionDict
+from openagi.actions.human_input import HumanCLIInput
+from openagi.prompts.ltm import LTMFormatPrompt
 
 class OutputFormat(str, Enum):
     markdown = "markdown"
     raw_text = "raw_text"
 
+session = None
 
 class Admin(BaseModel):
     planner: Optional[BasePlanner] = Field(
@@ -63,6 +67,9 @@ class Admin(BaseModel):
         default="final_output",
         description="Key to be used to store the output.",
     )
+
+    input_action: Optional[HumanCLIInput] = Field(default_factory=HumanCLIInput,
+                                               description="To get feedback in case long term memory has been enabled")
 
     def model_post_init(self, __context: Any) -> None:
         model = super().model_post_init(__context)
@@ -104,7 +111,7 @@ class Admin(BaseModel):
         else:
             self.workers.extend(workers)
 
-    def run_planner(self, query: str, descripton: str):
+    def run_planner(self, query: str, descripton: str, long_term_context: str):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
@@ -120,10 +127,13 @@ class Admin(BaseModel):
         workers_dict = []
         for worker in self.workers:
             workers_dict.append(worker.worker_doc())
+            for action in worker.actions:
+                actions_dict.append(action.cls_doc())
 
         return self.planner.plan(
             query=query,
             description=descripton,
+            long_term_context=long_term_context,
             supported_actions=actions_dict,
             supported_workers=workers_dict,
         )
@@ -200,14 +210,14 @@ class Admin(BaseModel):
         thoughts = dedent(f"""Observation: {observation}""".strip())
         return thoughts
 
-    def _should_continue(self, llm_resp: str) -> Union[bool, Optional[Dict]]:
+    def _should_continue(self, llm_resp: str) -> Tuple[bool, Optional[Dict]]:
         output: Dict = get_last_json(llm_resp, llm=self.llm, max_iterations=self.max_iterations)
         output_key_exists = bool(output and output.get(self.output_key))
         return (not output_key_exists, output)
 
     def _force_output(
         self, llm_resp: str, all_thoughts_and_obs: List[str]
-    ) -> Union[bool, Optional[str]]:
+    ) -> Tuple[bool, Optional[str]]:
         """Force the output once the max iterations are reached."""
         prompt = (
             "\n".join(all_thoughts_and_obs)
@@ -420,12 +430,46 @@ class Admin(BaseModel):
         logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return output
 
+
     def run(self, query: str, description: str,planned_tasks: Optional[List[Dict]] = None):
         logging.info("Running Admin Agent...")
         logging.info(f"SessionID - {self.memory.session_id}")
 
-        if planned_tasks is None:
-            planned_tasks = self.run_planner(query=query, descripton=description)
+        if self.memory.long_term and planned_tasks:
+            logging.warning("Long Term Memory is not applicable for user given plan.")
+
+        ltm = ["None"]
+        bad_feedback = False
+        bad_session = None
+        if self.memory.long_term and not planned_tasks:
+            logging.info("Retrieving similar queries from long term memory...")
+            similar_sessions = self.memory.get_ltm(query)
+            ltm = []
+            for memory in similar_sessions:
+                metadata = memory["metadata"]
+                if memory["similarity_score"] >= self.memory.ltm_threshold:
+                    if metadata["ans_feedback"]=='' and metadata["plan_feedback"]=='':
+                        logging.info(f"Found a very similar query (similarity = {memory['similarity_score']} in long term memory without negative feedback, returning answer directly")
+                        result = memory["document"]
+                        # ask for feedback here and UPDATE the response
+                        # write for case when threshold is crossed but negative feedback
+                        session = SessionDict.from_dict(metadata)
+                        self.save_ltm("update", session)
+                        return result
+                    else:
+                        ltm.append(LTMFormatPrompt().base_prompt.format(**metadata))
+                        bad_feedback = True
+                        bad_session = SessionDict.from_dict(metadata)
+                        break
+                # ltm.append(LTMFormatPrompt().base_prompt.format(**metadata))
+                # the above is commented because i think it is better to have a threshold on what gets retrieved
+                # instead of relying on top k. This way we only retrieve one session though, but it should be a
+                # good session.
+
+        old_context = "\n\n".join(ltm)
+        if not planned_tasks:
+            planned_tasks = self.run_planner(query=query, descripton=description, long_term_context=old_context)
+
 
         logging.info("Tasks Planned...")
         logging.debug(f"{planned_tasks=}")
@@ -435,20 +479,34 @@ class Admin(BaseModel):
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
 
         if self.planner.autonomous:
-            return self.auto_workers_assignment(
+            result = self.auto_workers_assignment(
                 query=query, description=description, task_lists=task_lists
             )
         else:
             if self.workers:
-                return self.worker_task_execution(
+                result = self.worker_task_execution(
                     query=query,
                     description=description,
                     task_lists=task_lists,
                 )
             else:
-                return self.single_agent_execution(
+                result = self.single_agent_execution(
                     query=query, description=description, task_lists=task_lists
                 )
+        # Human feedback part
+        if self.memory.long_term:
+            if bad_feedback:
+                self.save_ltm("update", bad_session)
+            else:
+                session = SessionDict(
+                    query=query,
+                    description=description,
+                    plan=str(planned_tasks),
+                    session_id=self.memory.session_id,
+                    answer=result
+                )
+                self.save_ltm("add", session)
+        return result
 
     def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
         content: str = find_last_r_failure_content(text=llm_resp)
@@ -472,3 +530,36 @@ class Admin(BaseModel):
                 matching_classes.append(action)
 
         return matching_classes
+
+    def save_ltm(self, action_type: str, session: SessionDict):
+        """
+        Save a session to long-term memory by either adding or updating an existing session.
+
+        :param action_type: Type of operation: 'add' or 'update'
+        :param session: The SessionDict object containing session details
+        """
+        # Get feedback for plan and answer
+        session.plan_feedback = self.input_action.execute(
+            prompt=(
+                f"Review the generated plan: \n{session.plan}\n"
+                "If satisfied, press ENTER. \nOtherwise, describe the issue and suggest improvements:"
+            )
+        ).strip()
+
+        session.ans_feedback = self.input_action.execute(
+            prompt=(
+                f"Review the generated answer: \n{session.answer}\n"
+                "If satisfied, press ENTER. \nOtherwise, describe the issue and suggest improvements:"
+            )
+        ).strip()
+
+        # Save or update based on the action_type
+        if action_type == "add":
+            self.memory.add_ltm(session)
+            logging.info(f"Session added to long-term memory: {session}")
+        elif action_type == "update":
+            self.memory.update_ltm(session)
+            logging.info(f"Session updated in long-term memory: {session}")
+        else:
+            raise ValueError("Invalid action_type. Use 'add' or 'update'.")
+

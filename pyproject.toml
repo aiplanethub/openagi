@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "openagi"
-version = "0.2.9.5"
+version = "0.2.9.6"
 description = ""
 authors = ["AI Planet <tech@aiplanet.com>"]
 readme = "README.md"
 include = ["src/*"]
+packages = [{ include = "openagi", from = "src" }]  # This tells Poetry where to find the package
 
 [tool.poetry.dependencies]
 python = "^3.9, <3.12"
@@ -49,6 +50,8 @@ ruff = "^0.1.11"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+openagi = "openagi.cli:main"
 
 [tool.ruff]
 ignore-init-module-imports = true
