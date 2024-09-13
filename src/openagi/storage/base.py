@@ -8,17 +8,17 @@ class BaseStorage(BaseModel):
 
     name: str = Field(title="BaseStorage", description="Name of the Storage.")
 
-    def save_document(self):
+    def save_document(self, id, document, metadata):
         """Save documents to the with metadata."""
         raise NotImplementedError("Subclasses must implement this method.")
 
-    def update_document(self):
+    def update_document(self, id, document, metadata):
         raise NotImplementedError("Subclasses must implement this method.")
 
-    def delete_document(self):
+    def delete_document(self, id):
         raise NotImplementedError("Subclasses must implement this method.")
 
-    def query_documents(self):
+    def query_documents(self, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
 
     @classmethod

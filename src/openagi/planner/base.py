@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -23,5 +23,6 @@ class BasePlanner(BaseModel):
         """Whether to Ask clarifying questions"""
         raise NotImplementedError("Subclasses must implement this method.")
 
-    def plan(self, query: str, description: str) -> Dict:
+    def plan(self, query: str, description: str, long_term_context: str, supported_actions: List[BaseAction],*args,
+        **kwargs,) -> Dict:
         raise NotImplementedError("Subclasses must implement this method.")

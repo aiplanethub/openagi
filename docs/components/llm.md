@@ -113,7 +113,10 @@ This setup allows you to utilize the Ollama model effectively within your applic
 
 ```python
 import os
-from openagi.llms.azure.ollama  import OllamaModel
-    
-llm = OllamaModel(model="mistral")
+from openagi.llms.ollama  import OllamaModel
+
+os.environ['OLLAMA_MODEL'] = "mistral"
+
+config = OllamaModel.load_from_env_config()
+llm = OllamaModel(config=config)
 ```

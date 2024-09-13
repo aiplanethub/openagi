@@ -24,7 +24,8 @@ class BaseAction(BaseModel):
     )
 
     def execute(self):
-        """Executes the action"""
+        """Executes the action
+        """
         raise NotImplementedError("Subclasses must implement this method.")
 
     @classmethod
