@@ -498,6 +498,8 @@ class Admin(BaseModel):
         # Human feedback part
         if self.memory.long_term:
             if bad_feedback:
+                bad_session.plan = str(planned_tasks)
+                bad_session.answer =  result
                 self.save_ltm("update", bad_session)
             else:
                 session = SessionDict(
