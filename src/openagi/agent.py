@@ -1,5 +1,4 @@
 import logging
-import pprint
 from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union, Tuple
@@ -499,8 +498,6 @@ class Admin(BaseModel):
         # Human feedback part
         if self.memory.long_term:
             if bad_feedback:
-                bad_session.answer = result
-                bad_session.plan = str(planned_tasks)
                 self.save_ltm("update", bad_session)
             else:
                 session = SessionDict(
