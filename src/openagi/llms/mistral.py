@@ -1,3 +1,5 @@
+import time
+
 from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
@@ -52,6 +54,7 @@ class MistralModel(LLMBaseModel):
             raise ValueError("`llm` attribute not set.")
         message = HumanMessage(content=input_text)
         resp = self.llm([message])
+        time.sleep(1)
         return resp.content
 
     @staticmethod

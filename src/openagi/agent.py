@@ -4,9 +4,7 @@ from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union, Tuple
 
-from click import prompt
 from pydantic import BaseModel, Field, field_validator
-from transformers.utils.hub import SESSION_ID
 
 from openagi.actions.base import BaseAction
 from openagi.actions.compressor import SummarizerAction
@@ -501,6 +499,8 @@ class Admin(BaseModel):
         # Human feedback part
         if self.memory.long_term:
             if bad_feedback:
+                bad_session.answer = result
+                bad_session.plan = str(planned_tasks)
                 self.save_ltm("update", bad_session)
             else:
                 session = SessionDict(
