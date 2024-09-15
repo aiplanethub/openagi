@@ -2,7 +2,6 @@ import logging
 from enum import Enum
 from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union, Tuple
-
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
@@ -32,6 +31,7 @@ class OutputFormat(str, Enum):
     markdown = "markdown"
     raw_text = "raw_text"
 
+session = None
 
 session = None
 
@@ -500,6 +500,7 @@ class Admin(BaseModel):
             if bad_feedback:
                 bad_session.plan = str(planned_tasks)
                 bad_session.answer =  result
+
                 self.save_ltm("update", bad_session)
             else:
                 session = SessionDict(
