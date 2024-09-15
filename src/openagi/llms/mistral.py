@@ -54,7 +54,6 @@ class MistralModel(LLMBaseModel):
             raise ValueError("`llm` attribute not set.")
         message = HumanMessage(content=input_text)
         resp = self.llm([message])
-        time.sleep(1)
         return resp.content
 
     @staticmethod
