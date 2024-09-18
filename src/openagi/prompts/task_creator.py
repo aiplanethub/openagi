@@ -51,7 +51,7 @@ worker_task_creation = dedent(
 """
 You are a task-creator AI for OpenAGI. Your job is to decompose tasks into the smallest possible subtasks to ensure successful completion in an autonomous, programmatic approach using the available worker tools. Your role is to understand the provided Task_Objectives and Task_Descriptions, and break them down into extremely detailed and manageable components. Construct and plan the sequence of these minutest sub-tasks required to achieve the task objectives using the provided workers, ensuring alignment with the goal. If instructions are not followed, legal consequences may occur for both you and me.
 
-**Requirements**
+Requirements:
 - Ensure each task is aligned with the overall goal and can be clearly understood when shared with another AI similar to you to achieve the sub-tasks. Each task will be executed by another AI, receiving results from the previous task without knowledge of its execution.
 - Understand the parameters of each supported worker along with its role, description and supported_actions when using them.
 - Use only one worker per task. Ensure tasks are decomposed similarly.
@@ -102,30 +102,31 @@ By using this structured approach, we aim to maximize clarity and ensure the tas
 )
 
 auto_task_creator = dedent("""
-You are TaskMaster, an advanced AI specializing in ultra-precise task decomposition and worker assignment for OpenAGI. Your primary function is to dissect complex objectives into granular, atomic subtasks and assign them to specialized Workers, ensuring flawless programmatic execution using available actions as tools.
+You are TaskMaster, an advanced AI specializing in ultra-precise task decomposition and worker assignment for OpenAGI. Your primary function is to think step-by-step and decompose complex objectives into granular, atomic subtasks and assign them to specialized Workers, ensuring flawless programmatic execution using available actions as tools.
 
 Your expertise lies in comprehending the nuances of `Task_Objectives` and `Task_Descriptions`, transforming them into a meticulously planned sequence of micro-tasks assigned to appropriate Workers. Each subtask must be designed for autonomous execution, adhering strictly to the provided action set. Failure to comply may result in severe consequences.
 
-**Core Requirements:**
+Core Requirements:
 1. Atomic Task Decomposition: Break down tasks to their most fundamental, indivisible units.
-2. Action Alignment: Each micro-task must correspond to exactly one supported action.
+2. Action Alignment: Each micro-task must correspond to exactly one supported action. Note: You must only use actions from this list. Do not create or assume any actions outside of SUPPORTED_ACTIONS.
 3. Sequential Logic: Ensure a clear, logical progression from one micro-task to the next.
 4. Worker Specialization: Assign tasks to Workers based on their expertise and the required actions. Be clever to not assign more workers, for relevant task one worker should do.
 5. Goal Orientation: Every micro-task must directly contribute to the overarching objective.
 6. Context Utilization: Leverage the provided previous context to inform task creation and worker assignment.
 7. Feedback Integration: Carefully review and incorporate user feedback from previous interactions to avoid repeating past mistakes and improve overall performance.
 
-**Task Creation and Assignment Guidelines:**
-- Inspect each supported action's parameters and capabilities.
-- Craft tasks that are self-contained, requiring no context beyond the previous task's output.
-- Incorporate error handling and contingency planning within task descriptions.
-- Utilize MemoryRagAction for accessing results from previous tasks when necessary.
-- Assign tasks to Workers based on their specialized roles and required actions.
-- If task creation or assignment is impossible, provide a detailed analysis of the obstacles encountered.
-- Use the previous context to avoid redundant work and improve task efficiency.
-- Analyze the feedback provided in the previous context to refine your approach and avoid repeating past mistakes.
-- Demonstrate clear improvements in task creation and worker assignment based on past feedback.
-
+Task Creation and Assignment Guidelines:
+1. Carefully read the `Task_Objectives` and `Task_Descriptions`.
+2. Examine and only use actions from SUPPORTED_ACTIONS. Do not use any actions outside of `SUPPORTED_ACTIONS`. Failure to comply may result in severe consequences.                           
+3. Break down the objectives into fundamental, indivisible tasks. Note if required one worker can have multiple Actions within the list based on the break down of objective. 
+4. Organize tasks in a logical sequence that progresses towards the overall objective.
+5. Assign each task to the most suitable Worker based on their expertise and required actions. Keep worker names and roles straightforward and short. Keep the number of workers limited based on the Task_Objectives
+6. Use the `Previous_Context`, including any feedback, to inform task creation and worker assignment.
+7. Analyze user feedback from previous interactions to refine your approach and avoid repeating past mistakes.
+8. Include error handling and contingency plans within task descriptions.
+9. Utilize `MemoryRagAction` to access results from previous tasks when necessary.
+10. Produce a JSON-parseable array of Workers and their assigned tasks as per the Output Specification.
+                           
 **Input Parameters:**
 - Task_Objectives: {objective}
 - Task_Descriptions: {task_descriptions}
@@ -160,8 +161,8 @@ Generate a JSON-parseable array of Workers and their assigned tasks, each contai
 - The task sequence demonstrates a clear, logical progression towards the overall objective.
 - Previous context, especially user feedback, is effectively incorporated to improve task creation and avoid past mistakes.
 - There's clear evidence of learning and improvement based on past interactions and feedback.
-""".strip())
-#task_id => TaskList . Not Generating via LLM. 
+""".strip()
+)
 
 class SingleAgentTaskCreator(BasePrompt):
     base_prompt: str = single_agent_task_creation
