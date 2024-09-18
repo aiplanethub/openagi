@@ -429,7 +429,21 @@ class Admin(BaseModel):
 
         logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return output
+    
+    def add_worker_id_to_tasks(self, task_lists: TaskLists):
+        workers_dict = {}
+        for worker in self.workers:
+            workers_dict[worker.role] = worker.id
 
+        main_task_list = TaskLists()
+        while not task_lists.all_tasks_completed:
+            cur_task = task_lists.get_next_unprocessed_task()
+            if workers_dict[cur_task.name]:
+                cur_task.worker_id = workers_dict[cur_task.name]
+            
+            main_task_list.add_task(cur_task)
+
+        return main_task_list
 
     def run(self, query: str, description: str,planned_tasks: Optional[List[Dict]] = None):
         logging.info("Running Admin Agent...")
@@ -475,7 +489,10 @@ class Admin(BaseModel):
         logging.debug(f"{planned_tasks=}")
 
         task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
-
+        
+        if planned_tasks and self.workers:
+            task_lists = self.add_worker_id_to_tasks(task_lists)
+        
         self.memory.save_planned_tasks(tasks=list(task_lists.tasks.queue))
 
         if self.planner.autonomous:
