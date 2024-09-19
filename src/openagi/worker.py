@@ -191,7 +191,10 @@ class Worker(BaseModel):
                         res = run_action(action_cls=act_cls, **params)
                         logging.info(f"Action '{act_cls.__name__}' completed. Result: {res}")
                     except Exception as e:
-                        logging.error(f"Error running action: {e}")
+                        if str(e).startswith("API KEY NOT FOUND"):
+                            logging.error(e)
+                            return {"error": "API KEY NOT FOUND. Please enter a valid API key before running this task."}, task
+                        
                         observations = f"Action: {action_json}\n{observations}. {e} Try to fix the error and try again. Ignore if already tried more than twice"
                         all_thoughts_and_obs.append(action_json)
                         all_thoughts_and_obs.append(observations)
