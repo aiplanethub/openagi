@@ -1,15 +1,29 @@
 import logging
 import os
 from typing import Any
-
 from pydantic import Field, field_validator
 from serpapi import GoogleSearch
-
+from typing import ClassVar, Dict, Any
 from openagi.actions.base import BaseAction
 from openagi.exception import OpenAGIException
 
+class ConfigurableAction(BaseAction):
+    config: ClassVar[Dict[str, Any]] = {}
 
-class GoogleSerpAPISearch(BaseAction):
+    @classmethod
+    def set_config(cls, *args, **kwargs):
+        if args:
+            if len(args) == 1 and isinstance(args[0], dict):
+                cls.config.update(args[0])
+            else:
+                raise ValueError("If using positional arguments, a single dictionary must be provided.")
+        cls.config.update(kwargs)
+
+    @classmethod
+    def get_config(cls, key: str, default: Any = None) -> Any:
+        return cls.config.get(key, default)
+    
+class GoogleSerpAPISearch(ConfigurableAction):
     """Google Serp API Search Tool"""
 
     query: str = Field(
@@ -19,7 +33,7 @@ class GoogleSerpAPISearch(BaseAction):
         default=10,
         description="Total results, an integer, to be executed from the search. Defaults to 10",
     )
-
+    
     @field_validator("max_results")
     @classmethod
     def actions_validator(cls, max_results):
@@ -29,13 +43,16 @@ class GoogleSerpAPISearch(BaseAction):
         return max_results
 
     def execute(self):
-        serp_api_key = os.environ["GOOGLE_SERP_API_KEY"]
+        api_key = self.get_config('api_key')
+        if not api_key:
+            raise OpenAGIException("API KEY NOT FOUND. Use GoogleSerpAPISearch.set_config(api_key='your_key') to set the API key.")
+
         search_dict = {
             "q": self.query,
             "hl": "en",
             "gl": "us",
             "num": self.max_results,
-            "api_key": serp_api_key,
+            "api_key": api_key,
         }
         logging.debug(f"{search_dict=}")
         search = GoogleSearch(search_dict)

@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any,Dict
 from openagi.actions.base import BaseAction
 from pydantic import Field
 from duckduckgo_search import DDGS
@@ -40,6 +40,16 @@ class DuckDuckGoSearch(BaseAction):
             max_results=self.max_results,
         )
         return json.dumps(result)
+    
+    @classmethod
+    def from_user_config(cls, config: Dict[str, Any]) -> 'DuckDuckGoSearch':
+        """
+        Create a DuckDuckGoSearch instance from a user-provided configuration dictionary.
+        
+        :param config: A dictionary containing user-specified configuration.
+        :return: An instance of DuckDuckGoSearch.
+        """
+        return cls(**config)
 
 
 class DuckDuckGoNewsSearch(DuckDuckGoSearch):
@@ -50,3 +60,11 @@ class DuckDuckGoNewsSearch(DuckDuckGoSearch):
         return json.dumps(
             ddgs.news(keywords=self.query, max_results=(self.max_results)), indent=2
         )
+
+if __name__ == "__main__":
+    user_config = {
+        "query": "Python programming",
+        "max_results": 5
+    }
+    action = DuckDuckGoSearch
+    print(action.execute("query",max_results=15))

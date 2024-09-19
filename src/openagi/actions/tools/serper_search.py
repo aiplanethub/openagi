@@ -9,7 +9,12 @@ class ConfigurableAction(BaseAction):
     config: ClassVar[Dict[str, Any]] = {}
 
     @classmethod
-    def set_config(cls, **kwargs):
+    def set_config(cls, *args, **kwargs):
+        if args:
+            if len(args) == 1 and isinstance(args[0], dict):
+                cls.config.update(args[0])
+            else:
+                raise ValueError("If using positional arguments, a single dictionary must be provided.")
         cls.config.update(kwargs)
 
     @classmethod
@@ -24,7 +29,7 @@ class SerperSearch(ConfigurableAction):
     def execute(self):
         api_key = self.get_config('api_key')
         if not api_key:
-            raise OpenAGIException("Serper API key not set. Use SerperSearch.set_config(api_key='your_key') to set the API key.")
+            raise OpenAGIException("API KEY NOT FOUND. Use SerperSearch.set_config(api_key='your_key') to set the API key.")
 
         conn = http.client.HTTPSConnection("google.serper.dev")
         payload = json.dumps({"q": self.query})

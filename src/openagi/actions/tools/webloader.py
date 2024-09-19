@@ -9,9 +9,7 @@ from sumy.summarizers.lsa import LsaSummarizer
 from sumy.utils import get_stop_words
 
 from openagi.actions.base import BaseAction
-
 nltk.download("punkt")
-
 
 class WebBaseContextTool(BaseAction):
     """
