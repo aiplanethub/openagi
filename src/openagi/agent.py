@@ -132,7 +132,7 @@ class Admin(BaseModel):
 
         return self.planner.plan(
             query=query,
-            description=descripton,
+            description=description,
             long_term_context=long_term_context,
             supported_actions=actions_dict,
             supported_workers=workers_dict,
