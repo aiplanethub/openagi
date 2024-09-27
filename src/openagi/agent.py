@@ -111,7 +111,7 @@ class Admin(BaseModel):
         else:
             self.workers.extend(workers)
 
-    def run_planner(self, query: str, descripton: str, long_term_context: str):
+    def run_planner(self, query: str, description: str, long_term_context: str):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
@@ -468,7 +468,7 @@ class Admin(BaseModel):
 
         old_context = "\n\n".join(ltm)
         if not planned_tasks:
-            planned_tasks = self.run_planner(query=query, descripton=description, long_term_context=old_context)
+            planned_tasks = self.run_planner(query=query, description=description, long_term_context=old_context)
 
 
         logging.info("Tasks Planned...")
