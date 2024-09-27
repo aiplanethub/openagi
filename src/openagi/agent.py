@@ -104,7 +104,7 @@ class Admin(BaseModel):
         else:
             self.workers.extend(workers)
 
-    def run_planner(self, query: str, descripton: str):
+    def run_planner(self, query: str, description: str):
         if self.planner:
             if not getattr(self.planner, "llm", False):
                 setattr(self.planner, "llm", self.llm)
@@ -123,7 +123,7 @@ class Admin(BaseModel):
 
         return self.planner.plan(
             query=query,
-            description=descripton,
+            description=description,
             supported_actions=actions_dict,
             supported_workers=workers_dict,
         )
@@ -425,7 +425,7 @@ class Admin(BaseModel):
         logging.info(f"SessionID - {self.memory.session_id}")
 
         if planned_tasks is None:
-            planned_tasks = self.run_planner(query=query, descripton=description)
+            planned_tasks = self.run_planner(query=query, description=description)
 
         logging.info("Tasks Planned...")
         logging.debug(f"{planned_tasks=}")
