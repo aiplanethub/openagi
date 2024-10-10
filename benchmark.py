@@ -118,12 +118,12 @@ def agent(query, llm):
     )
     return res
 
-def run_agent(level='easy'):
-    os.environ["AZURE_BASE_URL"] = os.getenv("AZURE_BASE_URL", "")
-    os.environ["AZURE_DEPLOYMENT_NAME"] = os.getenv("AZURE_DEPLOYMENT_NAME", "")
-    os.environ["AZURE_MODEL_NAME"] = os.getenv("AZURE_MODEL_NAME", "gpt4")
-    os.environ["AZURE_OPENAI_API_VERSION"] = os.getenv("AZURE_OPENAI_API_VERSION", "")
-    os.environ["AZURE_OPENAI_API_KEY"] = os.getenv("AZURE_OPENAI_API_KEY", "")
+def run_agent(level = 'easy'):
+    os.environ["AZURE_BASE_URL"] = ""
+    os.environ["AZURE_DEPLOYMENT_NAME"] = ""
+    os.environ["AZURE_MODEL_NAME"]="gpt4"
+    os.environ["AZURE_OPENAI_API_VERSION"]=""
+    os.environ["AZURE_OPENAI_API_KEY"]=  ""
     config = AzureChatOpenAIModel.load_from_env_config()
     llm = AzureChatOpenAIModel(config=config)
 
@@ -135,15 +135,16 @@ def run_agent(level='easy'):
 
     f1_list = []
     correct = 0
+    results = {}
 
-    for task, answer in tqdm(task_instructions[:30]):
-        response = agent(task, llm)
-        f1, _, _ = f1_score(response, answer)
+    for task , answer in tqdm(task_instructions[0:30]):
+        response = agent(task , llm)
+        f1 , _ ,_ = f1_score(response,answer)
         f1_list.append(f1)
         correct += int(response == answer)
 
-    avg_f1 = np.mean(f1_list)
-    acc = correct / 30
+        avg_f1 = np.mean(f1_list)
+        acc = correct / len(task_instructions[0:30])
     return avg_f1, acc
 
 # levels are 'easy', 'medium', 'hard'
