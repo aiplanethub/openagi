@@ -1,0 +1,26 @@
+name: PR Review Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  check-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for PR review
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const approvedReviews = reviews.filter(review => review.state === 'APPROVED');
+            
+            if (approvedReviews.length === 0) {
+              core.setFailed('At least one approved review is required before merging.');
+            }
