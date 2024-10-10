@@ -8,6 +8,9 @@ jobs:
   check-review:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
       - name: Check for PR review
         uses: actions/github-script@v6
         with:
@@ -23,4 +26,27 @@ jobs:
             
             if (approvedReviews.length === 0) {
               core.setFailed('At least one approved review is required before merging.');
+            } else {
+              console.log(`${approvedReviews.length} approved reviews found.`);
+            }
+
+      - name: Retry on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            console.log('Retrying check for approved reviews...');
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const approvedReviews = reviews.filter(review => review.state === 'APPROVED');
+            
+            if (approvedReviews.length === 0) {
+              core.setFailed('PR cannot be merged as no approved reviews are found.');
+            } else {
+              console.log(`${approvedReviews.length} approved reviews found on retry.`);
             }
