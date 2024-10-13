@@ -1,8 +1,9 @@
+import os
 from openagi.actions.tools.webloader import WebBaseContextTool
 from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 from openagi.actions.files import WriteFileAction, ReadFileAction
 from openagi.agent import Admin
-from openagi.llms.azure import AzureChatOpenAIModel
+from openagi.llms.gemini import GeminiModel
 from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
 from openagi.worker import Worker
@@ -12,52 +13,26 @@ from rich.markdown import Markdown
 
 
 if __name__ == "__main__":
-    config = AzureChatOpenAIModel.load_from_env_config()
-    llm = AzureChatOpenAIModel(config=config)
+    os.environ['GOOGLE_API_KEY'] = ""
+    os.environ['Gemini_MODEL'] = "gemini-1.5-flash"
+    os.environ['Gemini_TEMP'] = "0.1"
 
     # Team Members
     researcher = Worker(
         role="Research Analyst",
-        instructions="""
-        Analyze AI Planet (https://aiplanet.com/) to extract key information:
-        - Company culture and core values
-        - Main products or services in AI and ML
-        - Required technical skills (Python, ReactJS, Golang, NodeJS, SQL)
-        - Desired experience in Machine Learning and Deep Learning
-        - Any unique selling points or benefits of working at AI Planet
-        Compile findings in a structured format for the writer.
-        """,
+        instructions="Analyze AI Planet (https://aiplanet.com/) for company culture, products/services, required skills (Python, ReactJS, Golang, NodeJS, SQL), ML/DL experience, and unique selling points. Compile findings for the writer.",
         actions=[DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
     writer = Worker(
         role="Job Description Writer",
-        instructions="""
-        Create an engaging SDE 2 Full Stack Developer job posting:
-        - Craft a compelling introduction highlighting AI Planet's mission
-        - List key responsibilities for a Full Stack SDE 2 role
-        - Detail required skills (Python, ReactJS, Golang, NodeJS, SQL)
-        - Mention desired ML/DL experience as a plus
-        - Include qualifications and years of experience expected
-        - Highlight growth opportunities and company culture
-        - Add a call-to-action for applying
-        Use the researcher's insights to align with company values.
-        """,
+        instructions="Create an engaging SDE 2 Full Stack Developer job posting for AI Planet. Include company mission, responsibilities, required skills, desired ML/DL experience, qualifications, growth opportunities, and company culture. Use researcher's insights to align with company values.",
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
     reviewer = Worker(
         role="Review and Editing Specialist",
-        instructions="""
-        Refine the job posting for optimal impact:
-        - Ensure clarity and engaging tone throughout
-        - Verify technical accuracy of required skills
-        - Check for grammar, spelling, and punctuation
-        - Confirm alignment with AI Planet's values and culture
-        - Optimize structure for easy readability (use bullet points, short paragraphs)
-        - Ensure the job title and requirements match (SDE 2 Full Stack Developer)
-        Make final edits to polish the job description.
-        """,
+        instructions="Refine the job posting for clarity, engagement, and technical accuracy. Ensure alignment with AI Planet's values, optimize readability, and polish the final description for an SDE 2 Full Stack Developer role.",
         actions=[ReadFileAction, DuckDuckGoSearch, WebBaseContextTool, WriteFileAction],
     )
 
@@ -72,14 +47,7 @@ if __name__ == "__main__":
 
     res = admin.run(
         query="Create a job posting for an SDE 2 Full Stack Developer at AI Planet",
-        description="""
-        Develop a compelling job description for AI Planet (https://aiplanet.com/):
-        - Position: SDE 2 Full Stack Developer
-        - Required skills: Python, ReactJS, Golang, NodeJS, SQL
-        - Preferred: Experience with Machine Learning and Deep Learning
-        - Company focus: Technology, AI and ML
-        Ensure the posting reflects AI Planet's culture and attracts qualified candidates.
-        """
+        description="Develop a compelling job description for an SDE 2 Full Stack Developer at AI Planet (https://aiplanet.com/). Include required skills (Python, ReactJS, Golang, NodeJS, SQL) and preferred ML/DL experience. Reflect AI Planet's culture and focus on AI and ML technology.",
     )
 
     # Print the results from the OpenAGI
