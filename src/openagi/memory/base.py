@@ -50,7 +50,7 @@ class BaseMemory(BaseModel):
                 collection_name="long_term_memory",
                 persist_path=self.long_term_dir
             )
-            assert 1 >= self.ltm_threshold >= 0.6, "Semantic similarity threshold should be between 0.6 and 1"
+            assert 1 >= self.ltm_threshold >= 0.7, "Semantic similarity threshold should be between 0.7 and 1"
 
         logging.info(f"Session ID initialized: {self.session_id}")
         if self.long_term:
@@ -114,7 +114,7 @@ class BaseMemory(BaseModel):
         )
         logging.info(f"Task saved: {task.id}")
 
-    def save_planned_tasks(self, tasks: TaskLists) -> None:
+    def save_planned_tasks(self, tasks: List[Task]) -> None:
         """
         Save a list of planned tasks into Memory.
 
