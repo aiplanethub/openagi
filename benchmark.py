@@ -13,58 +13,68 @@ import re
 import string
 from tqdm import tqdm
 from collections import Counter
-from pydantic import Field, field_validator
+from pydantic import Field, validator
 import numpy as np
 
 class WikiSearchAction(BaseAction):
-  """
-  Use this Action to get the information from Wikipedia Search
-  """
-  query: str = Field(
-      default_factory=str,
-      description="The search string. be simple"
+    """
+    Use this Action to get the information from Wikipedia Search
+    """
+    query: str = Field(
+        default_factory=str,
+        description="The search string. Be simple."
     )
 
-  def execute(self):
-    search_res = wikipedia.search(self.query)
-    if not search_res:
-      return 'No results found.'
-    article = wikipedia.page(search_res[0])
-    return article.summary
+    @validator('query')
+    def validate_query(cls, v):
+        if not v or not isinstance(v, str):
+            raise ValueError('Query must be a non-empty string.')
+        return v
+
+    def execute(self):
+        try:
+            search_res = wikipedia.search(self.query)
+            if not search_res:
+                return 'No results found.'
+            article = wikipedia.page(search_res[0])
+            return article.summary
+        except wikipedia.exceptions.DisambiguationError as e:
+            return f"Disambiguation error: {str(e)}"
+        except wikipedia.exceptions.PageError as e:
+            return f"Page error: {str(e)}"
+        except Exception as e:
+            return f"Error: {str(e)}"
 
 def download_file(url, filename):
     """
     Download a file from a URL and save it locally.
     """
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
-    print(f"Downloaded {filename}")
-
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        with open(filename, "wb") as f:
+            f.write(response.content)
+        print(f"Downloaded {filename}")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to download {filename}: {str(e)}")
 
 def load_hotpot_qa_data(level):
     """
     Load HotpotQA data for a given level. If data doesn't exist, download it.
     """
     file_path = f"./data/{level}.joblib"
-    data_url = (
-        f"https://github.com/salesforce/BOLAA/raw/main/hotpotqa_run/data/{level}.joblib"
-    )
+    data_url = f"https://github.com/salesforce/BOLAA/raw/main/hotpotqa_run/data/{level}.joblib"
 
     if not os.path.exists(file_path):
         print(f"{level} data not found, downloading...")
-        # Create directory if it doesn't exist
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         download_file(data_url, file_path)
-    # joblib requires python 3.10 or higher
     return joblib.load(file_path)
 
 def normalize_answer(s):
     """
     Normalize answers for evaluation.
     """
-
     def remove_articles(text):
         return re.sub(r"\b(a|an|the)\b", " ", text)
 
@@ -72,14 +82,12 @@ def normalize_answer(s):
         return " ".join(text.split())
 
     def remove_punc(text):
-        exclude = set(string.punctuation)
-        return "".join(ch for ch in text if ch not in exclude)
+        return "".join(ch for ch in text if ch not in string.punctuation)
 
     def lower(text):
         return text.lower()
 
     return white_space_fix(remove_articles(remove_punc(lower(s))))
-
 
 def f1_score(prediction, ground_truth):
     """
@@ -91,34 +99,22 @@ def f1_score(prediction, ground_truth):
     num_same = sum(common.values())
     if num_same == 0:
         return 0, 0, 0
-    precision = 1.0 * num_same / len(prediction_tokens)
-    recall = 1.0 * num_same / len(ground_truth_tokens)
+    precision = num_same / len(prediction_tokens)
+    recall = num_same / len(ground_truth_tokens)
     f1 = (2 * precision * recall) / (precision + recall)
     return f1, precision, recall
 
-def agent(query , llm):
+def agent(query, llm):
     planner = TaskPlanner(autonomous=True)
-    # for autonomous = False
-    """
-    planner = TaskPlanner(autonomous=False,human_intervene=False)
-    
-    researcher = Worker(
-        role="Wikipedia Researcher",
-        instructions="You are an intelligent Wikipedia agent. Your generation should follow the example format. Finish the task if you find the answer. And you answer should be simple and straighforward. DO NOT repeat your actions.",
-        actions=[WikiSearchAction],
-        max_iterations = 3,
-    )"""
     admin = Admin(
         planner=planner,
         memory=Memory(),
         actions=[WikiSearchAction],
         llm=llm,
     )
-    # admin.assign_workers([researcher]) #un-comment this for Autonomous = False
-
     res = admin.run(
         query=query,
-        description="Provide answer for the query.You should decompose your task into executable actions.",
+        description="Provide answer for the query. You should decompose your task into executable actions.",
     )
     return res
 
@@ -151,6 +147,6 @@ def run_agent(level = 'easy'):
         acc = correct / len(task_instructions[0:30])
     return avg_f1, acc
 
-# levels are 'easy' , 'medium' , 'hard'
-f1 , acc = run_agent(level='easy')
-print(f"F1 score : {f1} , Accuracy : {acc}")
+# levels are 'easy', 'medium', 'hard'
+f1, acc = run_agent(level='easy')
+print(f"F1 score: {f1}, Accuracy: {acc}")
