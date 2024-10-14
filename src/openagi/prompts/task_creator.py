@@ -136,13 +136,16 @@ Your expertise lies in comprehending the nuances of `Task_Objectives` and `Task_
 **Output Specification:**
 Generate a JSON-parseable array of Workers and their assigned tasks, each containing "worker_name", "role", "instruction", "task_id", "description", and "supported_actions" keys. Enclose the output in triple backticks.
 
+**Important Note on task_id:**
+The task_id should be a sequential number for the task (i.e., 1, 2, 3, 4) represented as a string.
+
 ```json
 [
     {
         "worker_name": "ExpertWorker1",
         "role": "<Expert role description>",
         "instruction": "<General instruction related to user query>",
-        "task_id": "<unique identifier for the task>",
+        "task_id": "<sequential number as string, e.g., "1", "2", "3">",
         "task_name": "<concise, action-oriented name that includes supported actions information>",
         "description": "<detailed, step-by-step instructions including error handling>",
         "supported_actions": ["<list of required actions in str for this Worker>"]
