@@ -7,7 +7,7 @@ from langchain_core.messages import HumanMessage
 try:
    from langchain_google_genai import ChatGoogleGenerativeAI
 except ImportError:
-  raise OpenAGIException("Install langchain Google Gemini with cmd `pip install langchain-google-genai`")
+  raise OpenAGIException("Install langchain Google Gemini with cmd `pip install langchain-google-genai==0.0.3`")
 
 class GeminiConfigModel(LLMConfigModel):
     """Configuration model for Gemini Chat model."""
