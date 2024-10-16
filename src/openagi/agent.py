@@ -1,7 +1,7 @@
 import logging
 from enum import Enum
 from textwrap import dedent
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field, field_validator
 
 from openagi.actions.base import BaseAction
@@ -16,9 +16,7 @@ from openagi.planner.task_decomposer import BasePlanner, TaskPlanner
 from openagi.prompts.worker_task_execution import WorkerAgentTaskExecution
 from openagi.tasks.lists import TaskLists
 from openagi.utils.extraction import (
-    find_last_r_failure_content,
-    get_act_classes_from_json,
-    get_last_json,
+    get_act_classes_from_json, get_last_json,
 )
 from openagi.utils.helper import get_default_llm
 from openagi.utils.tool_list import get_tool_list
@@ -141,7 +139,7 @@ class Admin(BaseModel):
     def _generate_tasks_list(self, planned_tasks):
         task_lists = TaskLists()
         task_lists.add_tasks(tasks=planned_tasks)
-        logging.debug(f"Created {task_lists.get_tasks_queue().qsize()} Tasks.")
+        logging.info(f"Created {task_lists.get_tasks_queue().qsize()} Tasks.")
         return task_lists
 
     def get_previous_task_contexts(self, task_lists: TaskLists):
@@ -261,7 +259,7 @@ class Admin(BaseModel):
         main_task_list = TaskLists()
         while not task_lists.all_tasks_completed:
             cur_task = task_lists.get_next_unprocessed_task()
-            print(cur_task)
+            # print(cur_task)
             logging.info(f"**** Executing Task - {cur_task.name} [{cur_task.id}] ****")
 
             worker_config = cur_task.worker_config
@@ -430,6 +428,19 @@ class Admin(BaseModel):
         logging.debug(f"Execution Completed for Session ID - {self.memory.session_id}")
         return output
 
+    def experiment(self, description: str):
+        logging.info("Starting Experiment mode...")
+        logging.info(f"SessionID - {self.memory.session_id}")
+
+        while True:
+            query = self.input_action.execute(prompt="Enter the query to be processed:")
+            logging.info(f"Query: {query}")
+            result = self.run(query=query, description=description)
+            logging.info(f"Query: {query}\n\nResult: {result}\n\n")
+            cont = self.input_action.execute(prompt="Do you want to continue experimenting (y/n):").strip()
+            if cont.lower() == "n":
+                break
+        logging.info("Exiting experiment mode.")
 
     def run(self, query: str, description: str,planned_tasks: Optional[List[Dict]] = None):
         logging.info("Running Admin Agent...")
@@ -472,7 +483,7 @@ class Admin(BaseModel):
 
 
         logging.info("Tasks Planned...")
-        logging.debug(f"{planned_tasks=}")
+        logging.info(f"{planned_tasks=}")
 
         task_lists: TaskLists = self._generate_tasks_list(planned_tasks=planned_tasks)
 
@@ -509,12 +520,6 @@ class Admin(BaseModel):
                 )
                 self.save_ltm("add", session)
         return result
-
-    def _can_task_execute(self, llm_resp: str) -> Union[bool, Optional[str]]:
-        content: str = find_last_r_failure_content(text=llm_resp)
-        if content:
-            return False, content
-        return True, content
 
     def get_supported_actions_for_worker(self, actions_list: List[str],tool_list: List[str]):
         """
