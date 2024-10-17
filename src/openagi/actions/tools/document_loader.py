@@ -1,6 +1,7 @@
 from openagi.actions.base import BaseAction
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders.csv_loader import CSVLoader
+from langchain_community.document_loaders.pdf import PyPDFLoader
 from pydantic import Field
 from typing import ClassVar, Dict, Any
 
@@ -31,9 +32,20 @@ class TextLoaderTool(ConfigurableAction):
         meta_data = data[0].metadata["source"]
         context = meta_data + " " + page_content
         return context
+    
+class PDFLoaderTool(ConfigurableAction):
+    """Use this Action to load the content from .pdf file"""
+    def execute(self):
+        file_path = self.get_config('filename')        
+        loader = PyPDFLoader(file_path=file_path)
+        data = loader.load()
+        page_content = data[0].page_content
+        meta_data = data[0].metadata["source"]
+        context = meta_data + " " + page_content
+        return context
 
 class CSVLoaderTool(ConfigurableAction):
-    """Use this Action to load the content from .text file"""
+    """Use this Action to load the content from .csv file"""
     def execute(self):
         file_path = self.get_config('filename')
         content = ""
