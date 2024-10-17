@@ -2,27 +2,42 @@ from openagi.actions.base import BaseAction
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders.csv_loader import CSVLoader
 from pydantic import Field
+from typing import ClassVar, Dict, Any
 
+class ConfigurableAction(BaseAction):
+    config: ClassVar[Dict[str, Any]] = {}
 
-class DocumentLoader(BaseAction):
-    """Use this Action to extract content from documents"""
+    @classmethod
+    def set_config(cls, *args, **kwargs):
+        if args:
+            if len(args) == 1 and isinstance(args[0], dict):
+                cls.config.update(args[0])
+            else:
+                raise ValueError("If using positional arguments, a single dictionary must be provided.")
+        cls.config.update(kwargs)
 
-    file_path: str = Field(
-        default_factory=str,
-        description="File from which content is extracted",
-    )
-
-    def text_loader(self):
-        loader = TextLoader(file_path=self.file_path)
+    @classmethod
+    def get_config(cls, key: str, default: Any = None) -> Any:
+        return cls.config.get(key, default)
+    
+class TextLoaderTool(ConfigurableAction):
+    """Use this Action to load the content from .text file"""
+    def execute(self):
+        file_path = self.get_config('filename')        
+        #print(file_path)
+        loader = TextLoader(file_path=file_path)
         data = loader.load()
         page_content = data[0].page_content
         meta_data = data[0].metadata["source"]
         context = meta_data + " " + page_content
         return context
 
-    def csv_loader(self):
+class CSVLoaderTool(ConfigurableAction):
+    """Use this Action to load the content from .text file"""
+    def execute(self):
+        file_path = self.get_config('filename')
         content = ""
-        loader = CSVLoader(file_path=self.file_path)
+        loader = CSVLoader(file_path=file_path)
         data = loader.load()
 
         for i in range(len(data)):
@@ -30,10 +45,3 @@ class DocumentLoader(BaseAction):
             row_no = data[i].metadata["row"]
             content += "row_no" + " " + str(row_no) + ": " + str(row_content)
         return content
-
-    def execute(self):
-        if self.file_path.endswith(".txt"):
-            context = self.text_loader()
-        elif self.file_path.endswith(".csv"):
-            context = self.csv_loader()
-        return context
