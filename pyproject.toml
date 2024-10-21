@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "openagi"
-version = "0.2.9.5b2"
+version = "0.2.9.6b1"
 description = ""
 authors = ["AI Planet <tech@aiplanet.com>"]
 readme = "README.md"
