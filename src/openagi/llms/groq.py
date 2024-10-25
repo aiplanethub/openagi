@@ -1,13 +1,8 @@
 from typing import Any
-from langchain_core.messages import HumanMessage
 from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
-
-try:
-   from langchain_groq import ChatGroq
-except ImportError:
-  raise OpenAGIException("Install langchain groq with cmd `pip install langchain-groq`")
+from groq import Groq
 
 class GroqConfigModel(LLMConfigModel):
     """Configuration model for Groq Chat model."""
@@ -26,10 +21,8 @@ class GroqModel(LLMBaseModel):
 
     def load(self):
         """Initializes the GroqModel instance with configurations."""
-        self.llm = ChatGroq(
-            model_name = self.config.model_name,
-            groq_api_key = self.config.groq_api_key,
-            temperature = self.config.temperature
+        self.llm = Groq(
+            api_key = self.config.groq_api_key
         )
         return self.llm
     
@@ -46,10 +39,19 @@ class GroqModel(LLMBaseModel):
             self.load()
         if not self.llm:
             raise ValueError("`llm` attribute not set.")
-        message = HumanMessage(content=input_data)
-        resp = self.llm([message])
-        return resp.content
-    
+        chat_completion = self.llm.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": input_data,
+            }
+            ],
+            model = self.config.model_name,
+            temperature = self.config.temperature
+
+        )
+        return chat_completion.choices[0].message.content
+
     @staticmethod
     def load_from_env_config() -> GroqConfigModel:
         """Loads the GroqModel configurations from a env file.
