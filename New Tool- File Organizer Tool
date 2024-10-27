@@ -1,0 +1,50 @@
+import os
+import shutil
+
+def create_directory(dir_name):
+    """Create a directory if it does not exist."""
+    try:
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+            print(f"Created directory: {dir_name}")
+    except Exception as e:
+        print(f"Error creating directory {dir_name}: {e}")
+
+def organize_files(base_path):
+    """Organize files in the specified directory by their extensions."""
+    file_types = {
+        'Python': ['.py'],
+        'JavaScript': ['.js'],
+        'HTML': ['.html', '.htm'],
+        'CSS': ['.css'],
+        'Images': ['.jpg', '.jpeg', '.png', '.gif'],
+        'Documents': ['.pdf', '.docx', '.txt']
+    }
+
+    for folder, extensions in file_types.items():
+        create_directory(os.path.join(base_path, folder))
+
+    try:
+        for item in os.listdir(base_path):
+            item_path = os.path.join(base_path, item)
+
+            if os.path.isfile(item_path):
+                moved = False
+                for folder, extensions in file_types.items():
+                    if any(item.endswith(ext) for ext in extensions):
+                        shutil.move(item_path, os.path.join(base_path, folder, item))
+                        print(f"Moved: {item} to {folder}/")
+                        moved = True
+                        break
+                if not moved:
+                    print(f"No specific folder for: {item}")
+    except FileNotFoundError:
+        print("Error: The specified directory does not exist.")
+    except PermissionError:
+        print("Error: Permission denied. Check your access rights.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+if __name__ == "__main__":
+    path = input("Enter the path of the directory to organize: ")
+    organize_files(path)
