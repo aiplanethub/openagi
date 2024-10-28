@@ -1,8 +1,10 @@
 from typing import Any
+from groq import Groq
+from groq._exceptions import AuthenticationError
+
 from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
-from groq import Groq
 
 class GroqConfigModel(LLMConfigModel):
     """Configuration model for Groq Chat model."""
@@ -22,8 +24,8 @@ class GroqModel(LLMBaseModel):
     def load(self):
         """Initializes the GroqModel instance with configurations."""
         self.llm = Groq(
-            api_key = self.config.groq_api_key
-        )
+                    api_key = self.config.groq_api_key
+                )
         return self.llm
     
     def run(self, input_data: str):
@@ -39,17 +41,20 @@ class GroqModel(LLMBaseModel):
             self.load()
         if not self.llm:
             raise ValueError("`llm` attribute not set.")
-        chat_completion = self.llm.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": input_data,
-            }
-            ],
-            model = self.config.model_name,
-            temperature = self.config.temperature
+        try:
+            chat_completion = self.llm.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": input_data,
+                }
+                ],
+                model = self.config.model_name,
+                temperature = self.config.temperature
 
-        )
+            )
+        except AuthenticationError:
+            raise OpenAGIException("Authentication failed. Please check your GROQ_API_KEY.")
         return chat_completion.choices[0].message.content
 
     @staticmethod
