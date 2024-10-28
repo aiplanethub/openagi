@@ -1,5 +1,8 @@
 from typing import Any
-from groq import Groq
+try:
+   from groq import Groq
+except ImportError:
+  raise OpenAGIException("Install groq using 'pip install groq' ")
 from groq._exceptions import AuthenticationError
 
 from openagi.exception import OpenAGIException
@@ -12,6 +15,7 @@ class GroqConfigModel(LLMConfigModel):
     groq_api_key: str
     model_name: str = "mixtral-8x7b-32768"
     temperature: float = 0.1
+    
 
 class GroqModel(LLMBaseModel):
     """Chat Groq Model implementation of the LLMBaseModel.
@@ -20,6 +24,7 @@ class GroqModel(LLMBaseModel):
     """
 
     config: Any
+    system_prompt: str = "You are an AI assistant"
 
     def load(self):
         """Initializes the GroqModel instance with configurations."""
@@ -28,7 +33,7 @@ class GroqModel(LLMBaseModel):
                 )
         return self.llm
     
-    def run(self, input_data: str):
+    def run(self,prompt:Any):
         """Runs the Chat Groq model with the provided input text.
 
         Args:
@@ -45,12 +50,16 @@ class GroqModel(LLMBaseModel):
             chat_completion = self.llm.chat.completions.create(
             messages=[
                 {
+                    "role": "system",
+                    "content": f"{self.system_prompt}",
+                },
+                {
                     "role": "user",
-                    "content": input_data,
-                }
-                ],
-                model = self.config.model_name,
-                temperature = self.config.temperature
+                    "content": f"{prompt}",
+                },
+                      ],
+            model = self.config.model_name,
+            temperature = self.config.temperature
 
             )
         except AuthenticationError:

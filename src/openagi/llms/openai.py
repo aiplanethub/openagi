@@ -13,6 +13,7 @@ class OpenAIConfigModel(LLMConfigModel):
 
     model_name: str = "gpt-4o"
     openai_api_key: str
+    system_prompt: str = "You are an AI assistant"
 
 
 class OpenAIModel(LLMBaseModel):
@@ -22,6 +23,7 @@ class OpenAIModel(LLMBaseModel):
     """
 
     config: Any
+    system_prompt: str = "You are an AI assistant"
 
     def load(self):
         """Initializes the OpenAI instance with configurations."""
@@ -30,7 +32,7 @@ class OpenAIModel(LLMBaseModel):
         )
         return self.llm
 
-    def run(self, input_data: str):
+    def run(self, prompt : Any):
         """Runs the OpenAI model with the provided input text.
 
         Args:
@@ -48,11 +50,15 @@ class OpenAIModel(LLMBaseModel):
             chat_completion = self.llm.chat.completions.create(
             messages=[
                 {
+                    "role": "system",
+                    "content": f"{self.system_prompt}",
+                },
+                {
                     "role": "user",
-                    "content": input_data,
-                }
-                ],
-                model = self.config.model_name
+                    "content": f"{prompt}",
+                },
+                       ],
+            model=self.config.model_name
             )
         except AuthenticationError:
             raise OpenAGIException("Authentication failed. Please check your OPENAI_API_KEY.")
