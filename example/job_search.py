@@ -1,110 +1,80 @@
-from openagi.actions.tools.serp_search import GoogleSerpAPISearch
+
 from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 from openagi.agent import Admin
-from openagi.llms.azure import AzureChatOpenAIModel
-from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
-from openagi.worker import Worker
-
 from rich.console import Console
 from rich.markdown import Markdown
-
-from dotenv import load_dotenv
-load_dotenv()
-
-
-if __name__ == "__main__":
-    config = AzureChatOpenAIModel.load_from_env_config()
-    llm = AzureChatOpenAIModel(config=config)
-
-    websearcher = Worker(
-        role="SW",
-        instructions="""
-        You are an Expert Python SW Developer with deep knowledge of job markets.
-        - Focus on SDE2 (Software Development Engineer II) positions
-        - Look for roles requiring 2+ years of Python experience
-        - Consider various industries and company sizes
-        - Pay attention to job descriptions, required skills, and company culture
-        """,
-        actions=[DuckDuckGoSearch],
-    )
-
-    admin = Admin(
-        actions=[DuckDuckGoSearch],
-        planner=TaskPlanner(human_intervene=False),
-        memory=Memory(),
-        llm=llm,
-    )
-    admin.assign_workers([websearcher])
-
-    res = admin.run(
-        query="""
-        Provide a list of at least 10 SDE2 job opportunities suitable for candidates with 2+ years of Python experience.
-        For each job, include:
-        1. Company name and location
-        2. Job title
-        3. Key responsibilities
-        4. Required skills
-        5. Any standout perks or benefits
-        6. Application link or process (if available)
-        """,
-        description="""
-        You are an expert Internet Job Searching agent. Your task is to:
-        - Find the most relevant and high-quality job opportunities
-        - Ensure jobs match the specified experience level and skill set
-        - Provide a diverse range of companies and industries
-        - Verify the credibility of job postings
-        - Organize the information in a clear, easy-to-read format
-        - Highlight any unique or particularly attractive aspects of each role
-        """,
-    )
-
-    # Print the results from the OpenAGI
-    print("-" * 100)  # Separator
-    Console().print(Markdown(res))
+from openagi.llms.azure import AzureChatOpenAIModel
+from openagi.planner.task_decomposer import TaskPlanner
+from openagi.actions.tools.ddg_search import DuckDuckGoSearch
+from openagi.actions.files import WriteFileAction
+from openagi.agent import Admin
 
 
-# The Agent did some research using the given actions and job positions.
 
-"""
- # Job Listings                                                                                                                       
-                                                                                                                                      
- ## Amazon                                                                                                                            
-                                                                                                                                      
- ### Position: SDE II                                                                                                                 
- - **Location**: Multiple US geographic markets                                                                                       
- - **Compensation**: $129,300/year to $223,600/year                                                                                   
- - **Link**: [Amazon SDE II Job](https://www.amazon.jobs/en/jobs/2667280/sde-ii)                                                      
- - **Unique Aspects**:                                                                                                                
-   - Competitive base pay reflecting the cost of labor across several US geographic markets                                           
-   - Pay based on a number of factors including market location, job-related knowledge, skills, and experience                        
-                                                                                                                                      
- ### Position: SDE2                                                                                                                   
- - **Location**: Multiple US geographic markets                                                                                       
- - **Compensation**: $129,300/year to $223,600/year                                                                                   
- - **Link**: [Amazon SDE2 Job](https://www.amazon.jobs/en/jobs/2667189/sde2-amazon)                                                   
- - **Unique Aspects**:                                                                                                                
-   - Base pay reflecting the cost of labor across different US geographic markets                                                     
-   - Total compensation company with pay based on various factors like location, knowledge, skills, and experience                    
-                                                                                                                                      
- ## Google                                                                                                                            
-                                                                                                                                      
- ### Position: SDE II                                                                                                                 
- - **Location**: Not specified                                                                                                        
- - **Compensation**: Not specified                                                                                                    
- - **Link**: [Google SDE II Interview Experience](https://medium.com/@kajol_singh/google-interview-experience-sde-ii-11758d86c5ab)    
- - **Unique Aspects**:                                                                                                                
-   - Challenging phone interview involving solving complex problems with dynamic programming and trees                                
-   - Insight into Google's interview process and expectations                                                                         
-                                                                                                                                      
- ## Microsoft                                                                                                                         
-                                                                                                                                      
- ### Position: SDE II                                                                                                                 
- - **Location**: Not specified                                                                                                        
- - **Compensation**: Not specified                                                                                                    
- - **Link**: [Microsoft SDE II Interview Experience](https://www.geeksforgeeks.org/microsoft-interview-experience-for-sde-ii/)        
- - **Unique Aspects**:                                                                                                                
-   - Detailed experience of Microsoft's interview process                                                                             
-   - Insight into the recruitment and next steps   
-   
-   """
+
+import os
+from getpass import getpass
+
+
+config = AzureChatOpenAIModel.load_from_env_config()
+llm = AzureChatOpenAIModel(config=config)
+
+plan = TaskPlanner(autonomous=True) 
+
+admin = Admin(
+    actions = [DuckDuckGoSearch],
+    planner = plan,
+    llm=llm,
+    
+)
+res = admin.run(
+    query="Create a job posting for an SDE 2 Full Stack Developer at AI Planet",
+    description="""
+    AI Planet (https://aiplanet.com/), a cutting-edge company at the forefront of technology, artificial intelligence, 
+    and machine learning, is seeking a talented SDE 2 Full Stack Developer to join our innovative team. The ideal candidate will possess strong proficiency in Python, 
+    ReactJS, Golang, NodeJS, and SQL. Experience with Machine Learning and Deep Learning is highly preferred, as it aligns with our company's core focus. At AI Planet, 
+    we foster a culture of innovation, collaboration, and continuous learning. We're looking for a passionate developer who can contribute to our dynamic environment and 
+    help drive our mission to advance AI technology. If you're excited about pushing the boundaries of what's possible in the world of AI and want to work with a team of 
+    like-minded professionals, we encourage you to apply and become part of our journey in shaping the future of technology. 
+    """,
+)
+print(res)
+
+
+
+# Job Posting
+
+## Company: AI Planet
+
+### Role: SDE 2 Full Stack Developer
+
+# **Description:**
+
+# AI Planet is seeking a passionate and talented SDE 2 Full Stack Developer to design, develop, and maintain web applications. The ideal candidate will collaborate with cross-functional teams, write clean and efficient code, conduct code reviews, troubleshoot issues, and optimize application performance.
+
+# **Qualifications:**
+
+# - Bachelor's degree in a relevant field
+# - Experience with front-end technologies (HTML, CSS, JavaScript, frameworks like React)
+# - Experience with back-end technologies (Node.js, Python, Java)
+# - Proficiency with database systems and version control (Git)
+# - Strong communication skills
+
+# **Preferred Qualifications:**
+
+# - Experience with cloud platforms
+# - Familiarity with DevOps practices
+# - Experience with containerization (Docker, Kubernetes)
+
+# **Benefits:**
+
+# - Competitive salary
+# - Health insurance
+# - Flexible work hours
+# - Professional development opportunities
+# - Inclusive culture
+
+# **Company Culture:**
+
+# AI Planet fosters a culture of innovation, collaboration, and continuous learning. We emphasize adaptability and provide a supportive environment where leveraging generative AI is encouraged.
