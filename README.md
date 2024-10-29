@@ -14,24 +14,27 @@
 
 1. Setup a virtual environment.
 
-   ```bash
-   # For Mac users
-   python3 -m venv venv
-   source venv/bin/activate
+```bash
+# For Mac and Linux users
+python3 -m venv venv
+source venv/bin/activate
 
-   # For Windows users
-   python -m venv venv
-   venv/scripts/activate
-
-   # to create virtual env using particular python version (in Windows)
-   py -3.11 -m venv venv
-   ```
+# For Windows users
+python -m venv venv
+venv/scripts/activate
+```
 
 2. Install the openagi
 
-   ```bash
-   pip install openagi
-   ```
+```bash
+pip install openagi
+```
+
+or 
+```
+git clone https://github.com/aiplanethub/openagi.git
+pip install -e .
+```
 
 ## To setup your credentials
 
@@ -45,132 +48,133 @@ For more queries find documentation for OpenAGI at [openagi.aiplanet.com](https:
 
 ![Thumbnails](https://github.com/aiplanethub/openagi/blob/dev/assets/openagi.png)
 
-## Example (Single Agent)
+## Example (Manual Agent Execution)
 
-Follow this example to create a **Job Search Agent** that helps you to search available job posting for a given category.
-Here in the example we are using `AzureChatOpenAIModel` along with `GoogleSerpAPISearch` to search the internet for various job posting on the particular role.
-
-**Note:** Follow setup guide to configure the environment. For quick access click [here](https://openagi.aiplanet.com/getting-started/installation).
-
-```python
-from openagi.actions.tools.serp_search import GoogleSerpAPISearch
-from openagi.agent import Admin
-from openagi.llms.azure import AzureChatOpenAIModel
-from openagi.memory import Memory
-from openagi.planner.task_decomposer import TaskPlanner
-from rich.console import Console
-from rich.markdown import Markdown
-
-if __name__ == "__main__":
-    config = AzureChatOpenAIModel.load_from_env_config()
-    llm = AzureChatOpenAIModel(config=config)
-
-    company_domain = input("What is the company domain?\n")
-    job_domain = input("What is the job domain?\n")
-    job_level = input("What level job are you looking for?\n")
-    job_location = input("In what location are you for the job?\n")
-
-    query = f"""
-Need help finding a job description based on the following criteria:
-
-Company Domain: {company_domain}
-Job Domain: {job_domain}
-Job Level: {job_level}
-Job Location: {job_location}
-
-Please provide a list of suitable job descriptions, including the key responsibilities, requirements, and any other relevant details.
-"""
-
-    admin = Admin(
-        llm=llm,
-        actions=[GoogleSerpAPISearch],
-        planner=TaskPlanner(human_intervene=False),
-        memory=Memory(),
-    )
-
-    res = admin.run(
-        query=query,
-        description="You are an expert Internet searching agent , who gives best possible response.",
-    )
-
-    # Print the results from the OpenAGI
-    print("-" * 100)  # Separator
-    Console().print(Markdown(res))
-```
-
-## Example (Workers)
 Workers are used to create a Multi-Agent architecture.
 
-Follow this example to create a **Blog post Agent** that helps you research and write blog posts. A number of workers (agents) are working together to achieve this task. 
+Follow this example to create a **Trip Planner Agent** that helps you plan the itinerary to SF. 
 
-```python
-from openagi.actions.files import WriteFileAction
-from openagi.actions.tools.ddg_search import DuckDuckGoNewsSearch
-from openagi.actions.tools.webloader import WebBaseContextTool
+```py
 from openagi.agent import Admin
-from openagi.llms.azure import AzureChatOpenAIModel
+from openagi.planner.task_decomposer import TaskPlanner
+from openagi.actions.tools.ddg_search import DuckDuckGoSearch
+from openagi.llms.openai import OpenAIModel
+from openagi.worker import Worker
+
+plan = TaskPlanner(human_intervene=False)
+action = DuckDuckGoSearch
+
+import os
+os.environ['OPENAI_API_KEY'] = "sk-xxxx"
+config = OpenAIModel.load_from_env_config()
+llm = OpenAIModel(config=config)
+
+trip_plan = Worker(
+        role="Trip Planner",
+        instructions="""
+        User loves calm places, suggest the best itinerary accordingly.
+        """,
+        actions=[action],
+        max_iterations=10)
+
+admin = Admin(
+    llm=llm,
+    actions=[action],
+    planner=plan,
+)
+admin.assign_workers([trip_plan])
+
+res = admin.run(
+    query="Give me total 3 Days Trip to San francisco Bay area",
+    description="You are a knowledgeable local guide with extensive information about the city, it's attractions and customs",
+)
+print(res)
+```
+
+## Example (Autonomous Multi-Agent Execution)
+
+Lets build a **Sports Agent** now that can run autonomously without any Workers.
+
+```py
+from openagi.planner.task_decomposer import TaskPlanner
+from openagi.actions.tools.tavilyqasearch import TavilyWebSearchQA
+from openagi.agent import Admin
+from openagi.llms.gemini import GeminiModel
+
+import os
+from getpass import getpass
+
+# setup Gemini and Tavily API Key
+os.environ['TAVILY_API_KEY'] = getpass("Enter Tavily API key:")
+os.environ['GOOGLE_API_KEY'] = getpass("Enter your Gemini API key:")
+os.environ['Gemini_MODEL'] = "gemini-1.5-flash"
+os.environ['Gemini_TEMP'] = "0.1"
+
+gemini_config = GeminiModel.load_from_env_config()
+llm = GeminiModel(config=gemini_config)
+
+# define the planner
+plan = TaskPlanner(autonomous=True,human_intervene=True)
+
+admin = Admin(
+    actions = [TavilyWebSearchQA],
+    planner = plan,
+    llm = llm,
+)
+res = admin.run(
+    query="I need cricket updates from India vs Sri lanka 2024 ODI match in Sri Lanka",
+    description=f"give me the results of India vs Sri Lanka ODI and respective Man of the Match",
+)
+print(res)
+``` 
+
+## Long Term Memory like never before
+
+With LTM, OpenAGI agents can now:
+
+- Recall past interactions to provide continuity in conversations.
+- Learn and adapt based on user inputs over time.
+- Deliver contextually relevant responses by referencing previous conversations.
+- Improve their accuracy and efficiency with each successive interaction.
+
+```py
+import os
+from openagi.agent import Admin
+from openagi.llms.openai import OpenAIModel
 from openagi.memory import Memory
 from openagi.planner.task_decomposer import TaskPlanner
 from openagi.worker import Worker
-from rich.console import Console
-from rich.markdown import Markdown
+from openagi.actions.tools.ddg_search import DuckDuckGoSearch
 
-if __name__ == "__main__":
-    config = AzureChatOpenAIModel.load_from_env_config()
-    llm = AzureChatOpenAIModel(config=config)
+memory = Memory(long_term=True)
 
-    # Team Members
-    researcher = Worker(
-        role="Research Analyst",
-        instructions="Uncover cutting-edge developments in AI and data science. You work at a leading tech think tank. Your expertise lies in identifying emerging trends. You have a knack for dissecting complex data and presenting actionable insights.",
-        actions=[
-            DuckDuckGoNewsSearch,
-            WebBaseContextTool,
-        ],
-    )
-    writer = Worker(
-        role="Tech Content Strategist",
-        instructions="Craft compelling content on tech advancements. You are a renowned Content Strategist, known for your insightful and engaging articles.You transform complex concepts into compelling narratives. Finally return the entire article as output.",
-        actions=[
-            DuckDuckGoNewsSearch,
-            WebBaseContextTool,
-        ],
-    )
-    reviewer = Worker(
-        role="Review and Editing Specialist",
-        instructions="Review the content for clarity, engagement, grammatical accuracy, and alignment with company values and refine it to ensure perfection. A meticulous editor with an eye for detail, ensuring every piece of content is clear, engaging, and grammatically perfect. Finally write the blog post to a file and return the same as output.",
-        actions=[
-            DuckDuckGoNewsSearch,
-            WebBaseContextTool,
-            WriteFileAction,
-        ],
-    )
+os.environ['OPENAI_API_KEY'] = "-"
+config = OpenAIModel.load_from_env_config()
+llm = OpenAIModel(config=config)
 
-    # Team Manager/Admin
-    admin = Admin(
-        # actions=[DuckDuckGoSearch],
-        planner=TaskPlanner(human_intervene=False),
-        memory=Memory(),
-        llm=llm,
-    )
-    admin.assign_workers([researcher, writer, reviewer])
+web_searcher = Worker(
+    role="Web Researcher",
+    instructions="""
+    You are tasked with conducting web searches using DuckDuckGo.
+    Find the most relevant and accurate information based on the user's query.
+    """,
+    actions=[DuckDuckGoSearch], 
+)
 
-    res = admin.run(
-        query="Write a blog post about future of AI. Feel free to write files to maintain the context.",
-        description="Conduct a comprehensive analysis of the latest advancements in AI in 2024. Identify key trends, breakthrough technologies, and potential industry impacts. Using the insights provided, develop an engaging blog post that highlights the most significant AI advancements. Your post should be informative yet accessible, catering to a tech-savvy audience. Make it sound cool, avoid complex words so it doesn't sound like AI.",
-    )
+admin = Admin(
+    actions=[DuckDuckGoSearch],
+    planner=TaskPlanner(human_intervene=False),
+    memory=memory,
+    llm=llm,
+)
+admin.assign_workers([web_searcher])
 
-    # Print the results from the OpenAGI
-    print("-" * 100)  # Separator
-    Console().print(Markdown(res))
-``` 
+query = input("Enter your search query: ")
+description = f"Find accurate and relevant information for the query: {query}"
 
-
-## Prominent Features:
-
-- Flexible Agent Architecture: OpenAGI features a flexible agent architecture, allowing users to create sequential, parallel, and dynamic communication patterns similar to humans. This flexibility is designed to help users efficiently tackle their unique challenges.
-- Streamlined Integration and Configuration: OpenAGI introduces simplified integration and configuration processes, eliminating the infinite loops commonly encountered in other tools.
-- Automated & Manual Agent Configuration Generation: We provide the functionality to automatically generate the necessary configurations for building agents and their corresponding configurations. For developers preferring a hands-on approach, OpenAGI supports the manual configuration of agent solutions. This allows for detailed customization according to specific needs and preferences.
+res = admin.run(query=query,description=description)
+print(res)
+```
 
 ## Use Cases:
 
@@ -186,4 +190,4 @@ For any queries/suggestions/support connect us at [openagi@aiplanet.com](mailto:
 
 OpenAGI thrives in the rapidly evolving landscape of open-source projects. We wholeheartedly welcome contributions in various capacities, be it through innovative features, enhanced infrastructure, or refined documentation.
 
-For a comprehensive guide on the contribution process, please click [here](./CONTRIBUTING.md).
+For a comprehensive guide on the contribution process, please click [here](https://github.com/aiplanethub/openagi/blob/main/dev/Readme.md).
