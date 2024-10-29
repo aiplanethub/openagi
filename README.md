@@ -1,5 +1,6 @@
 <div align="center">
 <h1 align="center">OpenAGI </h1>
+<img src="https://github.com/aiplanethub/openagi/blob/dev/assets/openagi.png">
 <h2 align="center">Making the development of autonomous human-like agents accessible to all</h2>
 
 <a href="https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11-3776AB.svg?style=flat&logo=python&logoColor=white"><img src="https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11-3776AB.svg?style=flat&logo=python&logoColor=white" alt="Python Versions"></a>
@@ -35,18 +36,6 @@ or
 git clone https://github.com/aiplanethub/openagi.git
 pip install -e .
 ```
-
-## To setup your credentials
-
-Follow this quick [installation guide](https://openagi.aiplanet.com/getting-started/installation) to complete the setup.
-
-## Documentation
-
-For more queries find documentation for OpenAGI at [openagi.aiplanet.com](https://openagi.aiplanet.com/)
-
-## Understand OpenAGI
-
-![Thumbnails](https://github.com/aiplanethub/openagi/blob/dev/assets/openagi.png)
 
 ## Example (Manual Agent Execution)
 
@@ -175,6 +164,10 @@ description = f"Find accurate and relevant information for the query: {query}"
 res = admin.run(query=query,description=description)
 print(res)
 ```
+
+## Documentation
+
+For more queries find documentation for OpenAGI at [openagi.aiplanet.com](https://openagi.aiplanet.com/)
 
 ## Use Cases:
 
