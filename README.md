@@ -91,11 +91,8 @@ from openagi.agent import Admin
 from openagi.llms.gemini import GeminiModel
 
 import os
-from getpass import getpass
-
-# setup Gemini and Tavily API Key
-os.environ['TAVILY_API_KEY'] = getpass("Enter Tavily API key:")
-os.environ['GOOGLE_API_KEY'] = getpass("Enter your Gemini API key:")
+os.environ['TAVILY_API_KEY'] = "<replace with Tavily key>"
+os.environ['GOOGLE_API_KEY'] = "<replace with Gemini key>"
 os.environ['Gemini_MODEL'] = "gemini-1.5-flash"
 os.environ['Gemini_TEMP'] = "0.1"
 
