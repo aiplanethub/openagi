@@ -20,6 +20,7 @@
 
 ## 🛠️ USE CASES
 
+* [🎬 Movie Recommender Agent](use-cases/movie-recommender-agent.md)
 * [🔍 JobSearch Agent](use-cases/jobsearch-agent.md)
 * [✍️ Blog Writing Agent](use-cases/blog-writing-agent.md)
 * [📰 News Agent](use-cases/github-agent.md)
