@@ -1,32 +1,13 @@
-from openagi.actions.base import BaseAction
+from openagi.actions.base import ConfigurableAction
 from pydantic import Field
 from openagi.exception import OpenAGIException
 import logging
-import requests
-from bs4 import BeautifulSoup
-from typing import ClassVar, Dict, Any
 
 try:
    from googlesearch import search
 except ImportError:
   raise OpenAGIException("Install googlesearch-python with cmd `pip install googlesearch-python`")
 
-class ConfigurableAction(BaseAction):
-    config: ClassVar[Dict[str, Any]] = {}
-    
-    @classmethod
-    def set_config(cls, *args, **kwargs):
-        if args:
-            if len(args) == 1 and isinstance(args[0], dict):
-                cls.config.update(args[0])
-            else:
-                raise ValueError("If using positional arguments, a single dictionary must be provided.")
-        cls.config.update(kwargs)
-    
-    @classmethod
-    def get_config(cls, key: str, default: Any = None) -> Any:
-        return cls.config.get(key, default)
-    
 class GoogleSearchTool(ConfigurableAction):
     """
     Google Search is a tool used for scraping the Google search engine. Extract information from Google search results.

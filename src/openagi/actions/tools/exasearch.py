@@ -1,7 +1,6 @@
-from openagi.actions.base import BaseAction
+from openagi.actions.base import ConfigurableAction
 from pydantic import Field
 from openagi.exception import OpenAGIException
-from typing import ClassVar, Dict, Any
 import os
 import warnings
 
@@ -10,25 +9,11 @@ try:
 except ImportError:
     raise OpenAGIException("Install Exa Py with cmd `pip install exa_py`")
 
-class ConfigurableAction(BaseAction):
-    config: ClassVar[Dict[str, Any]] = {}
-    
-    @classmethod
-    def set_config(cls, *args, **kwargs):
-        if args:
-            if len(args) == 1 and isinstance(args[0], dict):
-                cls.config.update(args[0])
-            else:
-                raise ValueError("If using positional arguments, a single dictionary must be provided.")
-        cls.config.update(kwargs)
-    
-    @classmethod
-    def get_config(cls, key: str, default: Any = None) -> Any:
-        return cls.config.get(key, default)
-
 class ExaSearch(ConfigurableAction):
-    """
-    Exa Search is a tool used when user needs to ask the question in terms of query to get response 
+    """Exa Search tool for querying and retrieving information.
+    
+    This action uses the Exa API to perform searches and retrieve relevant content
+    based on user queries. Requires an API key to be configured before use.
     """
     query: str = Field(..., description="User query or question")
     
@@ -46,9 +31,9 @@ class ExaSearch(ConfigurableAction):
             )
             self.set_config(api_key=os.environ['EXA_API_KEY'])
 
-    def execute(self):
-        api_key = self.get_config('api_key')
-        
+
+    def execute(self) -> str:
+        api_key: str = self.get_config('api_key')
         if not api_key:
             if 'EXA_API_KEY' in os.environ:
                 api_key = os.environ['EXA_API_KEY']
@@ -60,16 +45,19 @@ class ExaSearch(ConfigurableAction):
                 )
             else:
                 raise OpenAGIException("API KEY NOT FOUND. Use ExaSearch.set_config(api_key='your_key') to set the API key.")
-
+            
         exa = Exa(api_key=api_key)
         results = exa.search_and_contents(
             self.query,
             text={"max_characters": 512},
         )
         
-        content = ""
-        for idx in results.results:
-            content += idx.text.strip()
-        content = content.replace("<|endoftext|>", "")
-        content = content.replace("NaN", "")
-        return content
+        content_parts = []
+        for result in results.results:
+            content_parts.append(result.text.strip())
+
+        content = "".join(content_parts)
+        return (
+            content.replace("<|endoftext|>", "")
+                  .replace("NaN", "")
+        )

@@ -12,7 +12,6 @@ from openagi.actions.base import BaseAction
 
 nltk.download("punkt")
 
-
 class WebBaseContextTool(BaseAction):
     """
     Use this Action to extract actual context from a Webpage. The WebBaseContextTool class provides a way to load and optionally summarize the content of a webpage, returning the metadata and page content as a context string.

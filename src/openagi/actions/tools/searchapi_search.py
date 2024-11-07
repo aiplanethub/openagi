@@ -5,29 +5,11 @@ from urllib.parse import urlencode
 from typing import Any
 
 from pydantic import Field
-
-from openagi.actions.base import BaseAction
-from openagi.exception import OpenAGIException
-from typing import ClassVar, Dict, Any
+from openagi.actions.base import ConfigurableAction
 import warnings
 
-class ConfigurableAction(BaseAction):
-    config: ClassVar[Dict[str, Any]] = {}
-    
-    @classmethod
-    def set_config(cls, *args, **kwargs):
-        if args:
-            if len(args) == 1 and isinstance(args[0], dict):
-                cls.config.update(args[0])
-            else:
-                raise ValueError("If using positional arguments, a single dictionary must be provided.")
-        cls.config.update(kwargs)
-    
-    @classmethod
-    def get_config(cls, key: str, default: Any = None) -> Any:
-        return cls.config.get(key, default)
 
-class SearchApiSearch(BaseAction):
+class SearchApiSearch(ConfigurableAction):
     """SearchApi.io provides a real-time API to access search results from Google (default), Google Scholar, Bing, Baidu, and other search engines."""
     query: str = Field(
         ..., description="User query of type string used to fetch web search results from a search engine."

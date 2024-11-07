@@ -4,24 +4,8 @@ import warnings
 from typing import Any, ClassVar, Dict
 from pydantic import Field, field_validator
 from serpapi import GoogleSearch
-from openagi.actions.base import BaseAction
+from openagi.actions.base import ConfigurableAction
 from openagi.exception import OpenAGIException
-
-class ConfigurableAction(BaseAction):
-    config: ClassVar[Dict[str, Any]] = {}
-    
-    @classmethod
-    def set_config(cls, *args, **kwargs):
-        if args:
-            if len(args) == 1 and isinstance(args[0], dict):
-                cls.config.update(args[0])
-            else:
-                raise ValueError("If using positional arguments, a single dictionary must be provided.")
-        cls.config.update(kwargs)
-    
-    @classmethod
-    def get_config(cls, key: str, default: Any = None) -> Any:
-        return cls.config.get(key, default)
 
 class GoogleSerpAPISearch(ConfigurableAction):
     """Google Serp API Search Tool"""

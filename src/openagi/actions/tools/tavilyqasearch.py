@@ -1,7 +1,6 @@
-from openagi.actions.base import BaseAction
+from openagi.actions.base import ConfigurableAction
 from pydantic import Field
 from openagi.exception import OpenAGIException
-from typing import ClassVar, Dict, Any
 import os
 import warnings
 
@@ -9,22 +8,6 @@ try:
     from tavily import TavilyClient
 except ImportError:
     raise OpenAGIException("Install Tavily with cmd `pip install tavily-python`")
-
-class ConfigurableAction(BaseAction):
-    config: ClassVar[Dict[str, Any]] = {}
-    
-    @classmethod
-    def set_config(cls, *args, **kwargs):
-        if args:
-            if len(args) == 1 and isinstance(args[0], dict):
-                cls.config.update(args[0])
-            else:
-                raise ValueError("If using positional arguments, a single dictionary must be provided.")
-        cls.config.update(kwargs)
-    
-    @classmethod
-    def get_config(cls, key: str, default: Any = None) -> Any:
-        return cls.config.get(key, default)
 
 class TavilyWebSearchQA(ConfigurableAction):
     """
@@ -47,7 +30,6 @@ class TavilyWebSearchQA(ConfigurableAction):
             self.set_config(api_key=os.environ['TAVILY_API_KEY'])
 
     def execute(self):
-        # First check config for API key
         api_key = self.get_config('api_key')
         
         if not api_key:

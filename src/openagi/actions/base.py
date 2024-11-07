@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from openagi.llms.base import LLMBaseModel
 from openagi.memory.memory import Memory
-
+from typing import ClassVar, Dict, Any
 
 class BaseAction(BaseModel):
     """Base Actions class to be inherited by other actions, providing basic functionality and structure."""
@@ -24,8 +24,7 @@ class BaseAction(BaseModel):
     )
 
     def execute(self):
-        """Executes the action
-        """
+        """Executes the action"""
         raise NotImplementedError("Subclasses must implement this method.")
 
     @classmethod
@@ -43,3 +42,19 @@ class BaseAction(BaseModel):
                 if field_name not in default_exclude_doc_fields
             },
         }
+
+class ConfigurableAction(BaseAction):
+    config: ClassVar[Dict[str, Any]] = {}
+
+    @classmethod
+    def set_config(cls, *args, **kwargs):
+        if args:
+            if len(args) == 1 and isinstance(args[0], dict):
+                cls.config.update(args[0])
+            else:
+                raise ValueError("If using positional arguments, a single dictionary must be provided.")
+        cls.config.update(kwargs)
+
+    @classmethod
+    def get_config(cls, key: str, default: Any = None) -> Any:
+        return cls.config.get(key, default)
