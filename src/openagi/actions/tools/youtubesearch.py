@@ -1,4 +1,4 @@
-from openagi.actions.base import BaseAction
+from openagi.actions.base import ConfigurableAction
 from pydantic import Field
 from typing import Any
 from openagi.exception import OpenAGIException
@@ -9,7 +9,7 @@ try:
 except ImportError:
   raise OpenAGIException("Install YouTube transcript with cmd `pip install yt-dlp` and `pip install youtube-search`")
 
-class YouTubeSearchTool(BaseAction):
+class YouTubeSearchTool(ConfigurableAction):
     """Youtube Search Tool"""
 
     query: str = Field(

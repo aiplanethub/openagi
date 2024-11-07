@@ -1,11 +1,11 @@
 import json
 from typing import Any
-from openagi.actions.base import BaseAction
+from openagi.actions.base import ConfigurableAction
 from pydantic import Field
 from duckduckgo_search import DDGS
 import logging
 
-class DuckDuckGoSearch(BaseAction):
+class DuckDuckGoSearch(ConfigurableAction):
     """Use this Action to search DuckDuckGo for a query."""
 
     name: str = Field(
@@ -40,13 +40,3 @@ class DuckDuckGoSearch(BaseAction):
             max_results=self.max_results,
         )
         return json.dumps(result)
-
-
-class DuckDuckGoNewsSearch(DuckDuckGoSearch):
-    """Use this Action to get the latest news from DuckDuckGo."""
-
-    def execute(self):
-        ddgs = self._get_ddgs()
-        return json.dumps(
-            ddgs.news(keywords=self.query, max_results=(self.max_results)), indent=2
-        )

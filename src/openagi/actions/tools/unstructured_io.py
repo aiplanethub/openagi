@@ -1,30 +1,26 @@
 import logging
 from pydantic import Field
 from openagi.exception import OpenAGIException
-from openagi.actions.base import BaseAction
+from openagi.actions.base import ConfigurableAction
+from typing import ClassVar, Dict, Any
 
 try:
    from unstructured.partition.pdf import partition_pdf
    from unstructured.chunking.title import chunk_by_title
 except ImportError:
   raise OpenAGIException("Install Unstructured with cmd `pip install 'unstructured[all-docs]'`")
-
-
-class UnstructuredPdfLoaderAction(BaseAction):
+    
+class UnstructuredPdfLoaderAction(ConfigurableAction):
     """
     Use this Action to extract content from PDFs including metadata.
     Returns a list of dictionary with keys 'type', 'element_id', 'text', 'metadata'.
     """
 
-    file_path: str = Field(
-        default_factory=str,
-        description="File or pdf file url from which content is extracted.",
-    )
-
     def execute(self):
-        logging.info(f"Reading file {self.file_path}")
-
-        elements = partition_pdf(self.file_path, extract_images_in_pdf=True)
+        file_path = self.get_config('filename')    
+        logging.info(f"Reading file {file_path}")
+        
+        elements = partition_pdf(file_path, extract_images_in_pdf=True)
 
         chunks = chunk_by_title(elements)
 
