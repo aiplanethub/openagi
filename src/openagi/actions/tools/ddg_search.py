@@ -23,7 +23,7 @@ class DuckDuckGoSearch(ConfigurableAction):
     )
 
     max_results: int = Field(
-        default=10,
+        default=5,
         description="Total results, in int, to be executed from the search. Defaults to 10.",
     )
 
