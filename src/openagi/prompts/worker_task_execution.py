@@ -46,6 +46,12 @@ Question: {task_to_execute}
 
 Context: {context}
 
+# Knowledge available to you to take decisions and perform actions
+Knowledge Base: {knowledge_base_info}
+
+Important: Always refer to and utilize the information provided in the Knowledge Base before taking any actions or making decisions.
+The Knowledge Base contains crucial information for completing the task accurately.
+
 # Example session:
 Question: What is the capital of France?
 Thought: I should look up France on DuckDuckGo to find reliable information about its capital city.
