@@ -79,7 +79,33 @@ admin = Admin(
 )
 ```
 
-### 4. Github Search Tool
+### 4. SearchApiSearch
+
+[SearchApi.io](https://searchapi.io/) provides a real-time API to access search results from Google (default), Google Scholar, Bing, Baidu, and other search engines. Any existing or upcoming SERP engine that returns `organic_results` is supported. The default web search engine is `google`, but it can be changed to `bing`, `baidu`, `google_news`, `bing_news`, `google_scholar`, `google_patents`, and others.
+
+**Setup API Key**
+
+```python
+import os
+os.environ['SEARCHAPI_API_KEY'] = "<replace-with-your-api-key>"
+os.environ['SEARCHAPI_ENGINE'] = "bing" # defaults to google.
+```
+
+Get your API key by creating an account or logging into your account on [SearchApi](https://searchapi.io/).
+
+```python
+from openagi.actions.tools.searchapi_search import SearchApiSearch
+from openagi.agent import Admin
+from openagi.llms.openai import OpenAIModel
+from openagi.planner.task_decomposer import TaskPlanner
+admin = Admin(
+    llm = llm,
+    actions=[SearchApiSearch],
+    planner=TaskPlanner(),
+)
+```
+
+### 5. Github Search Tool
 
 The Github SearchTool is used for retrieving information from Github repositories using natural language queries. This tool provides functionality for querying Github repositories for various information, such as code changes, commits, active pull requests, issues, etc., using natural language input. It is designed to be used as part of a larger AI-driven agent system.
 
@@ -106,7 +132,7 @@ admin = Admin(
 )
 ```
 
-### 5. YouTube Search Tool
+### 6. YouTube Search Tool
 
 The YouTube Search tool allows users to search for videos on YouTube using natural language queries. This tool retrieves relevant video content based on user-defined search parameters, making it easier to find specific videos or topics of interest.
 
@@ -132,7 +158,7 @@ admin = Admin(
 )
 ```
 
-### 6. Tavily QA Search Tool
+### 7. Tavily QA Search Tool
 
 The Tavily QA Search tool is designed to provide answers to user queries by fetching data from various online sources. This tool enhances the capability of the agent to retrieve precise information and answer questions effectively.
 
@@ -166,7 +192,7 @@ admin = Admin(
 )
 ```
 
-### 7. Exa Search Tool
+### 8. Exa Search Tool
 
 The Exa Search tool allows users to query the Exa API to retrieve relevant responses based on user-defined questions. This tool is particularly useful for extracting information and insights from various data sources using natural language queries.
 
@@ -202,7 +228,7 @@ admin = Admin(
 )
 ```
 
-### 8. Unstructured PDF Loader Tool
+### 9. Unstructured PDF Loader Tool
 
 The Unstructured PDF Loader tool is designed to extract content, including metadata, from PDF files. It utilizes the Unstructured library to partition the PDF and chunk the content based on titles. This tool is useful for processing large volumes of PDF documents and making their contents accessible for further analysis.
 
