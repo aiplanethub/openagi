@@ -23,19 +23,20 @@ class SearchApiSearch(ConfigurableAction):
         if 'SEARCHAPI_API_KEY' in os.environ and not self.get_config('api_key'):
             warnings.warn(
                 "Using environment variables for API keys is deprecated and will be removed in a future version. "
-                "Please use SearchApiSearch.set_config(api_key='your_key') instead of setting environment variables.",
+                "Please use SearchApiSearch.set_config(api_key='your_key', engine='google') instead of setting environment variables.",
                 DeprecationWarning,
                 stacklevel=2
             )
-            self.set_config(api_key=os.environ['SEARCHAPI_API_KEY'])
+            self.set_config(api_key=os.environ['SEARCHAPI_API_KEY'], engine='google')
 
     def execute(self):
         base_url = "https://www.searchapi.io/api/v1/search"
         api_key = self.get_config('api_key')
+        engine = self.get_config('engine', 'google')  # Default to google if not set
 
         search_dict = {
             "q": self.query,
-            "engine": "google",
+            "engine": engine,
             "api_key": api_key
         }
 
