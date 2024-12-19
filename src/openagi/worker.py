@@ -1,7 +1,8 @@
+import functools
+from concurrent.futures import ThreadPoolExecutor
 import logging
 from pathlib import Path
 import re
-from textwrap import dedent
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
@@ -35,7 +36,7 @@ class Worker(BaseModel):
         default_factory=list,
     )
     max_iterations: int = Field(
-        default=20,
+        default=10,
         description="Maximum number of steps to achieve the objective.",
     )
     output_key: str = Field(
@@ -46,7 +47,7 @@ class Worker(BaseModel):
         default=True,
         description="If set to True, the output will be overwritten even if it exists.",
     )
-
+    
     # Validate output_key. Should contain only alphabets and only underscore are allowed. Not alphanumeric
     @field_validator("output_key")
     @classmethod
@@ -70,7 +71,7 @@ class Worker(BaseModel):
         }
 
     def provoke_thought_obs(self, observation):
-        thoughts = dedent(f"""Observation: {observation}""".strip())
+        thoughts = f"""Observation: {observation}""".strip()
         return thoughts
 
     def should_continue(self, llm_resp: str) -> Union[bool, Optional[Dict]]:
@@ -84,7 +85,7 @@ class Worker(BaseModel):
         """Force the output once the max iterations are reached."""
         prompt = (
             "\n".join(all_thoughts_and_obs)
-            + "Based on the previous action and observation, give me the output."
+            + "Based on the previous action and observation, force and give me the output."
         )
         output = self.llm.run(prompt)
         cont, final_output = self.should_continue(output)
@@ -101,43 +102,53 @@ class Worker(BaseModel):
             )
         return (cont, final_output)
 
+    @functools.lru_cache(maxsize=100)
+    def _cached_llm_run(self, prompt: str) -> str:
+        """Cache LLM responses for identical prompts"""
+        return self.llm.run(prompt)
+
     def save_to_memory(self, task: Task):
-        """Saves the output to the memory."""
-        return self.memory.update_task(task)
+        """Optimized memory update"""
+        if not hasattr(self, '_memory_buffer'):
+            self._memory_buffer = []
+        self._memory_buffer.append(task)
+        
+        # Batch update memory when buffer reaches certain size
+        if len(self._memory_buffer) >= 5:
+            for buffered_task in self._memory_buffer:
+                self.memory.update_task(buffered_task)
+            self._memory_buffer.clear()
+        return True
 
     def execute_task(self, task: Task, context: Any = None) -> Any:
-        """Executes the specified task."""
-        logging.info(
-            f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}"
-        )
+        """Optimized task execution"""
+        logging.info(f"{'>'*20} Executing Task - {task.name}[{task.id}] with worker - {self.role}[{self.id}] {'<'*20}")
+        
+        # Pre-compute common values
         iteration = 1
         task_to_execute = f"{task.description}"
         worker_description = f"{self.role} - {self.instructions}"
         all_thoughts_and_obs = []
-
-        logging.debug("Provoking initial thought observation...")
-        initial_thought_provokes = self.provoke_thought_obs(None)
+        
+        # Generate base prompt once
         te_vars = dict(
             task_to_execute=task_to_execute,
             worker_description=worker_description,
             supported_actions=[action.cls_doc() for action in self.actions],
-            thought_provokes=initial_thought_provokes,
+            thought_provokes=self.provoke_thought_obs(None),
             output_key=self.output_key,
             context=context,
             max_iterations=self.max_iterations,
         )
-
-        logging.debug("Generating base prompt...")
         base_prompt = WorkerAgentTaskExecution().from_template(te_vars)
+        
+        # Use cached LLM run
         prompt = f"{base_prompt}\nThought:\nIteration: {iteration}\nActions:\n"
-
-        logging.debug("Running LLM with prompt...")
-        observations = self.llm.run(prompt)
-        logging.info(f"LLM execution completed. Observations: {observations}")
+        observations = self._cached_llm_run(prompt)
         all_thoughts_and_obs.append(prompt)
 
-        max_iters = self.max_iterations + 1
-        while iteration < max_iters:
+        while iteration < self.max_iterations + 1:
+
             logging.info(f"---- Iteration {iteration} ----")
             logging.debug("Checking if task should continue...")
             continue_flag, output = self.should_continue(observations)
@@ -210,6 +221,7 @@ class Worker(BaseModel):
                 prompt = f"{base_prompt}\n" + "\n".join(all_thoughts_and_obs)
                 logging.debug(f"\nSTART:{'*' * 20}\n{prompt}\n{'*' * 20}:END")
                 pth = Path(f"{self.memory.session_id}/logs/{task.name}-{iteration}.log")
+                
                 pth.parent.mkdir(parents=True, exist_ok=True)
                 with open(pth, "w", encoding="utf-8") as f:
                     f.write(f"{prompt}\n")
@@ -240,3 +252,8 @@ class Worker(BaseModel):
             f"Task Execution Completed - {task.name} with worker - {self.role}[{self.id}] in {iteration} iterations"
         )
         return output, task
+
+    def __del__(self):
+        """Cleanup thread pool on deletion"""
+        if hasattr(self, '_thread_pool'):
+            self._thread_pool.shutdown(wait=False)
