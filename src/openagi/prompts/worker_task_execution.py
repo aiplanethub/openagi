@@ -1,10 +1,7 @@
-from textwrap import dedent
-
 from openagi.prompts.base import BasePrompt
 
-WORKER_TASK_EXECUTION = dedent(
-    """
-You: {worker_description}
+WORKER_TASK_EXECUTION = """
+You are expert in: {worker_description}
 
 # Instructions
 - You run in a loop of Thought, Action, Observation. Follow the instructions below to understand the workflow and follow them in each iteration of the loop.
@@ -13,9 +10,9 @@ You: {worker_description}
 - Observation will be the result of running those actions. Make sure to thoroughly analyze the observation to see if it aligns with your expectations.
 - On each observation, try to understand the drawbacks and mistakes and learn from them to improve further and get back on track.
 - Take the context into account when you are answering the question. It will be the results or data from the past executions. If no context is provided, then you can assume that the context is empty and you can start from scratch. Use context to ensure consistency and accuracy in your responses.
-- Output the answer when you feel the observations are correct and aligned with the goal. They do not have to be very accurate, but ensure they are reasonably reliable.
-- The output should always be in the following format in all the iterations. Ensure the JSON format is suitable for utilization with json.loads(), enclosed in triple backticks:
+- Output the answer when you feel the observations are reasonably good and aligned with the goal. They do not have to be very accurate, but ensure they are reasonably reliable.
 - No Action/Output should be without json. Trying not include your thoughts as part of the action. You can skip the action if not required.
+- The output needs to be in JSON ONLY:
 - For Running an action:
 ```json
 {
@@ -72,8 +69,6 @@ Output format:
 Begin!
 {thought_provokes}
 """.strip()
-)
-
 
 class WorkerAgentTaskExecution(BasePrompt):
     base_prompt: str = WORKER_TASK_EXECUTION
