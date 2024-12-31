@@ -11,9 +11,18 @@ except ImportError:
 
 class CerebrasConfigModel(LLMConfigModel):
     
-    """cloud.cerebras.ai"""
-    """Configuration model for Cerebras."""
-    """Available models: llama-3.3-70b || llama-3.1-70b || llama-3.1-8b """
+     """
+    Configuration model for Cerebras.
+    Reference: https://cloud.cerebras.ai
+    
+    Attributes:
+        cerebras_api_key (str): API key for Cerebras.
+        model_name (str): Name of the model to use. Default is 'llama3.1-8b'.
+        temperature (float): Sampling temperature. Default is 0.7.
+    
+    Note:
+        Available models as of December 2024: llama-3.3-70b, llama-3.1-70b, llama-3.1-8b
+    """
 
     cerebras_api_key: str
     model_name: str = "llama3.1-8b"
