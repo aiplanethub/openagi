@@ -148,5 +148,6 @@ def run_agent(level = 'easy'):
     return avg_f1, acc
 
 # levels are 'easy', 'medium', 'hard'
-f1, acc = run_agent(level='easy')
+choice = input("Choose the dataset level: (easy, medium or hard)").lower()
+f1, acc = run_agent(level=choice)
 print(f"F1 score: {f1}, Accuracy: {acc}")
