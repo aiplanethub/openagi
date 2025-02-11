@@ -5,7 +5,9 @@ from pydantic import Field
 from langchain.agents import initialize_agent, load_tools
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 import logging
-from openagi.llms.openai import ChatOpenAI
+import warnings
+import os
+from langchain_openai import ChatOpenAI
 
 class DallEImageGenerator(ConfigurableAction):
     """Use this Action to generate images using DALL·E."""
@@ -26,6 +28,13 @@ class DallEImageGenerator(ConfigurableAction):
     
     def _get_dalle_tool(self):
         tools = load_tools(["dalle-image-generator"])
+        if 'OPENAI_API_KEY' not in os.environ:
+            warnings.warn(
+                "Dall-E expects to OPENAI_API_KEY. Please add it inside OPENAI_API_KEY environment.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            return json.dumps({"error": "Invalid or missing API key."})
         return initialize_agent(tools, llm=ChatOpenAI(), agent="zero-shot-react-description", verbose=True)
 
     def execute(self):
