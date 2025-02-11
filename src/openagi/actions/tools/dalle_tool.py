@@ -1,13 +1,15 @@
 import json
+import logging
+import os
+import warnings
 from typing import Any
+
+from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
 from openagi.actions.base import ConfigurableAction
 from pydantic import Field
-from langchain.agents import initialize_agent, load_tools
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
-import logging
-import warnings
-import os
-from langchain_openai import ChatOpenAI
 
 class DallEImageGenerator(ConfigurableAction):
     """Use this Action to generate images using DALL·E."""
@@ -25,24 +27,24 @@ class DallEImageGenerator(ConfigurableAction):
         default_factory=str,
         description="User query, a string, describing the image to be generated.",
     )
-    
-    def _get_dalle_tool(self):
-        tools = load_tools(["dalle-image-generator"])
+
+    def execute(self):
+        logging.info(f"Generating image for prompt: {self.query}")
         if 'OPENAI_API_KEY' not in os.environ:
             warnings.warn(
                 "Dall-E expects to OPENAI_API_KEY. Please add it inside OPENAI_API_KEY environment.",
                 DeprecationWarning,
                 stacklevel=2
             )
-            return json.dumps({"error": "Invalid or missing API key."})
-        return initialize_agent(tools, llm=ChatOpenAI(), agent="zero-shot-react-description", verbose=True)
-
-    def execute(self):
-        logging.info(f"Generating image for prompt: {self.query}")
-        agent = self._get_dalle_tool()
+            return json.dumps({"error": "Dall-E expects to OPENAI_API_KEY. Please add it inside OPENAI_API_KEY environment."})
+        prompt = PromptTemplate(
+        input_variables=["image_desc"],
+        template="Generate a detailed prompt to generate an image based on the following description: {image_desc}",
+    )
+        chain = LLMChain(llm=ChatOpenAI(), prompt=prompt)
         
         try:
-            result = DallEAPIWrapper().run(agent.run(self.query))
+            result = DallEAPIWrapper().run(chain.run(self.query))
             return json.dumps(result)
 
         except Exception as e:
