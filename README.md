@@ -182,3 +182,9 @@ For any queries/suggestions/support connect us at [openagi@aiplanet.com](mailto:
 OpenAGI thrives in the rapidly evolving landscape of open-source projects. We wholeheartedly welcome contributions in various capacities, be it through innovative features, enhanced infrastructure, or refined documentation.
 
 For a comprehensive guide on the contribution process, please click [here](https://github.com/aiplanethub/openagi/blob/main/CONTRIBUTING.md).
+
+## Support
+
+📚 [Documentation](https://openagi.aiplanet.com/)
+💬 [Discord Community](https://discord.gg/4aWV7He2QU)
+📝 [Issue Tracker](https://github.com/aiplanethub/openagi/issues)
