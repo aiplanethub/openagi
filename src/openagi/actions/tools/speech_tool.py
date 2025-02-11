@@ -4,19 +4,16 @@ import os
 import warnings
 from typing import Any
 from openagi.exception import OpenAGIException
+from pydantic import Field
 try:
-    from dotenv import load_dotenv
     from elevenlabs.client import ElevenLabs
     from elevenlabs import play
-    from pydantic import Field
 except ImportError:
     raise OpenAGIException("Please install the required dependencies by running 'pip install -r requirements.txt'.")
 
-
 from openagi.actions.base import ConfigurableAction
 
-# Load environment variables
-load_dotenv()
+
 
 class ElevenLabsTTS(ConfigurableAction):
     """Use this Action to generate lifelike speech using ElevenLabs' text-to-speech API."""
