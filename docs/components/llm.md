@@ -103,7 +103,7 @@ Ollama allows you to run models locally, providing a straightforward way to inte
 
 For more commands, refer to the [Ollama GitHub repository](https://github.com/ollama/ollama).
 
-**Running the Model:**Before executing the Ollama model, ensure that the model is running locally in your terminal. You can start the Llama2 model with the following command:
+**Running the Model:**&#x42;efore executing the Ollama model, ensure that the model is running locally in your terminal. You can start the Llama2 model with the following command:
 
 ```
 ollama run mistral
@@ -119,4 +119,42 @@ os.environ['OLLAMA_MODEL'] = "mistral"
 
 config = OllamaModel.load_from_env_config()
 llm = OllamaModel(config=config)
+```
+
+### SambaNova Model
+
+SambaNova provides high-performance cloud AI services with support for various LLM models including Meta's Llama family. To initialize this model, you need to configure several parameters including the API key, base URL, and project ID. The model supports advanced parameters like temperature, max tokens, and top\_p for fine-tuned control over the generation process.
+
+```python
+import os
+from openagi.llms.sambanova import SambaNovaModel
+
+os.environ['SAMBANOVA_API_KEY'] = '<your-api-key>'
+os.environ['SAMBANOVA_BASE_URL'] = '<your-base-url>'
+os.environ['SAMBANOVA_PROJECT_ID'] = '<your-project-id>'
+os.environ['SAMBANOVA_MODEL'] = 'Meta-Llama-3.3-70B-Instruct'  # default model
+os.environ['SAMBANOVA_TEMPERATURE'] = '0.7'  # default temperature
+os.environ['SAMBANOVA_MAX_TOKENS'] = '1024'  # default max tokens
+os.environ['SAMBANOVA_TOP_P'] = '0.01'  # default top_p
+os.environ['SAMBANOVA_STREAMING'] = 'False'  # default streaming setting
+
+config = SambaNovaModel.load_from_env_config()
+llm = SambaNovaModel(config=config)
+
+```
+
+### Cerebras Model
+
+Cerebras offers cloud AI services with access to various LLM models. The platform provides access to different versions of the Llama model family. To initialize this model, you need to provide your API key and can optionally configure the model name and temperature settings.
+
+```python
+import os
+from openagi.llms.cerebras import CerebrasModel
+
+os.environ['CEREBRAS_API_KEY'] = '<your-api-key>'
+os.environ['Cerebras_MODEL'] = 'llama3.1-8b'  # default model
+os.environ['Cerebras_TEMP'] = '0.7'  # default temperature
+
+config = CerebrasModel.load_from_env_config()
+llm = CerebrasModel(config=config)
 ```
