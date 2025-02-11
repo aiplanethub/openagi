@@ -3,18 +3,24 @@ import logging
 import os
 import warnings
 from typing import Any
+from openagi.exception import OpenAGIException
+try:
+    from dotenv import load_dotenv
+    from elevenlabs.client import ElevenLabs
+    from elevenlabs import play
+    from pydantic import Field
+except ImportError:
+    raise OpenAGIException("Please install the required dependencies by running 'pip install -r requirements.txt'.")
 
-from dotenv import load_dotenv
-from elevenlabs.client import ElevenLabs
-from elevenlabs import play
-from pydantic import Field
+
 from openagi.actions.base import ConfigurableAction
+
+# Load environment variables
+load_dotenv()
 
 class ElevenLabsTTS(ConfigurableAction):
     """Use this Action to generate lifelike speech using ElevenLabs' text-to-speech API."""
 
-   
-    
     text: Any = Field(
         default_factory=str,
         description="Text input that needs to be converted to speech.",
@@ -32,7 +38,7 @@ class ElevenLabsTTS(ConfigurableAction):
         description="The output format of the generated audio.",
     )
     api_key: str = Field(
-        default_factory=str,
+        default_factory=lambda: os.getenv("ELEVENLABS_API_KEY", ""),
         description="API key for ElevenLabs' authentication.",
     )
 
@@ -41,11 +47,11 @@ class ElevenLabsTTS(ConfigurableAction):
         
         if not self.api_key:
             warnings.warn(
-                "ElevenLabs API key is missing. Please provide it as a parameter.",
+                "ElevenLabs API key is missing. Please provide it as a parameter or set it in the .env file.",
                 DeprecationWarning,
                 stacklevel=2
             )
-            return json.dumps({"error": "ElevenLabs API key is missing. Please provide it as a parameter."})
+            return json.dumps({"error": "ElevenLabs API key is missing. Please provide it as a parameter or set it in the .env file."})
         
         client = ElevenLabs(api_key=self.api_key)
         try:
