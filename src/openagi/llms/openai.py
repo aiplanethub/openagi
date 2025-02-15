@@ -1,8 +1,9 @@
 import logging
 from typing import Any
-from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
+from openai._exceptions import AuthenticationError
 
+from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
 
@@ -12,6 +13,7 @@ class OpenAIConfigModel(LLMConfigModel):
 
     model_name: str = "gpt-4o"
     openai_api_key: str
+    system_prompt: str = "You are an AI assistant"
 
 
 class OpenAIModel(LLMBaseModel):
@@ -21,16 +23,16 @@ class OpenAIModel(LLMBaseModel):
     """
 
     config: Any
+    system_prompt: str = "You are an AI assistant"
 
     def load(self):
         """Initializes the OpenAI instance with configurations."""
-        self.llm = ChatOpenAI(
-            openai_api_key=self.config.openai_api_key,
-            model_name=self.config.model_name,
+        self.llm = OpenAI(
+            api_key=self.config.openai_api_key
         )
         return self.llm
 
-    def run(self, input_text: str):
+    def run(self, prompt : Any):
         """Runs the OpenAI model with the provided input text.
 
         Args:
@@ -44,9 +46,24 @@ class OpenAIModel(LLMBaseModel):
             self.load()
         if not self.llm:
             raise ValueError("`llm` attribute not set.")
-        message = HumanMessage(content=input_text)
-        resp = self.llm([message])
-        return resp.content
+        try:
+            chat_completion = self.llm.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"{self.system_prompt}",
+                },
+                {
+                    "role": "user",
+                    "content": f"{prompt}",
+                },
+                       ],
+            model=self.config.model_name
+            )
+        except AuthenticationError:
+            raise OpenAGIException("Authentication failed. Please check your OPENAI_API_KEY.")
+        return chat_completion.choices[0].message.content
+
 
     @staticmethod
     def load_from_env_config() -> OpenAIConfigModel:
