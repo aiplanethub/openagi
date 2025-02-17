@@ -14,69 +14,89 @@ The DuckDuckGoSearch tool is a tool that can be used to search for words, docume
 
 ```python
 from openagi.actions.tools.ddg_search import DuckDuckGoSearch
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
 
-admin = Admin(
-    llm = llm,
-    actions=[DuckDuckGoSearch],
-    planner=TaskPlanner(),
+# Initialize the DuckDuckGo search tool
+ddg_tool = DuckDuckGoSearch(
+    query="Your search query"  # Required: The search term to look up
 )
+
+# Execute the search
+result = ddg_tool.execute()
+# Returns search results including web pages and content
 ```
 
 ### 2. Serper Search Tool
 
 Serper is a low-cost Google Search API that can be used to add answer box, knowledge graph, and organic results data from Google Search. This tool is mainly helps user to query the Google results with less throughput and latency.&#x20;
 
-#### Setup API
+**Setup API**
+
+There are two ways to configure the API key:
+
+1. Using the recommended configuration method:
+
+```python
+from openagi.actions.tools.serper_search import GoogleSerpAPISearch
+GoogleSerpAPISearch.set_config(api_key='your-api-key')
+```
+
+2. Using environment variables (deprecated):
 
 ```python
 import os
-
-os.environ['SERPER_API_KEY'] = "<replace-with-your-api-key>"
+os.environ['GOOGLE_SERP_API_KEY'] = "<replace-with-your-api-key>"
 ```
 
 Get your API key: [https://serper.dev/](https://serper.dev/)
 
-```python
-from openagi.actions.tools.serper_search import SerperSearch
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
-
-admin = Admin(
-    llm = llm,
-    actions=[SerperSearch],
-    planner=TaskPlanner(),
-)
-```
-
-### 3.  Google Serp API Search
-
-Serp API is yet another solution to integrate search data. SERP stands for _Search Engine Results Page_. It refers to the page displayed by a search engine in response to a user's query.
-
-#### Setup API
-
-```python
-import os
-
-os.environ['GOOGLE_SERP_API_KEY'] = "<replace-with-your-api-key>"
-```
-
-Get your API key: [https://serpapi.com/manage-api-key/](https://serpapi.com/manage-api-key/)
+Usage:
 
 ```python
 from openagi.actions.tools.serp_search import GoogleSerpAPISearch
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
 
-admin = Admin(
-    llm = llm,
-    actions=[SerperSearch],
-    planner=TaskPlanner(),
+# Initialize the Serper search tool
+serp_tool = GoogleSerpAPISearch(
+    query="Your search query",  # Required: The search query to look up
+    max_results=10             # Optional: Number of results to return (default: 10)
 )
+
+# Execute the search
+result = serp_tool.execute()
+# Returns formatted search results with titles, snippets, and URLs
+```
+
+The tool requires the following parameters:
+
+* `query`: The search query string to look up on Google
+* `max_results`: (Optional) Number of results to return, defaults to 10
+
+The tool will return search results including titles, snippets, and URLs from Google search results.&#x20;
+
+### 3. Google Search Tool
+
+The Google Search Tool enables searching and extracting information from Google search results using the googlesearch-python library. This tool provides a simple way to scrape Google search results without requiring an API key.
+
+**Installation**
+
+```bash
+pip install googlesearch-python
+```
+
+Usage:
+
+```python
+from openagi.actions.tools.google_search_tool import GoogleSearchTool
+
+# Initialize the Google search tool
+google_tool = GoogleSearchTool(
+    query="Your search query",          # Required: The search query to look up
+    max_results=10,                     # Optional: Number of results (default: 10, max: 15)
+    lang="en"                           # Optional: Language for search results (default: "en")
+)
+
+# Execute the search
+result = google_tool.execute()
+# Returns formatted search results with titles, descriptions, and URLs
 ```
 
 ### 4. SearchApiSearch
@@ -85,25 +105,57 @@ admin = Admin(
 
 **Setup API Key**
 
-```python
-import os
-os.environ['SEARCHAPI_API_KEY'] = "<replace-with-your-api-key>"
-os.environ['SEARCHAPI_ENGINE'] = "bing" # defaults to google.
-```
+There are two ways to configure the API key:
 
-Get your API key by creating an account or logging into your account on [SearchApi](https://searchapi.io/).
+1. Using the recommended configuration method:
 
 ```python
 from openagi.actions.tools.searchapi_search import SearchApiSearch
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
-admin = Admin(
-    llm = llm,
-    actions=[SearchApiSearch],
-    planner=TaskPlanner(),
-)
+SearchApiSearch.set_config(api_key='your-api-key', engine='google')  # engine is optional
 ```
+
+2. Using environment variables (deprecated):
+
+```python
+import os
+os.environ['SEARCHAPI_API_KEY'] = "<replace-with-your-api-key>"
+```
+
+Get your API key from [SearchApi.io](https://vscode-file/vscode-app/Applications/Aide.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html).
+
+Usage:
+
+```python
+from openagi.actions.tools.searchapi_search import SearchApiSearch
+
+# Configure API key (recommended way)
+SearchApiSearch.set_config(api_key='your-api-key', engine='google')
+
+# Initialize the SearchAPI tool
+search_api_tool = SearchApiSearch(
+    query="Your search query"  # Required: The search query to look up
+)
+
+# Execute the search
+result = search_api_tool.execute()
+# Returns search results from the configured search engine
+```
+
+The tool requires the following parameter:
+
+* `query`: The search query string to look up
+
+The tool will return search results including titles, snippets, and URLs from the configured search engine (defaults to Google).
+
+Supported search engines include:
+
+* Google (default)
+* Google Scholar
+* Bing
+* Baidu
+* Google News
+* Bing News
+* Google Patents
 
 ### 5. Github Search Tool
 
@@ -121,15 +173,21 @@ Get your GitHub Access Token: [https://docs.github.com/en/authentication/keeping
 
 ```python
 from openagi.actions.tools.github_search_tool import GitHubFileLoadAction
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
 
-admin = Admin(
-    llm = llm,
-    actions=[GitHubFileLoadAction],
-    planner=TaskPlanner(),
+# Set GitHub access token in environment
+import os
+os.environ['GITHUB_ACCESS_TOKEN'] = "<your-github-token>"
+
+# Initialize the GitHub search tool
+github_tool = GitHubFileLoadAction(
+    repo="username/repository",  # e.g., "aiplanethub/openagi"
+    directory="path/to/files",   # e.g., "src/openagi/llms"
+    extension=".py"              # File extension to filter
 )
+
+# Execute the search
+result = github_tool.execute()
+# Returns content and metadata of matching files
 ```
 
 ### 6. YouTube Search Tool
@@ -147,16 +205,28 @@ pip install youtube-search
 
 ```python
 from openagi.actions.tools.youtubesearch import YouTubeSearchTool
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
 
-admin = Admin(
-    llm=llm,
-    actions=[YouTubeSearch],
-    planner=TaskPlanner(),
+# Initialize the YouTube search tool
+youtube_tool = YouTubeSearchTool(
+    query="Your search query",  # Required: The keyword to search for
+    max_results=5              # Optional: Number of results to return (default: 5)
 )
+
+# Execute the search
+result = youtube_tool.execute()
+# Returns video titles, descriptions, and URLs
 ```
+
+The tool requires the following parameters:
+
+* `query`: The search keyword or phrase to look up on YouTube
+* `max_results`: (Optional) Number of video results to return, defaults to 5
+
+The tool will return search results including:
+
+* Video titles
+* Video descriptions
+* Video URLs (in format: [https://youtube.com/watch?v=VIDEO\_ID](https://vscode-file/vscode-app/Applications/Aide.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html))
 
 ### 7. Tavily QA Search Tool
 
@@ -181,16 +251,25 @@ os.environ['TAVILY_API_KEY'] = "<replace-with-your-tavily-api-key>"
 
 ```python
 from openagi.actions.tools.tavilyqasearch import TavilyWebSearchQA
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
 
-admin = Admin(
-    llm=llm,
-    actions=[TavilyQASearch],
-    planner=TaskPlanner(),
+# Configure API key (recommended way)
+TavilyWebSearchQA.set_config(api_key='your-api-key')
+
+# Initialize the Tavily QA search tool
+tavily_tool = TavilyWebSearchQA(
+    query="Your search query"  # Required: The question or query to search for
 )
+
+# Execute the search
+result = tavily_tool.execute()
+# Returns AI-generated answers based on web content
 ```
+
+The tool requires the following parameter:
+
+* `query`: The search query or question to look up
+
+The tool will return comprehensive search results with AI-generated answers based on the most relevant web content found.&#x20;
 
 ### 8. Exa Search Tool
 
@@ -217,15 +296,18 @@ os.environ['EXA_API_KEY'] = "<replace-with-your-exa-api-key>"
 
 ```python
 from openagi.actions.tools.exasearch import ExaSearch
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
 
-admin = Admin(
-    llm=llm,
-    actions=[ExaSearch],
-    planner=TaskPlanner(),
+# Configure API key (recommended way)
+ExaSearch.set_config(api_key='your-api-key')
+
+# Initialize the Exa search tool
+exa_tool = ExaSearch(
+    query="Your search query"  # Required: The search query to look up
 )
+
+# Execute the search
+result = exa_tool.execute()
+# Returns relevant content from search results
 ```
 
 ### 9. Unstructured PDF Loader Tool
@@ -242,15 +324,78 @@ pip install unstructured
 
 ```python
 from openagi.actions.tools.unstructured_io import UnstructuredPdfLoaderAction
-from openagi.agent import Admin
-from openagi.llms.openai import OpenAIModel
-from openagi.planner.task_decomposer import TaskPlanner
 
-admin = Admin(
-    llm=llm,
-    actions=[UnstructuredPdfLoaderAction],
-    planner=TaskPlanner(),
+# Initialize the PDF loader tool with configuration
+pdf_tool = UnstructuredPdfLoaderAction()
+pdf_tool.set_config(filename="/path/to/your/file.pdf")
+
+# Execute the loader
+result = pdf_tool.execute()
+# Returns structured content from PDF including metadata
+```
+
+### 10. Wikipedia Search Tool
+
+The Wikipedia Search tool enables searching and retrieving information from Wikipedia articles. This tool provides functionality to search Wikipedia articles and retrieve summaries, with built-in handling for disambiguation pages.
+
+**Installation**
+
+```
+pip install wikipedia-api
+```
+
+**Usage Example**
+
+```python
+from openagi.actions.tools.wikipedia_search import WikipediaSearch
+
+# Initialize the Wikipedia search tool
+wikipedia_tool = WikipediaSearch(
+    query="Your search query",          # Required: The search query to look up
+    max_results=3                       # Optional: Number of sentences to return (default: 3)
 )
+
+# Execute the search
+result = wikipedia_tool.execute()
+# Returns JSON string containing title, summary, and URL or disambiguation options
+
+```
+
+
+
+### 11. ElevenLabsTTS Tool
+
+This tool is designed to seamlessly convert text to speech using ElevenLabs, allowing you to utilize any voice ID or customization options provided by the platform. It leverages the ElevenLabs API to transform the input text into speech, offering high-quality, multilingual text-to-speech conversions.
+
+```
+pip install elevenlabs
+```
+
+Usage:
+
+```python
+import os
+import json
+from elevenlabs.client import ElevenLabs
+from elevenlabs import play
+from src.openagi.actions.tools.speech_tool import ElevenLabsTTS  
+
+# Set your ElevenLabs API Key (Optional: Can also be set in .env file)
+os.environ["ELEVENLABS_API_KEY"] = "your_api_key_here"
+
+# Create an instance of ElevenLabsTTS
+tts = ElevenLabsTTS(
+    text="Hello, this is a test of ElevenLabs text-to-speech.",
+    voice_id="JBFqnCBsd6RMkjVDRZzb",
+    model_id="eleven_multilingual_v2",
+    output_format="mp3_44100_128",
+)
+
+# Execute the text-to-speech conversion
+response = tts.execute()
+
+# Print the response
+print(json.loads(response))
 ```
 
 ### How to build a custom Tool?
