@@ -4,9 +4,6 @@ import os
 import warnings
 from typing import Any
 
-from langchain.chains import LLMChain
-from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
 from openagi.actions.base import ConfigurableAction
 from pydantic import Field
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
@@ -32,19 +29,16 @@ class DallEImageGenerator(ConfigurableAction):
         logging.info(f"Generating image for prompt: {self.query}")
         if 'OPENAI_API_KEY' not in os.environ:
             warnings.warn(
-                "Dall-E expects to OPENAI_API_KEY. Please add it inside OPENAI_API_KEY environment.",
-                DeprecationWarning,
+                "Dall-E expects an OPENAI_API_KEY. Please add it to your environment variables.",
+                UserWarning,
                 stacklevel=2
             )
-            return json.dumps({"error": "Dall-E expects to OPENAI_API_KEY. Please add it inside OPENAI_API_KEY environment."})
-        prompt = PromptTemplate(
-        input_variables=["image_desc"],
-        template="Generate a detailed prompt to generate an image based on the following description: {image_desc}",
-    )
-        chain = LLMChain(llm=ChatOpenAI(), prompt=prompt)
+            return json.dumps({"error": "Dall-E requires an OPENAI_API_KEY. Please add it to your environment variables."})
         
         try:
-            result = DallEAPIWrapper().run(chain.run(self.query))
+            # Use the query directly without the LLM chain
+            dalle_wrapper = DallEAPIWrapper()
+            result = dalle_wrapper.run(self.query)
             return json.dumps(result)
 
         except Exception as e:
