@@ -1,7 +1,8 @@
 from typing import Any
-from langchain_core.messages import HumanMessage
-from langchain_openai import AzureChatOpenAI  # Assuming this import is correct
+from openai import AzureOpenAI  # Assuming this import is correct
+from openai._exceptions import AuthenticationError
 
+from openagi.exception import OpenAGIException
 from openagi.llms.base import LLMBaseModel, LLMConfigModel
 from openagi.utils.yamlParse import read_from_env
 
@@ -14,6 +15,7 @@ class AzureChatConfigModel(LLMConfigModel):
     model_name: str
     openai_api_version: str
     api_key: str
+    
 
 
 class AzureChatOpenAIModel(LLMBaseModel):
@@ -23,19 +25,19 @@ class AzureChatOpenAIModel(LLMBaseModel):
     """
 
     config: Any
+    system_prompt: str = "You are an AI assistant"
 
     def load(self):
         """Initializes the AzureChatOpenAI instance with configurations."""
-        self.llm = AzureChatOpenAI(
-            azure_deployment=self.config.deployment_name,
-            model_name=self.config.model_name,
-            openai_api_version=self.config.openai_api_version,
-            openai_api_key=self.config.api_key,
+        self.llm = AzureOpenAI(
+            api_version=self.config.openai_api_version,
             azure_endpoint=self.config.base_url,
+            azure_deployment=self.config.deployment_name,
+            api_key=self.config.api_key
         )
         return self.llm
 
-    def run(self, input_data: str):
+    def run(self, prompt : Any):
         """Runs the Azure Chat OpenAI model with the provided input text.
 
         Args:
@@ -48,9 +50,24 @@ class AzureChatOpenAIModel(LLMBaseModel):
             self.load()
         if not self.llm:
             raise ValueError("`llm` attribute not set.")
-        message = HumanMessage(content=input_data)
-        resp = self.llm([message])
-        return resp.content
+        try:
+            chat_completion = self.llm.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"{self.system_prompt}",
+                },
+                {
+                    "role": "user",
+                    "content": f"{prompt}",
+                },
+                           ],
+            model = self.config.model_name
+            )
+        except AuthenticationError:
+            raise OpenAGIException("Authentication failed. Please check your AZURE_OPENAI_API_KEY.")
+        return chat_completion.choices[0].message.content
+
 
     @staticmethod
     def load_from_env_config() -> AzureChatConfigModel:

@@ -206,3 +206,4 @@ yfinance==0.2.40 ; python_version >= "3.9" and python_version < "3.12"
 youtube-search==2.1.2 ; python_version >= "3.9" and python_version < "3.12"
 yt-dlp==2024.8.6 ; python_version >= "3.9" and python_version < "3.12"
 zipp==3.19.2 ; python_version >= "3.9" and python_version < "3.12"
+groq==0.10.0
