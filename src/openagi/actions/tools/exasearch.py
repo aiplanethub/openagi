@@ -10,7 +10,7 @@ except ImportError:
     raise OpenAGIException("Install Exa Py with cmd `pip install exa_py`")
 
 class ExaSearch(ConfigurableAction):
-    """Exa Search tool for querying and retrieving information.
+    """Exa Search - the fastest and most accurate web search API for AI.
     
     This action uses the Exa API to perform searches and retrieve relevant content
     based on user queries. Requires an API key to be configured before use.
