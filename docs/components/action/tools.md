@@ -8,6 +8,41 @@ Tool is a functionality based on which the data is fetched to the Agent for furt
 
 ## Tool configuration
 
+### Parallel Search MCP (opt-in)
+
+`ParallelSearch` calls [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp)
+at `https://search.parallel.ai/mcp`. Search is free and keyless at anonymous rate
+limits. This action does not read API keys or configure a paid search provider.
+It returns the server's text content, including source URLs and relevant excerpts,
+as a string that an agent can use as an observation.
+
+```python
+from openagi.actions.tools.parallel_search import ParallelSearch
+
+search = ParallelSearch(query="What is Python?", timeout=30)
+print(search.execute())
+```
+
+To enable it for an existing Admin or Worker, import the action and explicitly
+include `ParallelSearch` in that object's `actions` list. Existing search tools,
+default actions, saved configuration and LLM selection remain unchanged. The
+agent's LLM still needs its usual configuration. When memory is supplied by the
+agent, its session identifier is reused for related searches. For standalone
+searches, reuse `session_id` explicitly to group calls in a conversation.
+
+The action initializes an MCP session, calls `web_search`, and closes the session.
+It supports JSON and SSE responses over Streamable HTTP, with a positive `timeout`
+in seconds for each HTTP request (default 30). Network, protocol and tool failures
+raise `OpenAGIException`; rate limits do not trigger a switch to another provider.
+It uses Python's standard library for HTTP, with no additional search dependency.
+
+From an installed checkout, run the example through OpenAGI's action runner:
+
+```bash
+python example/parallel_search.py "What is Python?"
+python -m pytest tests/test_parallel_search.py
+```
+
 ### 1. DuckDuckGoSearch Tool
 
 The DuckDuckGoSearch tool is a tool that can be used to search for words, documents, images, videos, news, maps and text translation using the DuckDuckGo.com search engine. DuckDuckGo Search is a web search engine that _DuckDuckGo_ is an independent Google alternative that lets you search and browse the web, but it emphasises protecting user privacy and avoiding the filter bubble of personalised search results.
